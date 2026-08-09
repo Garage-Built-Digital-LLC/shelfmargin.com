@@ -74,7 +74,7 @@ function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) 
     <a
       href={href}
       className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-widest"
-      style={{ ...styles[tone], border: `2px solid ${LINE}` }}
+      style={{ ...styles[tone], border: `1px solid ${LINE}` }}
     >
       {children}
       {Icon && <Icon size={16} />}
@@ -84,7 +84,7 @@ function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) 
 
 function PublicNav({ route, session, onSignOut }) {
   return (
-    <header className="sticky top-0 z-20" style={{ backgroundColor: BG, borderBottom: `2px solid ${LINE}` }}>
+    <header className="sticky top-0 z-20" style={{ backgroundColor: BG, borderBottom: `1px solid ${LINE}` }}>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <a href={publicPath("home")} className="flex min-w-0 items-center gap-2">
           <img src={ASSETS.brandMark} alt="" className="h-8 w-8 shrink-0 object-contain" />
@@ -101,14 +101,14 @@ function PublicNav({ route, session, onSignOut }) {
           <details className="relative shrink-0">
             <summary
               className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
-              style={{ backgroundColor: BLUE, color: "#FFF", border: `2px solid ${LINE}` }}
+              style={{ backgroundColor: BLUE, color: "#FFF", border: `1px solid ${LINE}` }}
             >
               Account
               <ChevronDownIcon />
             </summary>
             <div
               className="absolute right-0 mt-2 w-72 p-3 text-xs font-bold normal-case shadow-[4px_4px_0_#151512]"
-              style={{ backgroundColor: "#FFFDF6", border: `2px solid ${LINE}`, color: INK }}
+              style={{ backgroundColor: "#FFFDF6", border: `1px solid ${LINE}`, color: INK }}
             >
               <div className="truncate font-mono" style={{ color: MUTED }}>{session.user?.email}</div>
               <div className="mt-3 grid gap-2">
@@ -144,7 +144,7 @@ function PublicNav({ route, session, onSignOut }) {
           <a
             href={publicPath("login")}
             className="shrink-0 px-3 py-2 text-xs font-black uppercase tracking-widest"
-            style={{ backgroundColor: INK, color: "#FFF", border: `2px solid ${LINE}` }}
+            style={{ backgroundColor: INK, color: "#FFF", border: `1px solid ${LINE}` }}
           >
             Sign in
           </a>
@@ -179,7 +179,7 @@ function ChevronDownIcon() {
 
 function FramedImage({ src, alt, aspect = "aspect-[4/3]", className = "", imgClassName = "object-cover" }) {
   return (
-    <div className={`overflow-hidden ${aspect} ${className}`} style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}>
+    <div className={`overflow-hidden ${aspect} ${className}`} style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFDF6" }}>
       <img src={src} alt={alt} className={`h-full w-full ${imgClassName}`} loading="lazy" />
     </div>
   );
@@ -188,7 +188,7 @@ function FramedImage({ src, alt, aspect = "aspect-[4/3]", className = "", imgCla
 function Band({ children, tone = "plain", compact = false }) {
   const bg = tone === "blue" ? BLUE_BG : tone === "green" ? GREEN_BG : tone === "amber" ? AMBER_BG : tone === "red" ? RED_BG : "transparent";
   return (
-    <section style={{ backgroundColor: bg, borderTop: `2px solid ${LINE}` }}>
+    <section style={{ backgroundColor: bg, borderTop: `1px solid ${LINE}` }}>
       <div className={`mx-auto max-w-6xl px-4 ${compact ? "py-6" : "py-10 sm:py-12"}`}>{children}</div>
     </section>
   );
@@ -198,7 +198,7 @@ function SectionTitle({ eyebrow, title, body }) {
   return (
     <div className="max-w-3xl">
       {eyebrow && <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: BLUE }}>{eyebrow}</div>}
-      <h2 className="text-2xl font-black uppercase tracking-widest sm:text-3xl">{title}</h2>
+      <h2 className="text-2xl font-black leading-tight sm:text-3xl">{title}</h2>
       {body && <p className="mt-3 text-sm font-bold sm:text-base" style={{ color: MUTED }}>{body}</p>}
     </div>
   );
@@ -207,11 +207,27 @@ function SectionTitle({ eyebrow, title, body }) {
 function Feature({ icon: Icon, title, body, tone = "plain" }) {
   const bg = tone === "green" ? GREEN_BG : tone === "amber" ? AMBER_BG : tone === "blue" ? BLUE_BG : "transparent";
   return (
-    <div className="py-4" style={{ borderTop: `2px solid ${LINE}`, backgroundColor: bg }}>
+    <div className="py-4" style={{ borderTop: `1px solid ${LINE}`, backgroundColor: bg }}>
       <Icon size={22} />
-      <div className="mt-3 text-sm font-black uppercase tracking-widest">{title}</div>
+      <div className="mt-3 text-sm font-black">{title}</div>
       <div className="mt-2 text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
     </div>
+  );
+}
+
+function StatusPill({ children, tone = "amber" }) {
+  const styles = {
+    amber: { backgroundColor: AMBER_BG, color: "#8A6100", borderColor: "#B8860B" },
+    blue: { backgroundColor: BLUE_BG, color: BLUE, borderColor: BLUE },
+    green: { backgroundColor: GREEN_BG, color: GREEN, borderColor: GREEN },
+  };
+  return (
+    <span
+      className="inline-flex items-center gap-2 px-2.5 py-1 text-[11px] font-black uppercase tracking-widest"
+      style={{ border: `1px solid ${styles[tone].borderColor}`, ...styles[tone] }}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -222,19 +238,90 @@ function ProductPreview() {
     ["PASS", "The Alchemist", "+$1.58", RED, RED_BG],
   ];
   return (
-    <div className="w-full p-3" style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }} aria-label="ShelfMargin app preview">
-      <div className="flex items-center gap-2 px-3 py-3 text-sm font-black uppercase tracking-widest" style={{ border: `2px solid ${LINE}` }}>
+    <div className="w-full p-3" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFDF6" }} aria-label="ShelfMargin app preview">
+      <div className="flex items-center gap-2 px-3 py-3 text-sm font-black uppercase tracking-widest" style={{ border: `1px solid ${LINE}` }}>
         <Scan size={18} />
         Scan ISBN...
       </div>
       <div className="mt-3 flex flex-col gap-2">
         {rows.map(([status, title, profit, color, bg]) => (
-          <div key={title} className="grid grid-cols-[72px_1fr_auto] items-center gap-3 p-3" style={{ border: `2px solid ${LINE}`, backgroundColor: bg }}>
+          <div key={title} className="grid grid-cols-[72px_1fr_auto] items-center gap-3 p-3" style={{ border: `1px solid ${LINE}`, backgroundColor: bg }}>
             <span className="px-2 py-1 text-center text-xs font-black uppercase text-white" style={{ backgroundColor: color }}>{status}</span>
             <span className="truncate text-sm font-black">{title}</span>
             <span className="font-mono text-sm font-black" style={{ color }}>{profit}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function FieldScannerVisual() {
+  const rows = [
+    ["BUY", "Clean Code", "+$11.42", GREEN, GREEN_BG],
+    ["CHECK", "Calculus Early Transcendentals", "+$3.20", "#8A6100", AMBER_BG],
+    ["PASS", "Old travel guide", "-$0.45", RED, RED_BG],
+  ];
+
+  return (
+    <div
+      className="field-pattern relative overflow-hidden p-3 sm:p-4"
+      style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}
+      aria-label="Field scanner workflow preview"
+    >
+      <div className="absolute right-3 top-3 hidden text-[10px] font-black uppercase tracking-widest sm:block" style={{ color: MUTED }}>
+        thrift shelf mode
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[0.62fr_1fr] lg:items-center">
+        <div className="mx-auto w-full max-w-[245px]">
+          <div className="scanner-pulse relative overflow-hidden bg-[#151512] p-2 text-white" style={{ border: `2px solid ${LINE}` }}>
+            <div className="flex items-center justify-between px-2 pb-2 text-[10px] font-black uppercase tracking-widest">
+              <span>Shelf Margin</span>
+              <Scan size={14} />
+            </div>
+            <div className="relative h-28 overflow-hidden bg-white p-3" style={{ border: `1px solid ${LINE}` }}>
+              <div className="scan-beam" />
+              <div className="flex h-full items-end justify-center gap-1">
+                {[8, 18, 10, 28, 14, 22, 9, 30, 12, 20, 26, 11, 17].map((height, index) => (
+                  <span key={index} className="w-1 bg-[#151512]" style={{ height }} />
+                ))}
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] font-black uppercase tracking-widest">
+              <span style={{ backgroundColor: GREEN }}>buy</span>
+              <span style={{ backgroundColor: YELLOW, color: INK }}>check</span>
+              <span style={{ backgroundColor: RED }}>pass</span>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-5 gap-1" aria-hidden="true">
+            {["#FDF0D2", "#E4F2E6", "#E3ECF7", "#F7E4E0", "#FFFDF6"].map((color, index) => (
+              <div key={color} className="h-10" style={{ backgroundColor: color, border: `1px solid ${LINE}`, transform: `translateY(${index % 2 ? 6 : 0}px)` }} />
+            ))}
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <StatusPill tone="green">Live catalog lookup</StatusPill>
+            <StatusPill>Prices estimated</StatusPill>
+          </div>
+          <div className="flex flex-col gap-2">
+            {rows.map(([status, title, profit, color, bg]) => (
+              <div key={title} className="scan-result-row grid grid-cols-[78px_1fr_auto] items-center gap-3 px-3 py-3" style={{ border: `1px solid ${LINE}`, backgroundColor: bg }}>
+                <span className="decision-badge px-2 py-2 text-center text-xs font-black uppercase text-white" style={{ backgroundColor: color }}>
+                  {status}
+                </span>
+                <span className="min-w-0 truncate text-sm font-black">{title}</span>
+                <span className="font-mono text-sm font-black" style={{ color }}>{profit}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-widest">
+            <div className="py-2" style={{ borderTop: `2px solid ${LINE}` }}>scan</div>
+            <div className="py-2" style={{ borderTop: `2px solid ${LINE}` }}>save</div>
+            <div className="py-2" style={{ borderTop: `2px solid ${LINE}` }}>export</div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -249,10 +336,10 @@ function WorkflowSteps() {
   ];
 
   return (
-    <div className="grid gap-0" style={{ borderTop: `2px solid ${LINE}` }}>
+    <div className="grid gap-0" style={{ borderTop: `1px solid ${LINE}` }}>
       {steps.map(([title, body], index) => (
-        <div key={title} className="grid gap-2 py-4 sm:grid-cols-[96px_1fr]" style={{ borderBottom: `2px solid ${LINE}` }}>
-          <div className="text-sm font-black uppercase tracking-widest">
+        <div key={title} className="grid gap-2 py-4 sm:grid-cols-[96px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
+          <div className="text-sm font-black">
             <span className="mr-2 font-mono" style={{ color: BLUE }}>{index + 1}</span>
             {title}
           </div>
@@ -287,12 +374,10 @@ function SimpleBenefitList() {
 function HomePage({ session }) {
   return (
     <>
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <section className="field-pattern mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
         <div>
-          <div className="mb-3 text-xs font-black uppercase tracking-widest" style={{ color: BLUE }}>
-            used-book reseller scanner
-          </div>
-          <h1 className="text-4xl font-black leading-none sm:text-6xl">Scan books before you buy</h1>
+          <StatusPill tone="blue">used-book reseller scanner</StatusPill>
+          <h1 className="mt-4 text-4xl font-black leading-none sm:text-6xl">Scan books before you buy</h1>
           <p className="mt-5 max-w-2xl text-lg font-bold leading-relaxed sm:text-xl" style={{ color: MUTED }}>
             Scan a book, see an estimate, save possible buys, and export the list before you spend money.
           </p>
@@ -313,7 +398,7 @@ function HomePage({ session }) {
             <div>Export CSV</div>
           </div>
         </div>
-        <ProductPreview />
+        <FieldScannerVisual />
       </section>
 
       <Band tone="blue" compact>
@@ -365,12 +450,15 @@ function ProductPage({ session }) {
             title="The app is the scan list"
             body="Scan books, save the ones worth checking, and export a simple list. Estimates stay estimates until live marketplace data is connected."
           />
-          <FramedImage
-            src={ASSETS.productScan}
-            alt="ShelfMargin scan screen showing a book barcode scan, estimated profit, ROI, rank, and save-to-list action."
-            aspect="aspect-[4/5]"
-            imgClassName="object-cover object-center"
-          />
+          <div className="grid gap-3">
+            <FieldScannerVisual />
+            <FramedImage
+              src={ASSETS.productScan}
+              alt="ShelfMargin scan screen showing a book barcode scan, estimated profit, ROI, rank, and save-to-list action."
+              aspect="aspect-[16/10]"
+              imgClassName="object-cover object-top"
+            />
+          </div>
         </div>
       </Band>
       <Band>
@@ -380,16 +468,16 @@ function ProductPage({ session }) {
             title="Built around a real sourcing trip"
             body="Detailed marketplace checks still happen before money changes hands."
           />
-          <div style={{ borderTop: `2px solid ${LINE}` }}>
+          <div style={{ borderTop: `1px solid ${LINE}` }}>
             {productSteps.map(([title, body]) => (
-              <div key={title} className="grid gap-2 py-4 sm:grid-cols-[180px_1fr]" style={{ borderBottom: `2px solid ${LINE}` }}>
-                <div className="text-sm font-black uppercase tracking-widest">{title}</div>
+              <div key={title} className="grid gap-2 py-4 sm:grid-cols-[180px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <div className="text-sm font-black">{title}</div>
                 <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="mt-6 px-4 py-3 text-sm font-bold" style={{ borderLeft: `4px solid ${YELLOW}`, color: MUTED }}>
+        <div className="mt-6 px-4 py-3 text-sm font-bold" style={{ borderLeft: `3px solid ${YELLOW}`, color: MUTED }}>
           Estimated values are for sorting the pile. Check the real marketplace before buying.
         </div>
         <div className="mt-6">
@@ -425,10 +513,10 @@ function PricingPage({ session }) {
         title="Simple pricing for book resellers"
         body="Start free while ShelfMargin is in beta. The first paid plan is planned at $15/month once the app proves real sourcing value."
       />
-      <div className="mt-7" style={{ borderTop: `2px solid ${LINE}` }}>
+      <div className="mt-7" style={{ borderTop: `1px solid ${LINE}` }}>
         {plans.map(([name, price, note]) => (
-          <div key={name} className="grid gap-2 py-5 sm:grid-cols-[150px_120px_1fr]" style={{ borderBottom: `2px solid ${LINE}` }}>
-            <div className="text-sm font-black uppercase tracking-widest">{name}</div>
+          <div key={name} className="grid gap-2 py-5 sm:grid-cols-[150px_120px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
+            <div className="text-sm font-black">{name}</div>
             <div className="font-mono text-2xl font-black">{price}</div>
             <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{note}</div>
           </div>
@@ -458,20 +546,20 @@ function PricingPage({ session }) {
             ["Support email", `${SUPPORT_EMAIL} is planned once the domain and inbox are secured.`],
           ].map(([title, body]) => (
             <div key={title} className="grid gap-2 py-3 sm:grid-cols-[150px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
-              <div className="text-sm font-black uppercase tracking-widest">{title}</div>
+              <div className="text-sm font-black">{title}</div>
               <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
             </div>
           ))}
         </div>
       </div>
-      <div className="mt-8" style={{ borderTop: `2px solid ${LINE}` }}>
+      <div className="mt-8" style={{ borderTop: `1px solid ${LINE}` }}>
         <div className="py-4 text-xs font-black uppercase tracking-widest" style={{ color: "#8A6100" }}>
           what makes it worth paying for?
         </div>
         <div className="grid gap-0">
           {paidSignals.map(([title, body]) => (
             <div key={title} className="grid gap-2 py-4 sm:grid-cols-[180px_1fr]" style={{ borderTop: `1px solid ${LINE}` }}>
-              <div className="text-sm font-black uppercase tracking-widest">{title}</div>
+              <div className="text-sm font-black">{title}</div>
               <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
             </div>
           ))}
@@ -485,13 +573,13 @@ function FaqPage() {
   return (
     <Band>
       <SectionTitle eyebrow="faq" title="Quick answers" />
-      <div className="mt-6" style={{ borderTop: `2px solid ${LINE}` }}>
+      <div className="mt-6" style={{ borderTop: `1px solid ${LINE}` }}>
         {faqItems.map(([q, a]) => (
-          <div key={q} className="py-4" style={{ borderBottom: `2px solid ${LINE}` }}>
+          <div key={q} className="py-4" style={{ borderBottom: `1px solid ${LINE}` }}>
             <div className="flex items-start gap-2">
               <HelpCircle size={18} className="mt-0.5 shrink-0" />
               <div>
-                <div className="text-sm font-black uppercase tracking-widest">{q}</div>
+                <div className="text-sm font-black">{q}</div>
                 <div className="mt-2 text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{a}</div>
               </div>
             </div>
@@ -562,7 +650,7 @@ function TermsPage() {
 
 function PublicFooter() {
   return (
-    <footer style={{ borderTop: `2px solid ${LINE}` }}>
+    <footer style={{ borderTop: `1px solid ${LINE}` }}>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs font-black uppercase tracking-widest">
         <span>Scan - check - export</span>
         <div className="flex flex-wrap gap-4">
