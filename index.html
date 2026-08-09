@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#151512" />
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta
+      name="description"
+      content="Scan ISBNs, estimate profit, save possible buys, check books before purchasing, and export a simple used-book sourcing list."
+    />
+    <meta name="robots" content="index,follow" />
+    <meta name="application-name" content="ShelfMargin" />
+    <meta property="og:title" content="ShelfMargin - Used Book Reseller Scanner" />
+    <meta
+      property="og:description"
+      content="Scan books, see estimates, save possible buys, and export a simple list before checking real marketplace prices."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ShelfMargin" />
+    <meta property="og:image" content="/assets/images/social/og-default.webp" />
+    <meta property="og:image:width" content="1731" />
+    <meta property="og:image:height" content="909" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ShelfMargin - Used Book Reseller Scanner" />
+    <meta
+      name="twitter:description"
+      content="Scan ISBNs, estimate profit, save possible buys, and check books before purchasing."
+    />
+    <meta name="twitter:image" content="/assets/images/social/og-default.webp" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ShelfMargin",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Scan ISBNs, estimate profit, save possible buys, check books before purchasing, and export a simple used-book sourcing list.",
+        "offers": {
+          "@type": "AggregateOffer",
+          "lowPrice": "0",
+          "highPrice": "29",
+          "priceCurrency": "USD",
+          "offerCount": "3"
+        }
+      }
+    </script>
+    <title>ShelfMargin - Used Book Reseller Scanner</title>
+    <script>
+      if (window.location.protocol === 'file:') {
+        document.addEventListener('DOMContentLoaded', function () {
+          document.body.innerHTML = [
+            '<main style="min-height:100vh;display:grid;place-items:center;background:#F6F5F0;color:#151512;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:24px;">',
+            '<section style="max-width:640px;border:2px solid #151512;background:#FFFDF6;padding:24px;">',
+            '<h1 style="margin:0 0 12px;font-size:28px;text-transform:uppercase;letter-spacing:.08em;">Run ShelfMargin through Vite</h1>',
+            '<p style="font-size:16px;line-height:1.5;font-weight:700;color:#6B6A63;">This source file was opened directly with file://, so the React app and generated assets cannot load correctly. Use the local dev server URL instead.</p>',
+            '<p style="margin-top:18px;"><a href="http://127.0.0.1:5173/" style="display:inline-block;background:#FFC400;color:#151512;border:2px solid #151512;padding:12px 16px;text-transform:uppercase;font-size:12px;font-weight:900;letter-spacing:.12em;text-decoration:none;">Open Docker preview</a></p>',
+            '</section>',
+            '</main>'
+          ].join('');
+        });
+      }
+    </script>
+    <script>
+      // Kill any stale service worker + caches from earlier preview builds.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (rs) {
+          rs.forEach(function (r) { r.unregister(); });
+        });
+      }
+      if (window.caches) { caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); }
+    </script>
+    <script src="/registerSW.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

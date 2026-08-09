@@ -1,0 +1,7 @@
+services:
+  web:
+    build: .
+    image: shelfmargin-web
+    container_name: shelfmargin-preview
+    ports:
+      - "5173:4173"
