@@ -13,6 +13,7 @@ browser on desktop and mobile before we build a native iOS app.
 4. Live marketplace data after the workflow is proven.
 5. Paid plan only after users can see clear sourcing value.
 6. iOS app after the webapp has a proven workflow and retention.
+7. Apple Watch companion alerts after iPhone scanning is reliable.
 
 ## Webapp First
 
@@ -55,3 +56,5 @@ The iOS app should wait until:
 - Pricing is validated.
 - Users ask for camera scanning, push reminders, or offline sourcing enough to
   justify native development.
+
+See `docs/IOS_WATCH_ROADMAP.md` for the iOS and Apple Watch build sequence.

@@ -27,6 +27,9 @@ real books, business decisions, or external service access.
 - Secure the `shelfmargin.com` domain.
 - Activate the `support@shelfmargin.com` inbox before public launch.
 - Decide when Stripe billing should be connected.
+- Decide whether the first iOS app should prioritize phone camera scanning,
+  Bluetooth scanner input, or both.
+- Confirm Apple Developer Program enrollment before App Store release work.
 
 ## Do Not Put In The Browser App
 
