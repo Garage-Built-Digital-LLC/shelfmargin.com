@@ -1,55 +1,5 @@
 @import "tailwindcss";
 
-@keyframes shelfmargin-scan-sweep {
-  0% {
-    transform: translateY(-12px);
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  88% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(92px);
-    opacity: 0;
-  }
-}
-
-@keyframes shelfmargin-row-in {
-  from {
-    transform: translateY(8px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes shelfmargin-badge-pop {
-  0% {
-    transform: scale(0.92);
-  }
-  60% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes shelfmargin-soft-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 196, 0, 0);
-  }
-  50% {
-    box-shadow: 0 0 0 5px rgba(255, 196, 0, 0.22);
-  }
-}
-
 .field-pattern {
   background-image:
     linear-gradient(90deg, rgba(21, 21, 18, 0.055) 1px, transparent 1px),
@@ -57,34 +7,72 @@
   background-size: 22px 22px;
 }
 
-.scan-beam {
+.pos-grid {
+  background-image:
+    linear-gradient(90deg, rgba(8, 102, 216, 0.05) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(8, 102, 216, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.phone-float {
+  transform: translateZ(0);
+}
+
+.scan-reticle {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 12px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #ffc400, #1e8e4a, transparent);
-  box-shadow: 0 0 14px rgba(255, 196, 0, 0.72);
-  animation: shelfmargin-scan-sweep 2.2s ease-in-out infinite;
+  width: 18px;
+  height: 18px;
+  border-color: #151512;
+}
+
+.scan-reticle-tl {
+  left: 10px;
+  top: 10px;
+  border-left-width: 2px;
+  border-top-width: 2px;
+}
+
+.scan-reticle-tr {
+  right: 10px;
+  top: 10px;
+  border-right-width: 2px;
+  border-top-width: 2px;
+}
+
+.scan-reticle-bl {
+  bottom: 10px;
+  left: 10px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+.scan-reticle-br {
+  bottom: 10px;
+  right: 10px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.barcode-bar {
+  transform-origin: bottom center;
+}
+
+.scan-readout {
+  opacity: 1;
+}
+
+.scan-decision-chip {
+  transform: none;
 }
 
 .scan-result-row {
-  animation: shelfmargin-row-in 0.28s ease-out both;
+  opacity: 1;
 }
 
 .decision-badge {
-  animation: shelfmargin-badge-pop 0.34s ease-out both;
+  transform: none;
 }
 
 .scanner-pulse {
-  animation: shelfmargin-soft-pulse 2.8s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scan-beam,
-  .scan-result-row,
-  .decision-badge,
-  .scanner-pulse {
-    animation: none;
-  }
+  box-shadow: none;
 }

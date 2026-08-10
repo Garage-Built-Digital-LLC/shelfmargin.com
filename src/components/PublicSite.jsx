@@ -16,18 +16,18 @@ import {
 import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath, publicRouteMeta } from "../lib/siteRoutes.js";
 
-const BG = "#F6F5F0";
-const INK = "#151512";
-const YELLOW = "#FFC400";
-const GREEN = "#1E8E4A";
-const BLUE = "#1F5FAD";
-const RED = "#C6301E";
-const MUTED = "#6B6A63";
-const LINE = "#151512";
-const AMBER_BG = "#FDF0D2";
-const BLUE_BG = "#E3ECF7";
-const GREEN_BG = "#E4F2E6";
-const RED_BG = "#F7E4E0";
+const BG = "#F7FAFC";
+const INK = "#102033";
+const YELLOW = "#FFC526";
+const GREEN = "#128548";
+const BLUE = "#0866D8";
+const RED = "#D83A3A";
+const MUTED = "#64748B";
+const LINE = "#D7E0EA";
+const AMBER_BG = "#FFF7D8";
+const BLUE_BG = "#EAF3FF";
+const GREEN_BG = "#E9F8EF";
+const RED_BG = "#FDECEC";
 const SUPPORT_EMAIL = "support@shelfmargin.com";
 
 const ASSETS = {
@@ -58,7 +58,7 @@ function StripeBar() {
   return (
     <div
       className="h-1 w-full"
-      style={{ backgroundColor: YELLOW, borderBottom: `1px solid ${LINE}` }}
+      style={{ backgroundColor: BLUE, borderBottom: `1px solid ${LINE}` }}
     />
   );
 }
@@ -73,8 +73,8 @@ function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) 
   return (
     <a
       href={href}
-      className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-widest"
-      style={{ ...styles[tone], border: `1px solid ${LINE}` }}
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-3 text-xs font-black uppercase tracking-widest"
+      style={{ ...styles[tone], border: `1px solid ${tone === "ghost" ? LINE : styles[tone].backgroundColor}` }}
     >
       {children}
       {Icon && <Icon size={16} />}
@@ -84,7 +84,7 @@ function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) 
 
 function PublicNav({ route, session, onSignOut }) {
   return (
-    <header className="sticky top-0 z-20" style={{ backgroundColor: BG, borderBottom: `1px solid ${LINE}` }}>
+    <header className="sticky top-0 z-20" style={{ backgroundColor: "#FFFFFF", borderBottom: `1px solid ${LINE}` }}>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <a href={publicPath("home")} className="flex min-w-0 items-center gap-2">
           <img src={ASSETS.brandMark} alt="" className="h-8 w-8 shrink-0 object-contain" />
@@ -100,15 +100,15 @@ function PublicNav({ route, session, onSignOut }) {
         {session ? (
           <details className="relative shrink-0">
             <summary
-              className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
-              style={{ backgroundColor: BLUE, color: "#FFF", border: `1px solid ${LINE}` }}
+              className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest"
+              style={{ backgroundColor: BLUE, color: "#FFF", border: `1px solid ${BLUE}` }}
             >
               Account
               <ChevronDownIcon />
             </summary>
             <div
-              className="absolute right-0 mt-2 w-72 p-3 text-xs font-bold normal-case shadow-[4px_4px_0_#151512]"
-              style={{ backgroundColor: "#FFFDF6", border: `1px solid ${LINE}`, color: INK }}
+              className="absolute right-0 mt-2 w-72 rounded-lg p-3 text-xs font-bold normal-case shadow-xl"
+              style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}`, color: INK }}
             >
               <div className="truncate font-mono" style={{ color: MUTED }}>{session.user?.email}</div>
               <div className="mt-3 grid gap-2">
@@ -143,8 +143,8 @@ function PublicNav({ route, session, onSignOut }) {
         ) : (
           <a
             href={publicPath("login")}
-            className="shrink-0 px-3 py-2 text-xs font-black uppercase tracking-widest"
-            style={{ backgroundColor: INK, color: "#FFF", border: `1px solid ${LINE}` }}
+            className="shrink-0 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest"
+            style={{ backgroundColor: INK, color: "#FFF", border: `1px solid ${INK}` }}
           >
             Sign in
           </a>
@@ -179,7 +179,7 @@ function ChevronDownIcon() {
 
 function FramedImage({ src, alt, aspect = "aspect-[4/3]", className = "", imgClassName = "object-cover" }) {
   return (
-    <div className={`overflow-hidden ${aspect} ${className}`} style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFDF6" }}>
+    <div className={`overflow-hidden rounded-lg ${aspect} ${className}`} style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
       <img src={src} alt={alt} className={`h-full w-full ${imgClassName}`} loading="lazy" />
     </div>
   );
@@ -223,7 +223,7 @@ function StatusPill({ children, tone = "amber" }) {
   };
   return (
     <span
-      className="inline-flex items-center gap-2 px-2.5 py-1 text-[11px] font-black uppercase tracking-widest"
+      className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-widest"
       style={{ border: `1px solid ${styles[tone].borderColor}`, ...styles[tone] }}
     >
       {children}
@@ -258,45 +258,69 @@ function ProductPreview() {
 
 function FieldScannerVisual() {
   const rows = [
-    ["BUY", "Clean Code", "+$11.42", GREEN, GREEN_BG],
-    ["CHECK", "Calculus Early Transcendentals", "+$3.20", "#8A6100", AMBER_BG],
+    ["BUY", "Atomic Habits", "+$11.35", GREEN, GREEN_BG],
+    ["CHECK", "The 5 AM Club", "+$3.80", "#8A6100", AMBER_BG],
     ["PASS", "Old travel guide", "-$0.45", RED, RED_BG],
   ];
 
   return (
     <div
-      className="field-pattern relative overflow-hidden p-3 sm:p-4"
-      style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}
+      className="pos-grid relative overflow-hidden rounded-lg p-3 sm:p-4"
+      style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 18px 50px rgba(16, 32, 51, 0.08)" }}
       aria-label="Field scanner workflow preview"
     >
       <div className="absolute right-3 top-3 hidden text-[10px] font-black uppercase tracking-widest sm:block" style={{ color: MUTED }}>
-        thrift shelf mode
+        clean retail POS
       </div>
-      <div className="grid gap-4 lg:grid-cols-[0.62fr_1fr] lg:items-center">
-        <div className="mx-auto w-full max-w-[245px]">
-          <div className="scanner-pulse relative overflow-hidden bg-[#151512] p-2 text-white" style={{ border: `2px solid ${LINE}` }}>
-            <div className="flex items-center justify-between px-2 pb-2 text-[10px] font-black uppercase tracking-widest">
-              <span>Shelf Margin</span>
-              <Scan size={14} />
+      <div className="grid gap-4 lg:grid-cols-[0.58fr_1fr] lg:items-center">
+        <div className="mx-auto w-full max-w-[260px]">
+          <div className="phone-float relative overflow-hidden rounded-[24px] bg-white p-3" style={{ border: "6px solid #102033", boxShadow: "0 16px 34px rgba(16, 32, 51, 0.18)" }}>
+            <div className="mb-3 flex items-center justify-between text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>
+              <span>9:41</span>
+              <span>Scan</span>
             </div>
-            <div className="relative h-28 overflow-hidden bg-white p-3" style={{ border: `1px solid ${LINE}` }}>
-              <div className="scan-beam" />
-              <div className="flex h-full items-end justify-center gap-1">
-                {[8, 18, 10, 28, 14, 22, 9, 30, 12, 20, 26, 11, 17].map((height, index) => (
-                  <span key={index} className="w-1 bg-[#151512]" style={{ height }} />
-                ))}
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-black">Shelf Margin</div>
+              <Scan size={16} color={BLUE} />
+            </div>
+            <div className="mt-4 rounded-lg p-4 text-center" style={{ border: `1px dashed ${MUTED}`, backgroundColor: "#F8FBFF" }}>
+              <div className="relative mx-auto h-20 max-w-[180px] overflow-hidden">
+                <div className="flex h-full items-center justify-center gap-1">
+                  {[20, 38, 24, 44, 30, 52, 18, 48, 32, 41, 27, 36].map((height, index) => (
+                    <span
+                      key={index}
+                      className="barcode-bar w-1 bg-[#128548]"
+                      style={{ height }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="mt-2 text-xs font-black">Tap to scan ISBN</div>
+              <div className="mt-1 text-[10px] font-bold" style={{ color: MUTED }}>or type/paste here</div>
+            </div>
+            <div className="mt-4 rounded-lg p-3" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+              <div className="text-sm font-black">Atomic Habits</div>
+              <div className="mt-1 text-xs font-bold" style={{ color: MUTED }}>James Clear · catalog lookup</div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Est. sell</div>
+                  <div className="font-mono text-lg font-black">$14.75</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Cost</div>
+                  <div className="font-mono text-lg font-black">$2.00</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Est. net</div>
+                  <div className="font-mono text-lg font-black" style={{ color: GREEN }}>$11.35</div>
+                </div>
               </div>
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] font-black uppercase tracking-widest">
-              <span style={{ backgroundColor: GREEN }}>buy</span>
-              <span style={{ backgroundColor: YELLOW, color: INK }}>check</span>
-              <span style={{ backgroundColor: RED }}>pass</span>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-widest">
+              <span className="scan-decision-chip rounded-lg py-3 text-white" style={{ backgroundColor: GREEN }}>buy</span>
+              <span className="scan-decision-chip rounded-lg py-3" style={{ backgroundColor: YELLOW, color: INK }}>check</span>
+              <span className="scan-decision-chip rounded-lg py-3 text-white" style={{ backgroundColor: RED }}>pass</span>
             </div>
-          </div>
-          <div className="mt-3 grid grid-cols-5 gap-1" aria-hidden="true">
-            {["#FDF0D2", "#E4F2E6", "#E3ECF7", "#F7E4E0", "#FFFDF6"].map((color, index) => (
-              <div key={color} className="h-10" style={{ backgroundColor: color, border: `1px solid ${LINE}`, transform: `translateY(${index % 2 ? 6 : 0}px)` }} />
-            ))}
           </div>
         </div>
 
@@ -305,10 +329,10 @@ function FieldScannerVisual() {
             <StatusPill tone="green">Live catalog lookup</StatusPill>
             <StatusPill>Prices estimated</StatusPill>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="overflow-hidden rounded-lg" style={{ border: `1px solid ${LINE}` }}>
             {rows.map(([status, title, profit, color, bg]) => (
-              <div key={title} className="scan-result-row grid grid-cols-[78px_1fr_auto] items-center gap-3 px-3 py-3" style={{ border: `1px solid ${LINE}`, backgroundColor: bg }}>
-                <span className="decision-badge px-2 py-2 text-center text-xs font-black uppercase text-white" style={{ backgroundColor: color }}>
+              <div key={title} className="scan-result-row grid grid-cols-[84px_1fr_auto] items-center gap-3 px-3 py-3" style={{ borderBottom: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+                <span className="decision-badge rounded-md px-2 py-2 text-center text-xs font-black uppercase text-white" style={{ backgroundColor: color }}>
                   {status}
                 </span>
                 <span className="min-w-0 truncate text-sm font-black">{title}</span>
@@ -374,7 +398,7 @@ function SimpleBenefitList() {
 function HomePage({ session }) {
   return (
     <>
-      <section className="field-pattern mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+      <section className="pos-grid mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
         <div>
           <StatusPill tone="blue">used-book reseller scanner</StatusPill>
           <h1 className="mt-4 text-4xl font-black leading-none sm:text-6xl">Scan books before you buy</h1>

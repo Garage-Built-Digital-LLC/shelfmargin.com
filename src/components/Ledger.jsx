@@ -26,19 +26,19 @@ import { publicPath } from "../lib/siteRoutes.js";
 import { supabaseReady } from "../lib/supabase.js";
 import { cleanScan, normalizeToIsbn13 } from "../lib/isbn.js";
 
-// palette — hi-vis / shop-floor label aesthetic
-const BG = "#F6F5F0";
-const INK = "#151512";
-const YELLOW = "#FFC400";
-const GREEN = "#1E8E4A";
-const GREEN_BG = "#E4F2E6";
-const RED = "#C6301E";
-const RED_BG = "#F7E4E0";
-const AMBER_BG = "#FDF0D2";
-const LINE = "#151512";
-const MUTED = "#6B6A63";
-const BLUE = "#1F5FAD";
-const BLUE_BG = "#E3ECF7";
+// palette - clean retail POS aesthetic
+const BG = "#F7FAFC";
+const INK = "#102033";
+const YELLOW = "#FFC526";
+const GREEN = "#128548";
+const GREEN_BG = "#E9F8EF";
+const RED = "#D83A3A";
+const RED_BG = "#FDECEC";
+const AMBER_BG = "#FFF7D8";
+const LINE = "#D7E0EA";
+const MUTED = "#64748B";
+const BLUE = "#0866D8";
+const BLUE_BG = "#EAF3FF";
 const EMPTY_SCAN_IMAGE = "/assets/images/product/empty-state-scan.webp";
 
 function dbToDisplayCondition(c) {
@@ -147,17 +147,18 @@ function ShellButton({ active, icon: Icon, label, detail, href, onClick }) {
     <button
       onClick={onClick}
       data-href={href}
-      className="px-3 py-2 text-left flex items-center gap-2 min-w-0"
+      className="min-w-0 rounded-lg px-3 py-2 text-left flex items-center gap-2"
       style={{
-        backgroundColor: active ? INK : "transparent",
-        color: active ? BG : INK,
-        border: `2px solid ${LINE}`,
+        backgroundColor: active ? BLUE : "#FFFFFF",
+        color: active ? "#FFFFFF" : INK,
+        border: `1px solid ${active ? BLUE : LINE}`,
+        boxShadow: active ? "0 6px 18px rgba(8, 102, 216, 0.18)" : "0 1px 2px rgba(16, 32, 51, 0.04)",
       }}
     >
       <Icon size={16} className="shrink-0" />
       <span className="min-w-0">
         <span className="block text-xs font-black uppercase tracking-widest truncate">{label}</span>
-        {detail && <span className="block text-[10px] font-mono truncate" style={{ color: active ? BG : MUTED }}>{detail}</span>}
+        {detail && <span className="block text-[10px] font-mono truncate" style={{ color: active ? "#DCEBFF" : MUTED }}>{detail}</span>}
       </span>
     </button>
   );
@@ -175,14 +176,14 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
   return (
     <details className="relative shrink-0">
       <summary
-        className="flex cursor-pointer list-none items-center gap-1 px-2 py-1 text-xs font-black uppercase tracking-widest"
-        style={{ color: INK, border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}
+        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-1 text-xs font-black uppercase tracking-widest"
+        style={{ color: INK, border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}
       >
         Account <ChevronDown size={13} />
       </summary>
       <div
-        className="absolute right-0 z-30 mt-2 w-72 p-3 text-xs shadow-[4px_4px_0_#151512]"
-        style={{ backgroundColor: "#FFFDF6", border: `2px solid ${LINE}`, color: INK }}
+        className="absolute right-0 z-30 mt-2 w-72 rounded-lg p-3 text-xs shadow-xl"
+        style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}`, color: INK }}
       >
         <div className="truncate font-mono font-bold normal-case" style={{ color: MUTED }}>{session?.user?.email}</div>
         {profileRole === "admin" && (
@@ -241,10 +242,10 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
 }
 
 function MetricBox({ label, value, tone = "plain" }) {
-  const toneBg = tone === "buy" ? GREEN_BG : tone === "warn" ? AMBER_BG : tone === "action" ? BLUE_BG : "transparent";
+  const toneBg = tone === "buy" ? GREEN_BG : tone === "warn" ? AMBER_BG : tone === "action" ? BLUE_BG : "#FFFFFF";
   const toneColor = tone === "buy" ? GREEN : tone === "warn" ? "#8A6100" : tone === "action" ? BLUE : INK;
   return (
-    <div className="px-3 py-2" style={{ backgroundColor: toneBg, border: `2px solid ${LINE}` }}>
+    <div className="rounded-lg px-3 py-2" style={{ backgroundColor: toneBg, border: `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16, 32, 51, 0.04)" }}>
       <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>{label}</div>
       <div className="text-2xl font-black font-mono" style={{ color: toneColor }}>{value}</div>
     </div>
@@ -297,13 +298,13 @@ function PageHeader({ title, subtitle, action }) {
 
 function EmptyState({ icon: Icon, imageSrc, imageAlt = "", title, body, action }) {
   return (
-    <div className="px-4 py-10 text-center" style={{ border: `2px solid ${LINE}` }}>
+    <div className="rounded-lg px-4 py-10 text-center" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
       {imageSrc ? (
         <img
           src={imageSrc}
           alt={imageAlt}
-          className="mx-auto mb-4 aspect-[4/3] w-full max-w-xs object-cover object-bottom"
-          style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}
+          className="mx-auto mb-4 aspect-[4/3] w-full max-w-xs rounded-lg object-cover object-bottom"
+          style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}
           loading="lazy"
         />
       ) : Icon && <Icon size={28} className="mx-auto mb-3" color={MUTED} />}
@@ -888,7 +889,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   return (
     <div className="min-h-screen w-full" style={{ backgroundColor: BG, color: INK }}>
       <StripeBar />
-      <div className="max-w-2xl mx-auto px-3 py-4">
+      <div className="max-w-3xl mx-auto px-3 py-4">
         <div className="flex items-center justify-between mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>
           <span className="flex items-center gap-2 min-w-0">
             <span className="truncate normal-case font-mono">{session?.user?.email}</span>
@@ -910,16 +911,16 @@ function Ledger({ session, onSignOut, demoMode = false }) {
 
         <SyncStatus demoMode={demoMode} verificationReady={verificationReady} loading={loading} />
 
-        <div className="flex items-stretch justify-between mb-3" style={{ border: `2px solid ${LINE}` }}>
+        <div className="mb-3 grid grid-cols-3 overflow-hidden rounded-lg" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(16, 32, 51, 0.04)" }}>
           <div className="px-4 py-3">
             <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>scanned</div>
             <div className="text-2xl font-black font-mono">{totalUnits}</div>
           </div>
-          <div className="px-4 py-3 border-l-2" style={{ borderColor: LINE, backgroundColor: YELLOW }}>
+          <div className="px-4 py-3 border-l" style={{ borderColor: LINE, backgroundColor: BLUE_BG }}>
             <div className="text-xs font-bold uppercase tracking-widest">est. profit</div>
-            <div className="text-2xl font-black font-mono">${totalProfit.toFixed(2)}</div>
+            <div className="text-2xl font-black font-mono" style={{ color: BLUE }}>${totalProfit.toFixed(2)}</div>
           </div>
-          <div className="px-4 py-3 border-l-2 text-right flex flex-col justify-between items-end" style={{ borderColor: LINE }}>
+          <div className="px-4 py-3 border-l text-right flex flex-col justify-between items-end" style={{ borderColor: LINE }}>
             <button onClick={() => { const v = !soundOn; setSoundOn(v); persistProfile({ sound_enabled: v }); }} aria-label="toggle sound">
               {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} color={MUTED} />}
             </button>
@@ -930,7 +931,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
           </div>
         </div>
 
-        <div className="sticky top-0 z-10 -mx-3 px-3 pt-2 pb-3 mb-3" style={{ backgroundColor: BG, borderBottom: `2px solid ${LINE}` }}>
+        <div className="sticky top-0 z-10 -mx-3 px-3 pt-2 pb-3 mb-3" style={{ backgroundColor: BG, borderBottom: `1px solid ${LINE}` }}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <ShellButton active={view === "dashboard"} icon={LayoutDashboard} label="Dashboard" detail={`${totalUnits} books`} href={hashForSection("dashboard")} onClick={() => navigate("dashboard")} />
             <ShellButton active={view === "scan"} icon={Scan} label="Scan" detail="barcode" href={hashForSection("scan")} onClick={() => navigate("scan")} />
@@ -1141,16 +1142,21 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               subtitle="Scan book barcodes or type ISBNs."
             />
 
-            <div className="mb-3 px-3 py-2 text-xs font-black uppercase tracking-widest"
-              style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: `2px solid #B8860B` }}>
-              {LOOKUP_STATUS.mode === "live-catalog" ? "live catalog - prices still estimates" : "sample catalog - estimates only"}
+            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest"
+              style={{ backgroundColor: "#FFFFFF", color: "#8A6100", border: `1px solid ${LINE}` }}>
+              <span className="rounded-full px-2 py-1" style={{ backgroundColor: AMBER_BG, border: "1px solid #E2B203" }}>
+                {LOOKUP_STATUS.mode === "live-catalog" ? "catalog lookup" : "sample catalog"}
+              </span>
+              <span style={{ color: MUTED }}>prices still estimates</span>
             </div>
 
             <form onSubmit={addEntry} className="mb-3">
-              <div className="flex items-center gap-2 px-3 py-3" style={{ border: `2px solid ${LINE}` }}>
-                <Scan size={22} color={INK} />
+              <div className="scanner-pulse relative overflow-hidden flex items-center gap-3 rounded-lg px-4 py-5" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 10px 30px rgba(8, 102, 216, 0.08)" }}>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: BLUE_BG, color: BLUE }}>
+                  <Scan size={22} />
+                </div>
                 <input ref={inputRef} autoFocus value={isbn} onChange={(e) => setIsbn(e.target.value)}
-                  placeholder="SCAN BARCODE..." className="flex-1 bg-transparent outline-none text-lg font-mono font-bold tracking-wide"
+                  placeholder="Scan ISBN or type barcode" className="flex-1 bg-transparent outline-none text-lg font-mono font-bold tracking-wide"
                   style={{ color: INK }} />
               </div>
             </form>
@@ -1164,18 +1170,18 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               </a>
             </div>
 
-            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4 text-xs font-bold uppercase tracking-widest">
-              <div className="flex items-center gap-2">
+            <div className="mb-4 grid gap-2 text-xs font-bold uppercase tracking-widest sm:grid-cols-2">
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}` }}>
                 <span style={{ color: MUTED }}>cost/bk</span><span>$</span>
                 <input type="number" step="0.25" value={cost}
                   onChange={(e) => { const v = parseFloat(e.target.value) || 0; setCost(v); persistProfile({ cost_per_book: v }); }}
-                  className="w-14 bg-transparent border-b-2 outline-none font-mono normal-case" style={{ borderColor: LINE, color: INK }} />
+                  className="w-16 bg-transparent border-b outline-none font-mono normal-case" style={{ borderColor: LINE, color: INK }} />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}` }}>
                 <span style={{ color: MUTED }}>buy min</span><span>$</span>
                 <input type="number" step="0.5" value={threshold}
                   onChange={(e) => { const v = parseFloat(e.target.value) || 0; setThreshold(v); persistProfile({ buy_threshold: v }); }}
-                  className="w-14 bg-transparent border-b-2 outline-none font-mono normal-case" style={{ borderColor: GREEN, color: GREEN }} />
+                  className="w-16 bg-transparent border-b outline-none font-mono normal-case" style={{ borderColor: GREEN, color: GREEN }} />
               </div>
             </div>
 
@@ -1204,15 +1210,15 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 const statusLabel = en.restricted ? "check" : meets ? "buy" : "pass";
                 const sparkColor = en.velocity.trend === "up" ? GREEN : en.velocity.trend === "down" ? RED : MUTED;
                 return (
-                  <div key={en.id} style={{ backgroundColor: statusBg, border: `2px solid ${LINE}` }}>
-                    <div className="w-full flex items-center gap-2 px-3 py-2">
-                      <button onClick={() => setOpenId(open ? null : en.id)} className="flex items-center gap-3 flex-1 text-left min-w-0">
-                        <span className="text-xs font-black uppercase px-2 py-1 shrink-0 flex items-center gap-1" style={{ color: "#FFF", backgroundColor: statusColor }}>
+                  <div key={en.id} className="scan-result-row overflow-hidden rounded-lg" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16, 32, 51, 0.04)" }}>
+                    <div className="w-full flex items-stretch gap-2 px-2 py-2 sm:px-3">
+                      <button onClick={() => setOpenId(open ? null : en.id)} className="grid flex-1 grid-cols-[82px_1fr_auto] items-center gap-3 text-left min-w-0 sm:grid-cols-[96px_1fr_auto]">
+                        <span className="decision-badge flex min-h-14 shrink-0 items-center justify-center gap-1 rounded-lg px-2 text-sm font-black uppercase tracking-widest text-white sm:min-h-16 sm:text-base" style={{ backgroundColor: statusColor }}>
                           {en.restricted && <Lock size={11} />}
                           {statusLabel}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold truncate">
+                          <div className="text-base font-black truncate">
                             {en.title}
                             {en.count > 1 && <span className="ml-1 font-mono" style={{ color: MUTED }}>×{en.count}</span>}
                           </div>
@@ -1233,7 +1239,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                             </span>
                           </div>
                         </div>
-                        <span className="text-base font-black font-mono shrink-0" style={{ color: statusColor }}>
+                        <span className="rounded-lg px-2 py-1 text-lg font-black font-mono shrink-0 text-right sm:text-xl" style={{ color: statusColor, backgroundColor: statusBg }}>
                           {bestNet >= 0 ? "+" : ""}${(bestNet * en.count).toFixed(2)}
                         </span>
                       </button>
@@ -1248,7 +1254,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                       </button>
                     </div>
                     {open && (
-                      <div className="px-4 pb-3 text-xs font-mono" style={{ borderTop: `2px solid ${LINE}` }}>
+                      <div className="px-4 pb-3 text-xs font-mono" style={{ borderTop: `1px dashed ${LINE}` }}>
                         <div className="pt-3 mb-3 text-sm font-bold normal-case" style={{ color: MUTED }}>
                           {reasonForEntry(en, bestNet, threshold)}
                         </div>
