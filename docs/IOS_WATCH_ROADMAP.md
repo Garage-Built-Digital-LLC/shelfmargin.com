@@ -7,6 +7,8 @@ exports, pricing, and live data value are proven with real book resellers.
 
 The iOS app is a second product surface, not the first milestone. The Apple
 Watch experience is a companion to the iPhone app, not a standalone scanner.
+Apple Watch alerts should be treated as a future paid feature, most likely in
+the Pro plan once native iOS is ready.
 
 ## Why Wait
 
@@ -24,7 +26,8 @@ Watch experience is a companion to the iPhone app, not a standalone scanner.
 4. Validate paid conversion on the web.
 5. Build a PWA-quality mobile web experience.
 6. Start the native iOS app when repeat usage is proven.
-7. Add Apple Watch companion alerts after iPhone scanning is reliable.
+7. Add Apple Watch companion alerts as a paid Pro feature after iPhone scanning
+   is reliable.
 
 ## iOS App Scope
 
@@ -57,6 +60,19 @@ Expected flow:
 
 The watch should not be responsible for scanning, deep research, account setup,
 billing, exports, or admin tools.
+
+## Pricing Position
+
+Apple Watch alerts are not part of the free beta or first Starter plan. They
+should be reserved for a paid tier because they only become valuable after the
+user is scanning enough books that phone-checking slows them down.
+
+Current pricing position:
+
+- Free beta: scanner workflow, scan history, buy list, exports, and field tests.
+- Starter: planned $15/month solo reseller plan after live data is useful.
+- Pro: planned $29/month plan for higher-volume workflows, including future
+  Apple Watch alerts after the iOS app exists.
 
 ## Watch Result Design
 

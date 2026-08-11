@@ -42,6 +42,8 @@ browser on desktop and mobile before we build a native iOS app.
 - Track real scans, checked books, buy-list saves, exports, and repeat use.
 - Use a simple pricing ladder: free beta, $15/month Starter, and $29/month Pro
   after live data is useful.
+- Treat Apple Watch alerts as a future paid Pro feature, not a free beta
+  promise.
 - Do not add a team plan yet; keep the offer focused on solo book resellers.
 - Avoid building expensive native apps, complex dashboards, or marketplace
   automation before the core sourcing workflow pays for itself.

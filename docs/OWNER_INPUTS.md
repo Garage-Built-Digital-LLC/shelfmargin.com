@@ -10,6 +10,7 @@ real books, business decisions, or external service access.
 - Confirmed that account is email-confirmed and has the `admin` role.
 - Chose planned public support email: `support@shelfmargin.com`.
 - Chose initial pricing direction: free beta, $15/month Starter, $29/month Pro after live data is ready, and no team plan yet.
+- Chose Apple Watch alerts as a future paid feature.
 - Confirmed real books are available for field testing.
 
 ## Needed Now
