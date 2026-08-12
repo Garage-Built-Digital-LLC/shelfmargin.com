@@ -134,6 +134,9 @@ Last checked: August 11, 2026
 - Production/provider verification: Stripe test-mode checkout and webhook events.
 - Rollback risk: high until webhook trust is proven.
 
+Status: planned in `docs/STRIPE_BILLING_PLAN.md`; no Stripe code or provider
+changes have been implemented.
+
 ### Slice 5: Analytics And Error Visibility
 
 - Files likely touched: `src/lib/analytics.js`, `src/lib/monitoring.js`, env docs.

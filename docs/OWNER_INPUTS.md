@@ -28,6 +28,10 @@ real books, business decisions, or external service access.
 - Secure the `shelfmargin.com` domain.
 - Activate the `support@shelfmargin.com` inbox before public launch.
 - Decide when Stripe billing should be connected.
+- Create or confirm Stripe test-mode products and recurring monthly prices for
+  Starter and Pro before billing implementation.
+- Provide Stripe webhook signing secret only through server-side environment
+  variables after a backend boundary exists.
 - Decide whether the first iOS app should prioritize phone camera scanning,
   Bluetooth scanner input, or both.
 - Confirm Apple Developer Program enrollment before App Store release work.
