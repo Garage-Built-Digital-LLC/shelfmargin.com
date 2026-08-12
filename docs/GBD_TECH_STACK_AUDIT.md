@@ -38,10 +38,10 @@ Last checked: August 11, 2026
 10. Current analytics/error/security tooling: Mixed.
    - PostHog: Missing.
    - Sentry: Missing.
-   - GitHub security workflows: Missing in repo.
+   - GitHub security workflows: Basic CI/Gitleaks workflow exists in repo.
    - Semgrep: Missing locally and no repo workflow found.
    - Gitleaks: Installed locally and found JWT-shaped Supabase values in `.env.local` and `dist`.
-   - `npm audit`: Found one high-severity advisory in `nanoid`.
+   - `npm audit`: Verified locally with zero vulnerabilities after lockfile update.
 11. Current launch readiness gaps: Verified locally and planned only.
    - No production host path.
    - No Stripe billing or webhook trust.
@@ -91,7 +91,7 @@ Last checked: August 11, 2026
 5. Add Resend only after the domain and sending identity are ready.
 6. Add PostHog before beta traffic or serious onboarding experiments.
 7. Add Sentry before public launch.
-8. Add Gitleaks and Semgrep launch gates after approving remediation.
+8. Add Semgrep launch gate after approving app-security scanning.
 9. Improve in-app onboarding based on field-test friction.
 10. Reassess Next.js, TypeScript, Snyk, Clerk, and onboarding SaaS only after usage data exists.
 
@@ -108,13 +108,16 @@ Last checked: August 11, 2026
 
 ### Slice 2: Security Scan Remediation
 
-- Files likely touched: `.dockerignore`, `.gitleaks.toml` or scan config, `package-lock.json`, `package.json`.
+- Files likely touched: `.dockerignore`, `.gitleaks.toml` or scan config, `package-lock.json`, `package.json`, `.github/workflows/ci.yml`.
 - Provider changes required: none.
 - Local verification command: `gitleaks detect --source . --no-git --redact --verbose && npm audit --audit-level=moderate && npm test && npm run build`.
 - Browser verification path: `/`.
 - Production/provider verification: none.
 - Rollback risk: medium because dependency updates can affect builds.
 - Approval required before implementation.
+
+Status: Docker env exclusion, dependency audit fix, and GitHub CI/Gitleaks
+workflow have been added. Semgrep is still missing.
 
 ### Slice 3: Supabase Hosted Verification
 
@@ -148,8 +151,8 @@ changes have been implemented.
 
 ## Launch Blockers
 
-- Local Gitleaks currently flags `.env.local` and generated `dist` output.
-- `npm audit` currently reports one high-severity `nanoid` advisory.
+- GitHub CI has not run in provider yet.
+- Semgrep is not configured.
 - No production host is configured.
 - Stripe is not implemented.
 - Resend is not implemented.
