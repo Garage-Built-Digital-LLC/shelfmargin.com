@@ -12,6 +12,10 @@ import {
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const distDir = join(__dirname, "dist");
 const port = Number(process.env.PORT || 4173);
+const catalogTimeoutMs = Number(process.env.CATALOG_TIMEOUT_MS || 6500);
+const catalogRateLimitWindowMs = Number(process.env.CATALOG_RATE_LIMIT_WINDOW_MS || 60_000);
+const catalogRateLimitMax = Number(process.env.CATALOG_RATE_LIMIT_MAX || 60);
+const catalogRateBuckets = new Map();
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -25,11 +29,42 @@ const contentTypes = {
   ".ico": "image/x-icon",
 };
 
+const securityHeaders = {
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "content-security-policy": [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://openlibrary.org https://www.googleapis.com",
+    "manifest-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+  ].join("; "),
+};
+
+function responseHeaders(headers = {}) {
+  return { ...securityHeaders, ...headers };
+}
+
 async function fetchJson(url) {
-  const res = await fetch(url, { headers: { accept: "application/json" } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`catalog source failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), catalogTimeoutMs);
+  try {
+    const res = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`catalog source failed: ${res.status}`);
+    return res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function lookupCatalog(isbn) {
@@ -62,11 +97,41 @@ async function lookupCatalog(isbn) {
 }
 
 function sendJson(res, status, data) {
-  res.writeHead(status, {
+  res.writeHead(status, responseHeaders({
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
-  });
+  }));
   res.end(JSON.stringify(data));
+}
+
+function clientKey(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.socket.remoteAddress || "unknown";
+}
+
+function allowCatalogRequest(req) {
+  const now = Date.now();
+  const key = clientKey(req);
+  const existing = catalogRateBuckets.get(key);
+
+  if (!existing || existing.resetAt <= now) {
+    catalogRateBuckets.set(key, { count: 1, resetAt: now + catalogRateLimitWindowMs });
+    return true;
+  }
+
+  if (existing.count >= catalogRateLimitMax) return false;
+  existing.count += 1;
+
+  if (catalogRateBuckets.size > 500) {
+    for (const [bucketKey, bucket] of catalogRateBuckets.entries()) {
+      if (bucket.resetAt <= now) catalogRateBuckets.delete(bucketKey);
+    }
+  }
+
+  return true;
 }
 
 async function serveStatic(req, res) {
@@ -74,10 +139,18 @@ async function serveStatic(req, res) {
   const rawPath = decodeURIComponent(url.pathname);
   const safePath = normalize(rawPath).replace(/^(\.\.[/\\])+/, "");
   const requested = safePath === "/" ? "/index.html" : safePath;
+  const parts = requested.split("/").filter(Boolean);
+
+  if (parts.some((part) => part.startsWith("."))) {
+    res.writeHead(404, responseHeaders({ "content-type": "text/plain; charset=utf-8" }));
+    res.end("Not found");
+    return;
+  }
+
   const filePath = join(distDir, requested);
 
-  if (!filePath.startsWith(distDir)) {
-    res.writeHead(403);
+  if (!filePath.startsWith(`${distDir}/`) && filePath !== distDir) {
+    res.writeHead(403, responseHeaders({ "content-type": "text/plain; charset=utf-8" }));
     res.end("Forbidden");
     return;
   }
@@ -85,38 +158,57 @@ async function serveStatic(req, res) {
   try {
     const body = await readFile(filePath);
     const type = contentTypes[extname(filePath)] || "application/octet-stream";
-    res.writeHead(200, { "content-type": type, "cache-control": "no-cache" });
+    res.writeHead(200, responseHeaders({ "content-type": type, "cache-control": "no-cache" }));
     res.end(body);
   } catch (err) {
     const body = await readFile(join(distDir, "index.html"));
-    res.writeHead(200, { "content-type": contentTypes[".html"], "cache-control": "no-cache" });
+    res.writeHead(200, responseHeaders({
+      "content-type": contentTypes[".html"],
+      "cache-control": "no-cache",
+    }));
     res.end(body);
   }
 }
 
-createServer(async (req, res) => {
-  try {
-    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-    if (url.pathname === "/api/catalog") {
-      const isbn = normalizeToIsbn13(url.searchParams.get("isbn"));
-      if (!isbn) {
-        sendJson(res, 400, { error: "valid ISBN required" });
+export function createShelfMarginServer() {
+  return createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+      if (url.pathname === "/api/catalog") {
+        if (!allowCatalogRequest(req)) {
+          res.writeHead(429, responseHeaders({
+            "content-type": "application/json; charset=utf-8",
+            "cache-control": "no-store",
+            "retry-after": String(Math.ceil(catalogRateLimitWindowMs / 1000)),
+          }));
+          res.end(JSON.stringify({ error: "rate limit exceeded" }));
+          return;
+        }
+
+        const isbn = normalizeToIsbn13(url.searchParams.get("isbn"));
+        if (!isbn) {
+          sendJson(res, 400, { error: "valid ISBN required" });
+          return;
+        }
+
+        const hit = await lookupCatalog(isbn);
+        if (!hit) {
+          sendJson(res, 404, { error: "catalog match not found" });
+          return;
+        }
+        sendJson(res, 200, { isbn, ...hit });
         return;
       }
 
-      const hit = await lookupCatalog(isbn);
-      if (!hit) {
-        sendJson(res, 404, { error: "catalog match not found" });
-        return;
-      }
-      sendJson(res, 200, { isbn, ...hit });
-      return;
+      await serveStatic(req, res);
+    } catch (err) {
+      sendJson(res, 500, { error: "server error" });
     }
+  });
+}
 
-    await serveStatic(req, res);
-  } catch (err) {
-    sendJson(res, 500, { error: "server error" });
-  }
-}).listen(port, "0.0.0.0", () => {
-  console.log(`ShelfMargin preview listening on ${port}`);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  createShelfMarginServer().listen(port, "0.0.0.0", () => {
+    console.log(`ShelfMargin preview listening on ${port}`);
+  });
+}
