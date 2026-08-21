@@ -57,3 +57,17 @@ jobs:
 
       - name: Gitleaks
         run: gitleaks detect --source . --redact --verbose
+
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Semgrep scan
+        run: semgrep scan --config p/javascript --config p/react --config p/security-audit --error --metrics=off
