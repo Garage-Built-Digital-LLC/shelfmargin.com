@@ -3,15 +3,15 @@ import { ArrowLeft, FileSpreadsheet, Scan, ShieldCheck } from "lucide-react";
 import { supabase, supabaseReady } from "../lib/supabase.js";
 import { publicPath } from "../lib/siteRoutes.js";
 
-const BG = "#F6F5F0";
-const INK = "#151512";
-const YELLOW = "#FFC400";
-const GREEN = "#1E8E4A";
-const BLUE = "#1F5FAD";
-const RED = "#C6301E";
-const MUTED = "#6B6A63";
-const LINE = "#151512";
-const BLUE_BG = "#E3ECF7";
+const BG = "#FFFBEB";
+const INK = "#1F2937";
+const YELLOW = "#FACC15";
+const GREEN = "#16A34A";
+const BLUE = "#2563EB";
+const RED = "#DC2626";
+const MUTED = "#6B7280";
+const LINE = "#E5E7EB";
+const BLUE_BG = "#EFF6FF";
 
 function StripeBar() {
   return (
@@ -133,7 +133,7 @@ export default function Auth({ initialMode = "signin" }) {
         </section>
 
         <section>
-          <form onSubmit={submit} style={{ border: `2px solid ${INK}`, backgroundColor: "#FFFDF6" }}>
+          <form onSubmit={submit} className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 18px 50px rgba(31, 41, 55, 0.08)" }}>
             <div className="flex" style={{ borderBottom: `2px solid ${INK}` }}>
               {["signin", "signup"].map((m) => (
                 <button
@@ -142,8 +142,8 @@ export default function Auth({ initialMode = "signin" }) {
                   onClick={() => { setMode(m); setMsg(null); }}
                   className="flex-1 py-2 text-xs font-black uppercase tracking-widest"
                   style={{
-                    backgroundColor: mode === m ? INK : "transparent",
-                    color: mode === m ? BG : INK,
+                    backgroundColor: mode === m ? YELLOW : "transparent",
+                    color: INK,
                     borderRight: m === "signin" ? `2px solid ${INK}` : "none",
                   }}
                 >
@@ -176,7 +176,7 @@ export default function Auth({ initialMode = "signin" }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full mt-1 px-3 py-2 bg-transparent outline-none font-mono text-base normal-case"
-                    style={{ border: `2px solid ${INK}`, color: INK }}
+                    style={{ border: `1px solid ${LINE}`, color: INK }}
                   />
                 </label>
               )}
@@ -190,7 +190,7 @@ export default function Auth({ initialMode = "signin" }) {
                     value={pw}
                     onChange={(e) => setPw(e.target.value)}
                     className="w-full mt-1 px-3 py-2 bg-transparent outline-none font-mono text-base normal-case"
-                    style={{ border: `2px solid ${INK}`, color: INK }}
+                    style={{ border: `1px solid ${LINE}`, color: INK }}
                   />
                 </label>
               )}
@@ -204,7 +204,7 @@ export default function Auth({ initialMode = "signin" }) {
                     value={pwConfirm}
                     onChange={(e) => setPwConfirm(e.target.value)}
                     className="w-full mt-1 px-3 py-2 bg-transparent outline-none font-mono text-base normal-case"
-                    style={{ border: `2px solid ${INK}`, color: INK }}
+                    style={{ border: `1px solid ${LINE}`, color: INK }}
                   />
                 </label>
               )}
@@ -213,7 +213,7 @@ export default function Auth({ initialMode = "signin" }) {
                 <div
                   className="px-3 py-2 text-xs font-bold"
                   style={{
-                    border: `2px solid ${msg.tone === "err" ? RED : GREEN}`,
+                    border: `1px solid ${msg.tone === "err" ? RED : GREEN}`,
                     color: msg.tone === "err" ? RED : GREEN,
                   }}
                 >
@@ -225,7 +225,7 @@ export default function Auth({ initialMode = "signin" }) {
                 type="submit"
                 disabled={busy}
                 className="py-2.5 text-sm font-black uppercase tracking-widest"
-                style={{ backgroundColor: busy ? "#CFCFC5" : YELLOW, color: INK, border: `2px solid ${LINE}` }}
+                style={{ backgroundColor: busy ? "#E5E7EB" : YELLOW, color: INK, border: `1px solid ${LINE}` }}
               >
                 {busy ? "..." : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : mode === "reset" ? "Send reset link" : "Update password"}
               </button>

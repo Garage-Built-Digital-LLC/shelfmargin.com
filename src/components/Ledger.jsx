@@ -26,19 +26,21 @@ import { publicPath } from "../lib/siteRoutes.js";
 import { supabaseReady } from "../lib/supabase.js";
 import { cleanScan, normalizeToIsbn13 } from "../lib/isbn.js";
 
-// palette - clean retail POS aesthetic
-const BG = "#F7FAFC";
-const INK = "#102033";
-const YELLOW = "#FFC526";
-const GREEN = "#128548";
-const GREEN_BG = "#E9F8EF";
-const RED = "#D83A3A";
-const RED_BG = "#FDECEC";
-const AMBER_BG = "#FFF7D8";
-const LINE = "#D7E0EA";
-const MUTED = "#64748B";
-const BLUE = "#0866D8";
-const BLUE_BG = "#EAF3FF";
+// Scanner-console palette: neutral base, verdict colors do the work.
+const BG = "#F6F8FB";
+const INK = "#101828";
+const YELLOW = "#FDE047";
+const GREEN = "#16A34A";
+const GREEN_BG = "#ECFDF5";
+const RED = "#DC2626";
+const RED_BG = "#FEF2F2";
+const AMBER_BG = "#FFF7ED";
+const LINE = "#D6DDE8";
+const MUTED = "#667085";
+const BLUE = "#2563EB";
+const BLUE_BG = "#EFF6FF";
+const SURFACE = "#FFFFFF";
+const DARK = "#0B1220";
 const EMPTY_SCAN_IMAGE = "/assets/images/product/empty-state-scan.webp";
 
 function dbToDisplayCondition(c) {
@@ -104,7 +106,22 @@ function downloadTextFile(filename, text) {
 
 function StripeBar() {
   return (
-    <div className="h-1 w-full" style={{ backgroundColor: YELLOW, borderBottom: `1px solid ${LINE}` }} />
+    <div className="h-1 w-full" style={{ backgroundColor: DARK, borderBottom: `1px solid ${LINE}` }} />
+  );
+}
+
+function BrandMark({ compact = false }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className="grid h-[18px] w-[26px] grid-cols-[3px_5px_2px_6px_4px] items-end gap-0.5" aria-hidden="true">
+        <span className="h-[17px] rounded-sm" style={{ backgroundColor: "currentColor" }} />
+        <span className="h-[11px] rounded-sm" style={{ backgroundColor: "currentColor" }} />
+        <span className="h-[18px] rounded-sm" style={{ backgroundColor: "currentColor" }} />
+        <span className="h-[9px] rounded-sm" style={{ backgroundColor: "currentColor" }} />
+        <span className="h-[14px] rounded-sm" style={{ backgroundColor: "currentColor" }} />
+      </span>
+      {!compact && <span className="text-lg font-black tracking-tight normal-case">ShelfMargin</span>}
+    </span>
   );
 }
 
@@ -147,20 +164,62 @@ function ShellButton({ active, icon: Icon, label, detail, href, onClick }) {
     <button
       onClick={onClick}
       data-href={href}
-      className="min-w-0 rounded-lg px-3 py-2 text-left flex items-center gap-2"
+      className="min-w-0 rounded-xl px-3 py-2 text-left flex items-center gap-2"
       style={{
-        backgroundColor: active ? BLUE : "#FFFFFF",
+        backgroundColor: active ? DARK : SURFACE,
         color: active ? "#FFFFFF" : INK,
-        border: `1px solid ${active ? BLUE : LINE}`,
-        boxShadow: active ? "0 6px 18px rgba(8, 102, 216, 0.18)" : "0 1px 2px rgba(16, 32, 51, 0.04)",
+        border: `1px solid ${active ? DARK : LINE}`,
+        boxShadow: active ? "0 10px 22px rgba(11, 18, 32, 0.18)" : "0 1px 2px rgba(16, 24, 40, 0.04)",
       }}
     >
       <Icon size={16} className="shrink-0" />
       <span className="min-w-0">
-        <span className="block text-xs font-black uppercase tracking-widest truncate">{label}</span>
-        {detail && <span className="block text-[10px] font-mono truncate" style={{ color: active ? "#DCEBFF" : MUTED }}>{detail}</span>}
+        <span className="block text-xs font-black truncate">{label}</span>
+        {detail && <span className="block text-[10px] font-mono truncate" style={{ color: active ? "#DDE6F4" : MUTED }}>{detail}</span>}
       </span>
     </button>
+  );
+}
+
+function BottomNav({ view, queuedCount, totalUnits, onNavigate }) {
+  const items = [
+    { id: "scan", label: "Scan", detail: "barcode", icon: Scan },
+    { id: "queue", label: "Buy List", detail: `${queuedCount}`, icon: PackagePlus },
+    { id: "field", label: "Check", detail: "prices", icon: ClipboardList },
+  ];
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 border-t px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:hidden"
+      style={{ backgroundColor: "rgba(255, 255, 255, 0.96)", borderColor: LINE, backdropFilter: "blur(14px)" }}
+      aria-label="Field workflow navigation"
+    >
+      <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
+        {items.map(({ id, label, detail, icon: Icon }) => {
+          const active = view === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onNavigate(id)}
+              className="min-h-14 rounded-2xl px-2 py-2 text-center"
+              style={{
+                backgroundColor: active ? DARK : BG,
+                color: active ? "#FFFFFF" : INK,
+                border: `1px solid ${active ? DARK : LINE}`,
+                boxShadow: active ? "0 10px 24px rgba(11, 18, 32, 0.18)" : "none",
+              }}
+            >
+              <Icon size={18} className="mx-auto" />
+              <span className="mt-1 block text-[11px] font-black leading-none">{label}</span>
+              <span className="mt-0.5 block text-[9px] font-mono font-bold" style={{ color: active ? "#DDE6F4" : MUTED }}>
+                {detail}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -245,7 +304,7 @@ function MetricBox({ label, value, tone = "plain" }) {
   const toneBg = tone === "buy" ? GREEN_BG : tone === "warn" ? AMBER_BG : tone === "action" ? BLUE_BG : "#FFFFFF";
   const toneColor = tone === "buy" ? GREEN : tone === "warn" ? "#8A6100" : tone === "action" ? BLUE : INK;
   return (
-    <div className="rounded-lg px-3 py-2" style={{ backgroundColor: toneBg, border: `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16, 32, 51, 0.04)" }}>
+    <div className="rounded-lg px-3 py-2" style={{ backgroundColor: toneBg, border: `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(31, 41, 55, 0.04)" }}>
       <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>{label}</div>
       <div className="text-2xl font-black font-mono" style={{ color: toneColor }}>{value}</div>
     </div>
@@ -275,9 +334,67 @@ function AdminCheck({ done, label, detail }) {
   );
 }
 
+function decisionMeta(entry, threshold) {
+  const bestNet = Math.max(entry.amazonNet, entry.ebayNet ?? -Infinity);
+  const meets = bestNet >= threshold;
+  const label = entry.restricted ? "check" : meets ? "buy" : "pass";
+  const color = entry.restricted ? "#8A6100" : meets ? GREEN : RED;
+  const bg = entry.restricted ? AMBER_BG : meets ? GREEN_BG : RED_BG;
+  return { bestNet, meets, label, color, bg };
+}
+
+function StickyDecisionBar({ entry, threshold, onSave, onDetails }) {
+  if (!entry) return null;
+  const { bestNet, label, color } = decisionMeta(entry, threshold);
+  const saved = entry.queued;
+  return (
+    <div
+      className="sticky bottom-20 z-20 -mx-3 mt-4 px-3 py-2 sm:bottom-0"
+      style={{ backgroundColor: "rgba(246, 248, 251, 0.96)", borderTop: `1px solid ${LINE}`, backdropFilter: "blur(10px)" }}
+    >
+      <div className="mb-2 flex items-center justify-between gap-3 text-xs font-bold">
+        <div className="min-w-0">
+          <div className="truncate font-black uppercase tracking-widest" style={{ color }}>last scan: {label}</div>
+          <div className="truncate normal-case" style={{ color: MUTED }}>{entry.title}</div>
+        </div>
+        <div className="font-mono text-lg font-black" style={{ color }}>
+          {bestNet >= 0 ? "+" : ""}${(bestNet * entry.count).toFixed(2)}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => !saved && onSave(entry.id)}
+          disabled={saved}
+          className="min-h-12 rounded-lg text-sm font-black uppercase tracking-widest text-white"
+          style={{ backgroundColor: saved ? "#94A3B8" : GREEN }}
+        >
+          {saved ? "saved" : "buy"}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDetails(entry.id)}
+          className="min-h-12 rounded-lg text-sm font-black uppercase tracking-widest"
+          style={{ backgroundColor: DARK, color: "#FFF" }}
+        >
+          check
+        </button>
+        <button
+          type="button"
+          onClick={() => onDetails(entry.id)}
+          className="min-h-12 rounded-lg text-sm font-black uppercase tracking-widest text-white"
+          style={{ backgroundColor: RED }}
+        >
+          pass
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function OwnerInputItem({ label, detail }) {
   return (
-    <div className="px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFDF6" }}>
+    <div className="px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
       <div className="text-xs font-black uppercase tracking-widest">{label}</div>
       <div className="mt-0.5 text-xs font-bold normal-case" style={{ color: MUTED }}>{detail}</div>
     </div>
@@ -344,7 +461,7 @@ function OnboardingChecklist({ totalUnits, queuedCount, verifiedCount, onScan, o
             key={step.label}
             onClick={step.action}
             className="flex items-center gap-2 px-2 py-2 text-left text-xs font-bold"
-            style={{ border: `1px solid ${LINE}`, backgroundColor: step.done ? GREEN_BG : "#FFFDF6" }}
+            style={{ border: `1px solid ${LINE}`, backgroundColor: step.done ? GREEN_BG : "#FFFFFF" }}
           >
             {step.done ? <CheckSquare size={16} color={GREEN} /> : <Square size={16} color={MUTED} />}
             <span>{step.label}</span>
@@ -367,7 +484,7 @@ function FirstSessionPanel({ cost, threshold, onCostChange, onThresholdChange, o
         <div className="mt-4 grid grid-cols-2 gap-2">
           <label className="text-xs font-black uppercase tracking-widest">
             cost per book
-            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}>
+            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
               <span>$</span>
               <input
                 type="number"
@@ -380,7 +497,7 @@ function FirstSessionPanel({ cost, threshold, onCostChange, onThresholdChange, o
           </label>
           <label className="text-xs font-black uppercase tracking-widest">
             min profit
-            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `2px solid ${LINE}`, backgroundColor: "#FFFDF6" }}>
+            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
               <span>$</span>
               <input
                 type="number"
@@ -885,58 +1002,73 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const toastBg = toast?.tone === "buy" ? GREEN_BG : toast?.tone === "pass" ? RED_BG : toast?.tone === "action" ? BLUE_BG : AMBER_BG;
   const verifiedCount = entries.filter((entry) => verification[verificationKey(entry)]?.real_decision).length;
   const summary = fieldTestSummary(entries, verification);
+  const latestEntry = entries[0] || null;
+  const queuedEstimatedTotal = queued.reduce((sum, en) => {
+    const bestNet = Math.max(en.amazonNet, en.ebayNet ?? -Infinity);
+    return sum + bestNet * en.count;
+  }, 0);
 
   return (
     <div className="min-h-screen w-full" style={{ backgroundColor: BG, color: INK }}>
       <StripeBar />
-      <div className="max-w-3xl mx-auto px-3 py-4">
-        <div className="flex items-center justify-between mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>
-          <span className="flex items-center gap-2 min-w-0">
-            <span className="truncate normal-case font-mono">{session?.user?.email}</span>
+      <div className="max-w-3xl mx-auto px-3 pb-28 pt-4 sm:pb-4">
+        <div className="mb-3 rounded-2xl px-3 py-3 shadow-sm" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <BrandMark />
+                {demoMode && (
+                  <span className="rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: BLUE, backgroundColor: BLUE_BG }}>
+                    demo
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 truncate text-xs font-mono font-bold" style={{ color: MUTED }}>
+                {session?.user?.email}
+              </div>
+            </div>
             {profileRole === "admin" && (
               <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest"
                 style={{ color: "#FFF", backgroundColor: BLUE }}>
                 admin
               </span>
             )}
-          </span>
-          <AccountMenu
-            session={session}
-            profileRole={profileRole}
-            demoMode={demoMode}
-            onNavigate={navigate}
-            onSignOut={onSignOut}
-          />
-        </div>
-
-        <SyncStatus demoMode={demoMode} verificationReady={verificationReady} loading={loading} />
-
-        <div className="mb-3 grid grid-cols-3 overflow-hidden rounded-lg" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(16, 32, 51, 0.04)" }}>
-          <div className="px-4 py-3">
-            <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>scanned</div>
-            <div className="text-2xl font-black font-mono">{totalUnits}</div>
+            <AccountMenu
+              session={session}
+              profileRole={profileRole}
+              demoMode={demoMode}
+              onNavigate={navigate}
+              onSignOut={onSignOut}
+            />
           </div>
-          <div className="px-4 py-3 border-l" style={{ borderColor: LINE, backgroundColor: BLUE_BG }}>
-            <div className="text-xs font-bold uppercase tracking-widest">est. profit</div>
-            <div className="text-2xl font-black font-mono" style={{ color: BLUE }}>${totalProfit.toFixed(2)}</div>
-          </div>
-          <div className="px-4 py-3 border-l text-right flex flex-col justify-between items-end" style={{ borderColor: LINE }}>
-            <button onClick={() => { const v = !soundOn; setSoundOn(v); persistProfile({ sound_enabled: v }); }} aria-label="toggle sound">
-              {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} color={MUTED} />}
-            </button>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>possible buys</div>
+
+          <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-xl" style={{ border: `1px solid ${LINE}` }}>
+            <div className="px-3 py-2">
+              <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>scanned</div>
+              <div className="text-2xl font-black font-mono">{totalUnits}</div>
+            </div>
+            <div className="px-3 py-2 border-l" style={{ borderColor: LINE, backgroundColor: GREEN_BG }}>
+              <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: GREEN }}>est. profit</div>
+              <div className="text-2xl font-black font-mono" style={{ color: GREEN }}>${totalProfit.toFixed(2)}</div>
+            </div>
+            <div className="px-3 py-2 border-l text-right" style={{ borderColor: LINE }}>
+              <button onClick={() => { const v = !soundOn; setSoundOn(v); persistProfile({ sound_enabled: v }); }} aria-label="toggle sound">
+                {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} color={MUTED} />}
+              </button>
+              <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>buys</div>
               <div className="text-2xl font-black font-mono">{buyCount}</div>
             </div>
           </div>
         </div>
 
-        <div className="sticky top-0 z-10 -mx-3 px-3 pt-2 pb-3 mb-3" style={{ backgroundColor: BG, borderBottom: `1px solid ${LINE}` }}>
+        <SyncStatus demoMode={demoMode} verificationReady={verificationReady} loading={loading} />
+
+        <div className="sticky top-0 z-10 -mx-3 mb-3 hidden px-3 pb-3 pt-2 sm:block" style={{ backgroundColor: BG, borderBottom: `1px solid ${LINE}` }}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <ShellButton active={view === "dashboard"} icon={LayoutDashboard} label="Dashboard" detail={`${totalUnits} books`} href={hashForSection("dashboard")} onClick={() => navigate("dashboard")} />
             <ShellButton active={view === "scan"} icon={Scan} label="Scan" detail="barcode" href={hashForSection("scan")} onClick={() => navigate("scan")} />
-            <ShellButton active={view === "scannerTest"} icon={Scan} label="Scanner Test" detail={`${scannerTestRows.length} reads`} href={hashForSection("scannerTest")} onClick={() => navigate("scannerTest")} />
             <ShellButton active={view === "queue"} icon={PackagePlus} label="Buy List" detail={`${queued.length} saved`} href={hashForSection("queue")} onClick={() => navigate("queue")} />
+            <ShellButton active={view === "dashboard"} icon={LayoutDashboard} label="Run" detail={`${totalUnits} books`} href={hashForSection("dashboard")} onClick={() => navigate("dashboard")} />
+            <ShellButton active={view === "scannerTest"} icon={Scan} label="Scanner Test" detail={`${scannerTestRows.length} reads`} href={hashForSection("scannerTest")} onClick={() => navigate("scannerTest")} />
             <ShellButton active={view === "field"} icon={ClipboardList} label="Check Books" detail="real prices" href={hashForSection("field")} onClick={() => navigate("field")} />
             <ShellButton active={view === "inventory"} icon={Boxes} label="Saved" detail="all books" href={hashForSection("inventory")} onClick={() => navigate("inventory")} />
             <ShellButton active={view === "settings"} icon={Settings} label="Settings" detail={`$${threshold} min`} href={hashForSection("settings")} onClick={() => navigate("settings")} />
@@ -1138,26 +1270,29 @@ function Ledger({ session, onSignOut, demoMode = false }) {
         {view === "scan" && (
           <>
             <PageHeader
-              title="Scan"
-              subtitle="Scan book barcodes or type ISBNs."
+              title="Field Scanner"
+              subtitle="Scan fast. Decide where the book should go."
             />
 
-            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest"
-              style={{ backgroundColor: "#FFFFFF", color: "#8A6100", border: `1px solid ${LINE}` }}>
-              <span className="rounded-full px-2 py-1" style={{ backgroundColor: AMBER_BG, border: "1px solid #E2B203" }}>
+            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-xs font-black"
+              style={{ backgroundColor: SURFACE, color: "#8A6100", border: `1px solid ${LINE}` }}>
+              <span className="rounded-full px-2 py-1 uppercase tracking-widest" style={{ backgroundColor: AMBER_BG, border: "1px solid #FED7AA" }}>
                 {LOOKUP_STATUS.mode === "live-catalog" ? "catalog lookup" : "sample catalog"}
               </span>
-              <span style={{ color: MUTED }}>prices still estimates</span>
+              <span style={{ color: MUTED }}>prices are estimates until checked</span>
             </div>
 
             <form onSubmit={addEntry} className="mb-3">
-              <div className="scanner-pulse relative overflow-hidden flex items-center gap-3 rounded-lg px-4 py-5" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 10px 30px rgba(8, 102, 216, 0.08)" }}>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: BLUE_BG, color: BLUE }}>
-                  <Scan size={22} />
+              <div className="scanner-pulse relative overflow-hidden rounded-2xl p-3" style={{ border: `2px solid ${DARK}`, backgroundColor: SURFACE, boxShadow: "0 16px 36px rgba(16, 24, 40, 0.10)" }}>
+                <div className="flex items-center gap-3 rounded-xl px-3 py-5" style={{ border: `1px dashed ${MUTED}`, backgroundColor: "#FAFBFD" }}>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: DARK, color: "#FFF" }}>
+                    <Scan size={23} />
+                  </div>
+                  <input ref={inputRef} autoFocus value={isbn} onChange={(e) => setIsbn(e.target.value)}
+                    placeholder={scanning ? "Looking up book..." : "Scan ISBN"}
+                    className="flex-1 bg-transparent outline-none text-xl font-mono font-black tracking-wide"
+                    style={{ color: INK }} />
                 </div>
-                <input ref={inputRef} autoFocus value={isbn} onChange={(e) => setIsbn(e.target.value)}
-                  placeholder="Scan ISBN or type barcode" className="flex-1 bg-transparent outline-none text-lg font-mono font-bold tracking-wide"
-                  style={{ color: INK }} />
               </div>
             </form>
 
@@ -1171,13 +1306,13 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             </div>
 
             <div className="mb-4 grid gap-2 text-xs font-bold uppercase tracking-widest sm:grid-cols-2">
-              <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}` }}>
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
                 <span style={{ color: MUTED }}>cost/bk</span><span>$</span>
                 <input type="number" step="0.25" value={cost}
                   onChange={(e) => { const v = parseFloat(e.target.value) || 0; setCost(v); persistProfile({ cost_per_book: v }); }}
                   className="w-16 bg-transparent border-b outline-none font-mono normal-case" style={{ borderColor: LINE, color: INK }} />
               </div>
-              <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}` }}>
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
                 <span style={{ color: MUTED }}>buy min</span><span>$</span>
                 <input type="number" step="0.5" value={threshold}
                   onChange={(e) => { const v = parseFloat(e.target.value) || 0; setThreshold(v); persistProfile({ buy_threshold: v }); }}
@@ -1201,24 +1336,27 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             <div className="flex flex-col gap-2">
               {entries.map((en) => {
                 const open = openId === en.id;
-                const bestNet = Math.max(en.amazonNet, en.ebayNet ?? -Infinity);
-                const meets = bestNet >= threshold;
+                const { bestNet, meets, label: statusLabel, color: statusColor, bg: statusBg } = decisionMeta(en, threshold);
                 const score = sourcingScore(bestNet, threshold, en.velocity, en.offers);
                 const scoreColor = score.band === "Strong" ? GREEN : score.band === "Moderate" ? "#B8860B" : RED;
-                const statusColor = en.restricted ? "#B8860B" : meets ? GREEN : RED;
-                const statusBg = en.restricted ? AMBER_BG : meets ? GREEN_BG : RED_BG;
-                const statusLabel = en.restricted ? "check" : meets ? "buy" : "pass";
                 const sparkColor = en.velocity.trend === "up" ? GREEN : en.velocity.trend === "down" ? RED : MUTED;
+                const routeLabel = en.restricted ? "Verify first" : meets ? `List on ${en.winner}` : "Skip";
                 return (
-                  <div key={en.id} className="scan-result-row overflow-hidden rounded-lg" style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(16, 32, 51, 0.04)" }}>
+                  <div key={en.id} className="scan-result-row overflow-hidden rounded-2xl" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}`, boxShadow: "0 10px 24px rgba(16, 24, 40, 0.07)" }}>
                     <div className="w-full flex items-stretch gap-2 px-2 py-2 sm:px-3">
-                      <button onClick={() => setOpenId(open ? null : en.id)} className="grid flex-1 grid-cols-[82px_1fr_auto] items-center gap-3 text-left min-w-0 sm:grid-cols-[96px_1fr_auto]">
-                        <span className="decision-badge flex min-h-14 shrink-0 items-center justify-center gap-1 rounded-lg px-2 text-sm font-black uppercase tracking-widest text-white sm:min-h-16 sm:text-base" style={{ backgroundColor: statusColor }}>
-                          {en.restricted && <Lock size={11} />}
-                          {statusLabel}
+                      <button onClick={() => setOpenId(open ? null : en.id)} className="grid flex-1 grid-cols-[96px_1fr_auto] items-center gap-3 text-left min-w-0 sm:grid-cols-[112px_1fr_auto]">
+                        <span className="decision-badge flex min-h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl px-2 text-sm font-black text-white sm:min-h-24" style={{ backgroundColor: statusColor }}>
+                          <span className="text-[10px] uppercase tracking-widest opacity-80">action</span>
+                          <span className="flex items-center gap-1 text-2xl uppercase leading-none">
+                            {en.restricted && <Lock size={14} />}
+                            {statusLabel}
+                          </span>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-base font-black truncate">
+                          <div className="text-sm font-black uppercase tracking-widest" style={{ color: statusColor }}>
+                            {routeLabel}
+                          </div>
+                          <div className="mt-1 text-base font-black truncate">
                             {en.title}
                             {en.count > 1 && <span className="ml-1 font-mono" style={{ color: MUTED }}>×{en.count}</span>}
                           </div>
@@ -1239,8 +1377,11 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                             </span>
                           </div>
                         </div>
-                        <span className="rounded-lg px-2 py-1 text-lg font-black font-mono shrink-0 text-right sm:text-xl" style={{ color: statusColor, backgroundColor: statusBg }}>
-                          {bestNet >= 0 ? "+" : ""}${(bestNet * en.count).toFixed(2)}
+                        <span className="rounded-xl px-3 py-2 text-right shrink-0" style={{ color: statusColor, backgroundColor: statusBg }}>
+                          <span className="block text-[9px] font-black uppercase tracking-widest">net</span>
+                          <span className="block text-xl font-black font-mono">
+                            {bestNet >= 0 ? "+" : ""}${(bestNet * en.count).toFixed(2)}
+                          </span>
                         </span>
                       </button>
                       {meets && !en.queued && (
@@ -1315,6 +1456,15 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 );
               })}
             </div>
+            )}
+
+            {!loading && entries.length > 0 && (
+              <StickyDecisionBar
+                entry={latestEntry}
+                threshold={threshold}
+                onSave={addToQueue}
+                onDetails={(id) => setOpenId((current) => (current === id ? null : id))}
+              />
             )}
 
             {entries.length > 0 && (
@@ -1653,7 +1803,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
           <>
             <PageHeader
               title="Buy List"
-              subtitle="Books you may want to buy after checking."
+              subtitle="Saved books to check before you spend money."
             />
 
             {queued.length === 0 ? (
@@ -1669,27 +1819,55 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               />
             ) : (
               <>
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <button onClick={selectAll} className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-                    {allSelected ? <CheckSquare size={16} /> : <Square size={16} />} select all ({queued.length})
-                  </button>
-                  <span className="text-xs font-bold" style={{ color: MUTED }}>{selectedQueued.length} selected</span>
+                <div className="mb-3 overflow-hidden rounded-lg bg-white" style={{ border: `1px solid ${LINE}` }}>
+                  <div className="grid grid-cols-3 text-center">
+                    <div className="px-3 py-3">
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>saved</div>
+                      <div className="font-mono text-2xl font-black">{queued.length}</div>
+                    </div>
+                    <div className="border-l px-3 py-3" style={{ borderColor: LINE, backgroundColor: GREEN_BG }}>
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>est. net</div>
+                      <div className="font-mono text-2xl font-black" style={{ color: GREEN }}>${queuedEstimatedTotal.toFixed(2)}</div>
+                    </div>
+                    <div className="border-l px-3 py-3">
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>selected</div>
+                      <div className="font-mono text-2xl font-black">{selectedQueued.length}</div>
+                    </div>
+                  </div>
+                  <div className="border-t px-3 py-2 text-xs font-bold" style={{ borderColor: LINE, color: MUTED }}>
+                    Prices are estimates. Use this as a checkout list, then verify real marketplace data.
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 mb-4">
-                  {queued.map((en) => (
-                    <div key={en.id} className="px-3 py-2" style={{ backgroundColor: BLUE_BG, border: `2px solid ${LINE}` }}>
+
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <button onClick={selectAll} className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+                    {allSelected ? <CheckSquare size={16} /> : <Square size={16} />} select all
+                  </button>
+                  <span className="text-xs font-bold" style={{ color: MUTED }}>{selectedQueued.length || queued.length} ready to export</span>
+                </div>
+                <div className="mb-4 overflow-hidden rounded-lg bg-white font-mono text-xs" style={{ border: `1px solid ${LINE}` }}>
+                  {queued.map((en) => {
+                    const { bestNet, color } = decisionMeta(en, threshold);
+                    return (
+                    <div key={en.id} className="px-3 py-3" style={{ borderBottom: `1px dashed ${LINE}` }}>
                       <div className="flex items-center gap-3">
                         <button onClick={() => toggleSelect(en.id)} className="shrink-0">
                           {selected[en.id] ? <CheckSquare size={18} color={BLUE} /> : <Square size={18} />}
                         </button>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold truncate">
+                          <div className="font-sans text-sm font-black truncate">
                             {en.title} {en.count > 1 && <span className="font-mono" style={{ color: MUTED }}>×{en.count}</span>}
                           </div>
                           <div className="text-xs font-mono" style={{ color: MUTED }}>{en.isbn} · via {en.winner}</div>
                         </div>
+                        <div className="text-right shrink-0">
+                          <div className="font-black" style={{ color }}>
+                            {bestNet >= 0 ? "+" : ""}${(bestNet * en.count).toFixed(2)}
+                          </div>
+                          <div className="font-sans text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>est.</div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 mt-2 pl-8 text-xs font-bold uppercase tracking-widest">
+                      <div className="mt-3 grid grid-cols-[1fr_auto] gap-3 pl-8 text-xs font-bold uppercase tracking-widest sm:grid-cols-[auto_auto_1fr]">
                         <div className="flex items-center gap-1">
                           <span style={{ color: MUTED }}>price</span><span>$</span>
                           <input type="number" step="0.5" value={en.listPrice ?? 0}
@@ -1702,9 +1880,10 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         </select>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                <div className="sticky bottom-0 flex flex-wrap gap-2 p-2" style={{ backgroundColor: BG, borderTop: `2px solid ${LINE}` }}>
+                <div className="sticky bottom-20 flex flex-wrap gap-2 p-2 sm:bottom-0" style={{ backgroundColor: BG, borderTop: `2px solid ${LINE}` }}>
                   <button onClick={pushOffers} disabled={selectedQueued.length === 0}
                     className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest"
                     style={{ backgroundColor: selectedQueued.length ? GREEN : "#CFCFC5", color: "#FFF" }}>
@@ -1726,6 +1905,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
           </>
         )}
       </div>
+      <BottomNav view={view} queuedCount={queued.length} totalUnits={totalUnits} onNavigate={navigate} />
     </div>
   );
 }

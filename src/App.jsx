@@ -6,8 +6,8 @@ import PublicSite from "./components/PublicSite.jsx";
 import { APP_SECTIONS, hashForSection } from "./lib/appRoutes.js";
 import { publicPath, publicRouteFromLocation } from "./lib/siteRoutes.js";
 
-const BG = "#F6F5F0";
-const INK = "#151512";
+const BG = "#FFFBEB";
+const INK = "#1F2937";
 
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = still loading

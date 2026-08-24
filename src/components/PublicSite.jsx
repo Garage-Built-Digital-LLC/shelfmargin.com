@@ -16,18 +16,18 @@ import {
 import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath, publicRouteMeta } from "../lib/siteRoutes.js";
 
-const BG = "#F7FAFC";
-const INK = "#102033";
-const YELLOW = "#FFC526";
-const GREEN = "#128548";
-const BLUE = "#0866D8";
-const RED = "#D83A3A";
-const MUTED = "#64748B";
-const LINE = "#D7E0EA";
-const AMBER_BG = "#FFF7D8";
-const BLUE_BG = "#EAF3FF";
-const GREEN_BG = "#E9F8EF";
-const RED_BG = "#FDECEC";
+const BG = "#FFFBEB";
+const INK = "#1F2937";
+const YELLOW = "#FACC15";
+const GREEN = "#16A34A";
+const BLUE = "#2563EB";
+const RED = "#DC2626";
+const MUTED = "#6B7280";
+const LINE = "#E5E7EB";
+const AMBER_BG = "#FEF3C7";
+const BLUE_BG = "#EFF6FF";
+const GREEN_BG = "#ECFDF5";
+const RED_BG = "#FEF2F2";
 const SUPPORT_EMAIL = "support@shelfmargin.com";
 
 const ASSETS = {
@@ -40,7 +40,6 @@ const navItems = [
   ["product", "Product"],
   ["pricing", "Pricing"],
   ["faq", "FAQ"],
-  ["security", "Security"],
 ];
 
 const faqItems = [
@@ -151,7 +150,7 @@ function PublicNav({ route, session, onSignOut }) {
         )}
       </div>
       <nav
-        className="grid grid-cols-4 gap-0 border-t-2 text-center text-[10px] font-black uppercase tracking-widest md:hidden"
+        className="grid grid-cols-3 gap-0 border-t-2 text-center text-[10px] font-black uppercase tracking-widest md:hidden"
         style={{ borderColor: LINE }}
       >
         {navItems.map(([id, label]) => (
@@ -238,7 +237,7 @@ function ProductPreview() {
     ["PASS", "The Alchemist", "+$1.58", RED, RED_BG],
   ];
   return (
-    <div className="w-full p-3" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFDF6" }} aria-label="ShelfMargin app preview">
+    <div className="w-full p-3" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }} aria-label="ShelfMargin app preview">
       <div className="flex items-center gap-2 px-3 py-3 text-sm font-black uppercase tracking-widest" style={{ border: `1px solid ${LINE}` }}>
         <Scan size={18} />
         Scan ISBN...
@@ -257,93 +256,116 @@ function ProductPreview() {
 }
 
 function FieldScannerVisual() {
-  const rows = [
-    ["BUY", "Atomic Habits", "+$11.35", GREEN, GREEN_BG],
-    ["CHECK", "The 5 AM Club", "+$3.80", "#8A6100", AMBER_BG],
-    ["PASS", "Old travel guide", "-$0.45", RED, RED_BG],
+  const receiptRows = [
+    ["Atomic Habits", "$11.35", "BUY", GREEN],
+    ["The 5 AM Club", "$3.80", "CHECK", "#8A6100"],
+    ["Old travel guide", "-$0.45", "PASS", RED],
   ];
 
   return (
     <div
-      className="pos-grid relative overflow-hidden rounded-lg p-3 sm:p-4"
-      style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 18px 50px rgba(16, 32, 51, 0.08)" }}
-      aria-label="Field scanner workflow preview"
+      className="relative overflow-hidden rounded-lg"
+      style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 18px 50px rgba(31, 41, 55, 0.08)" }}
+      aria-label="Scanner console workflow preview"
     >
-      <div className="absolute right-3 top-3 hidden text-[10px] font-black uppercase tracking-widest sm:block" style={{ color: MUTED }}>
-        clean retail POS
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[0.58fr_1fr] lg:items-center">
-        <div className="mx-auto w-full max-w-[260px]">
-          <div className="phone-float relative overflow-hidden rounded-[24px] bg-white p-3" style={{ border: "6px solid #102033", boxShadow: "0 16px 34px rgba(16, 32, 51, 0.18)" }}>
-            <div className="mb-3 flex items-center justify-between text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>
-              <span>9:41</span>
-              <span>Scan</span>
+      <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="p-4 sm:p-5" style={{ borderRight: `1px solid ${LINE}` }}>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <StatusPill tone="green">Catalog lookup live</StatusPill>
+            <StatusPill>Prices estimated</StatusPill>
+          </div>
+
+          <div className="rounded-lg p-3" style={{ backgroundColor: AMBER_BG, border: `1px solid ${YELLOW}` }}>
+            <div className="mb-2 flex items-center justify-between text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>
+              <span>Scan ISBN</span>
+              <span>Bluetooth ready</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-black">Shelf Margin</div>
-              <Scan size={16} color={BLUE} />
-            </div>
-            <div className="mt-4 rounded-lg p-4 text-center" style={{ border: `1px dashed ${MUTED}`, backgroundColor: "#F8FBFF" }}>
-              <div className="relative mx-auto h-20 max-w-[180px] overflow-hidden">
-                <div className="flex h-full items-center justify-center gap-1">
-                  {[20, 38, 24, 44, 30, 52, 18, 48, 32, 41, 27, 36].map((height, index) => (
-                    <span
-                      key={index}
-                      className="barcode-bar w-1 bg-[#128548]"
-                      style={{ height }}
-                    />
-                  ))}
-                </div>
+            <div className="flex items-center gap-3 rounded-lg bg-white px-3 py-3" style={{ border: `1px solid ${LINE}` }}>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: BLUE_BG, color: BLUE }}>
+                <Scan size={20} />
               </div>
-              <div className="mt-2 text-xs font-black">Tap to scan ISBN</div>
-              <div className="mt-1 text-[10px] font-bold" style={{ color: MUTED }}>or type/paste here</div>
-            </div>
-            <div className="mt-4 rounded-lg p-3" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
-              <div className="text-sm font-black">Atomic Habits</div>
-              <div className="mt-1 text-xs font-bold" style={{ color: MUTED }}>James Clear · catalog lookup</div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Est. sell</div>
-                  <div className="font-mono text-lg font-black">$14.75</div>
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Cost</div>
-                  <div className="font-mono text-lg font-black">$2.00</div>
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Est. net</div>
-                  <div className="font-mono text-lg font-black" style={{ color: GREEN }}>$11.35</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-mono text-base font-black">9780143127796</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+                  scanner stays focused
                 </div>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-widest">
-              <span className="scan-decision-chip rounded-lg py-3 text-white" style={{ backgroundColor: GREEN }}>buy</span>
-              <span className="scan-decision-chip rounded-lg py-3" style={{ backgroundColor: YELLOW, color: INK }}>check</span>
-              <span className="scan-decision-chip rounded-lg py-3 text-white" style={{ backgroundColor: RED }}>pass</span>
+          </div>
+
+          <div className="mt-3 rounded-lg bg-white p-4" style={{ border: `1px solid ${LINE}` }}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-xl font-black leading-tight">Atomic Habits</div>
+                <div className="mt-1 text-sm font-bold" style={{ color: MUTED }}>
+                  James Clear · catalog lookup
+                </div>
+              </div>
+              <span className="shrink-0 rounded-lg px-3 py-2 text-sm font-black text-white" style={{ backgroundColor: GREEN }}>
+                BUY
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-lg text-center" style={{ border: `1px solid ${LINE}` }}>
+              <div className="px-2 py-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Est. sell</div>
+                <div className="font-mono text-lg font-black">$14.75</div>
+              </div>
+              <div className="border-l px-2 py-3" style={{ borderColor: LINE }}>
+                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Cost</div>
+                <div className="font-mono text-lg font-black">$2.00</div>
+              </div>
+              <div className="border-l px-2 py-3" style={{ borderColor: LINE, backgroundColor: GREEN_BG }}>
+                <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>Est. net</div>
+                <div className="font-mono text-lg font-black" style={{ color: GREEN }}>$11.35</div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-black uppercase tracking-widest">
+              <span className="rounded-lg py-3 text-white" style={{ backgroundColor: GREEN }}>Buy</span>
+              <span className="rounded-lg py-3" style={{ backgroundColor: YELLOW, color: INK }}>Check</span>
+              <span className="rounded-lg py-3 text-white" style={{ backgroundColor: RED }}>Pass</span>
+            </div>
+
+            <div className="mt-3 text-xs font-bold leading-relaxed" style={{ color: MUTED }}>
+              Estimates help sort the pile. Check real marketplace data before buying inventory.
             </div>
           </div>
         </div>
 
-        <div className="min-w-0">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <StatusPill tone="green">Live catalog lookup</StatusPill>
-            <StatusPill>Prices estimated</StatusPill>
+        <div className="min-w-0 p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-black uppercase tracking-widest">Buy list</div>
+              <div className="mt-1 text-xs font-bold" style={{ color: MUTED }}>Receipt preview</div>
+            </div>
+            <span className="rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: BLUE_BG, color: BLUE }}>
+              CSV ready
+            </span>
           </div>
-          <div className="overflow-hidden rounded-lg" style={{ border: `1px solid ${LINE}` }}>
-            {rows.map(([status, title, profit, color, bg]) => (
-              <div key={title} className="scan-result-row grid grid-cols-[84px_1fr_auto] items-center gap-3 px-3 py-3" style={{ borderBottom: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
-                <span className="decision-badge rounded-md px-2 py-2 text-center text-xs font-black uppercase text-white" style={{ backgroundColor: color }}>
-                  {status}
+          <div className="overflow-hidden rounded-lg bg-white font-mono text-xs" style={{ border: `1px solid ${LINE}` }}>
+            {receiptRows.map(([title, profit, status, color]) => (
+              <div key={title} className="grid grid-cols-[1fr_auto] gap-3 px-3 py-3" style={{ borderBottom: `1px dashed ${LINE}` }}>
+                <div className="min-w-0">
+                  <div className="truncate font-black">{title}</div>
+                  <div className="mt-1 font-sans text-[10px] font-black uppercase tracking-widest" style={{ color }}>
+                    {status}
+                  </div>
+                </div>
+                <span className="font-black" style={{ color }}>
+                  {profit}
                 </span>
-                <span className="min-w-0 truncate text-sm font-black">{title}</span>
-                <span className="font-mono text-sm font-black" style={{ color }}>{profit}</span>
               </div>
             ))}
+            <div className="grid grid-cols-[1fr_auto] gap-3 px-3 py-3" style={{ backgroundColor: AMBER_BG }}>
+              <span className="font-black">Estimated total</span>
+              <span className="font-black" style={{ color: GREEN }}>$14.70</span>
+            </div>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-widest">
-            <div className="py-2" style={{ borderTop: `2px solid ${LINE}` }}>scan</div>
-            <div className="py-2" style={{ borderTop: `2px solid ${LINE}` }}>save</div>
-            <div className="py-2" style={{ borderTop: `2px solid ${LINE}` }}>export</div>
+            <div className="rounded-lg bg-white px-2 py-3" style={{ border: `1px solid ${LINE}` }}>Scan</div>
+            <div className="rounded-lg bg-white px-2 py-3" style={{ border: `1px solid ${LINE}` }}>Save</div>
+            <div className="rounded-lg bg-white px-2 py-3" style={{ border: `1px solid ${LINE}` }}>Export</div>
           </div>
         </div>
       </div>
@@ -398,31 +420,30 @@ function SimpleBenefitList() {
 function HomePage({ session }) {
   return (
     <>
-      <section className="pos-grid mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-        <div>
-          <StatusPill tone="blue">used-book reseller scanner</StatusPill>
-          <h1 className="mt-4 text-4xl font-black leading-none sm:text-6xl">Scan books before you buy</h1>
-          <p className="mt-5 max-w-2xl text-lg font-bold leading-relaxed sm:text-xl" style={{ color: MUTED }}>
-            Scan a book, see an estimate, save possible buys, and export the list before you spend money.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <ButtonLink href={session ? hashForSection("scan") : publicPath("login")} tone="yellow">
-              {session ? "Start scanning" : "Start scanning"}
-            </ButtonLink>
-            <ButtonLink href={publicPath("demo")} tone="blue" icon={Scan}>
-              Try demo
-            </ButtonLink>
-            <ButtonLink href={publicPath("product")} tone="ghost" icon={ClipboardList}>
-              See product
-            </ButtonLink>
+      <section className="pos-grid">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:py-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+          <div>
+            <StatusPill tone="blue">used-book reseller scanner</StatusPill>
+            <h1 className="mt-4 text-4xl font-black leading-none sm:text-6xl">Scan. Decide. Save the buys.</h1>
+            <p className="mt-5 max-w-xl text-lg font-bold leading-relaxed" style={{ color: MUTED }}>
+              A fast web scanner for sourcing trips. Scan an ISBN, see an estimated net, save possible buys, then export the list.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href={publicPath("demo")} tone="yellow" icon={Scan}>
+                Try demo
+              </ButtonLink>
+              <ButtonLink href={session ? hashForSection("scan") : publicPath("login")} tone="dark">
+                {session ? "Open scanner" : "Create account"}
+              </ButtonLink>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-widest">
+              <span className="rounded-full bg-white px-3 py-2" style={{ border: `1px solid ${LINE}` }}>Bluetooth scanner ready</span>
+              <span className="rounded-full bg-white px-3 py-2" style={{ border: `1px solid ${LINE}` }}>Buy list receipt</span>
+              <span className="rounded-full bg-white px-3 py-2" style={{ border: `1px solid ${LINE}` }}>CSV export</span>
+            </div>
           </div>
-          <div className="mt-5 grid gap-2 text-xs font-black uppercase tracking-widest sm:grid-cols-3">
-            <div>Scan barcodes</div>
-            <div>Check profit</div>
-            <div>Export CSV</div>
-          </div>
+          <FieldScannerVisual />
         </div>
-        <FieldScannerVisual />
       </section>
 
       <Band tone="blue" compact>
@@ -460,58 +481,78 @@ function HomePage({ session }) {
 
 function ProductPage({ session }) {
   const productSteps = [
-    ["Scan books", "Use the barcode scanner at the shelf."],
-    ["Save possible buys", "Keep only the books worth checking again."],
-    ["Export the list", "Use the CSV for real marketplace checks before buying."],
+    ["At the shelf", "Scan the ISBN, enter your buy cost, and get a quick buy / check / pass read."],
+    ["During the trip", "Save possible buys without leaving the scanner or losing your place in the pile."],
+    ["Before checkout", "Review the buy list, remove weak picks, and export CSV for final marketplace checks."],
+  ];
+  const scanDetails = [
+    ["Input", "Bluetooth scanner or typed ISBN"],
+    ["Decision", "Buy, check, or pass"],
+    ["Saved fields", "ISBN, title, cost, estimate, note"],
+    ["Export", "CSV for follow-up research"],
   ];
 
   return (
     <>
       <Band>
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <SectionTitle
-            eyebrow="product"
-            title="The app is the scan list"
-            body="Scan books, save the ones worth checking, and export a simple list. Estimates stay estimates until live marketplace data is connected."
-          />
-          <div className="grid gap-3">
-            <FieldScannerVisual />
-            <FramedImage
-              src={ASSETS.productScan}
-              alt="ShelfMargin scan screen showing a book barcode scan, estimated profit, ROI, rank, and save-to-list action."
-              aspect="aspect-[16/10]"
-              imgClassName="object-cover object-top"
+        <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+          <div>
+            <SectionTitle
+              eyebrow="product"
+              title="A scanner that turns piles into a short buy list"
+              body="Built for sourcing trips: scan fast, make a quick call, and keep only the books worth checking again."
             />
+            <div className="mt-6" style={{ borderTop: `1px solid ${LINE}` }}>
+              {productSteps.map(([title, body], index) => (
+                <div key={title} className="grid gap-2 py-4 sm:grid-cols-[120px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
+                  <div className="text-sm font-black">
+                    <span className="mr-2 font-mono" style={{ color: BLUE }}>{index + 1}</span>
+                    {title}
+                  </div>
+                  <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href={publicPath("demo")} tone="yellow" icon={Scan}>
+                Try scanner demo
+              </ButtonLink>
+              <ButtonLink href={session ? hashForSection("dashboard") : publicPath("login")} tone="dark">
+                {session ? "Open dashboard" : "Create account"}
+              </ButtonLink>
+            </div>
           </div>
+          <FieldScannerVisual />
         </div>
       </Band>
-      <Band>
-        <div className="grid gap-5 lg:grid-cols-[0.85fr_1fr] lg:items-start">
+      <Band tone="blue">
+        <div className="grid gap-6 lg:grid-cols-[0.8fr_1fr] lg:items-start">
           <SectionTitle
-            eyebrow="workflow"
-            title="Built around a real sourcing trip"
-            body="Detailed marketplace checks still happen before money changes hands."
+            eyebrow="what it captures"
+            title="Enough detail to decide, not enough to slow you down"
+            body="The app should stay focused on the buying moment. Deeper research can happen after the trip."
           />
-          <div style={{ borderTop: `1px solid ${LINE}` }}>
-            {productSteps.map(([title, body]) => (
-              <div key={title} className="grid gap-2 py-4 sm:grid-cols-[180px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
+          <div className="rounded-lg bg-white px-4" style={{ border: `1px solid ${LINE}` }}>
+            {scanDetails.map(([title, body]) => (
+              <div key={title} className="grid gap-2 py-4 sm:grid-cols-[140px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
                 <div className="text-sm font-black">{title}</div>
                 <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="mt-6 px-4 py-3 text-sm font-bold" style={{ borderLeft: `3px solid ${YELLOW}`, color: MUTED }}>
-          Estimated values are for sorting the pile. Check the real marketplace before buying.
-        </div>
-        <div className="mt-6">
-          <div className="flex flex-wrap gap-3">
-          <ButtonLink href={session ? hashForSection("dashboard") : publicPath("login")} tone="blue">
-            {session ? "Go to dashboard" : "Create test account"}
-          </ButtonLink>
-          <ButtonLink href={publicPath("demo")} tone="ghost" icon={Scan}>
-            Try demo first
-          </ButtonLink>
+      </Band>
+      <Band>
+        <div className="grid gap-5 lg:grid-cols-[0.75fr_1fr] lg:items-center">
+          <SectionTitle
+            eyebrow="honest estimates"
+            title="Fast sorting first. Final checks before buying."
+            body="ShelfMargin is useful when it helps you move through the shelf faster. Estimated values are not a promise of sale price, rank, eligibility, fees, or profit."
+          />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Feature icon={Scan} title="Scan" body="Capture books quickly with the input already focused." tone="blue" />
+            <Feature icon={ClipboardCheck} title="Save" body="Keep only the books worth another look." tone="green" />
+            <Feature icon={ClipboardList} title="Export" body="Check the list later against real marketplace data." tone="amber" />
           </div>
         </div>
       </Band>
@@ -521,32 +562,42 @@ function ProductPage({ session }) {
 
 function PricingPage({ session }) {
   const plans = [
-    ["Free beta", "$0", "Use now while we test real scanning trips."],
-    ["Starter", "$15/mo", "First paid plan for solo book resellers."],
-    ["Pro", "$29/mo", "Planned after live marketplace data is useful."],
+    ["Free beta", "$0", "Test the scanner workflow while live pricing data is still being connected.", "Use now"],
+    ["Starter", "$15/mo", "For one reseller who wants saved scans, buy lists, notes, and CSV export.", "Planned"],
+    ["Pro", "$29/mo", "Planned for heavier sourcing once live marketplace data is useful enough.", "Later"],
   ];
-  const paidSignals = [
-    ["Find one good buy", "A paid plan has to help users find enough profitable books to justify the monthly cost."],
-    ["Avoid bad buys", "If the app helps skip books with weak profit or risky seller restrictions, that still counts as value."],
-    ["Save sourcing time", "The scanner workflow needs to be faster than typing ISBNs into several separate tools."],
+  const valueChecks = [
+    ["Find better picks", "Save books that look worth checking instead of guessing from memory."],
+    ["Skip weak books", "Pass faster when the estimate, condition, or notes do not justify the buy."],
+    ["Leave with a list", "Export CSV before you spend money or bring home a pile."],
   ];
   return (
     <Band>
       <SectionTitle
         eyebrow="pricing"
-        title="Simple pricing for book resellers"
-        body="Start free while ShelfMargin is in beta. The first paid plan is planned at $15/month once the app proves real sourcing value."
+        title="Free while the scanner is being field-tested"
+        body="Pricing stays simple: free beta now, then Starter at $15/month and Pro at $29/month after the product proves real sourcing value."
       />
-      <div className="mt-7" style={{ borderTop: `1px solid ${LINE}` }}>
-        {plans.map(([name, price, note]) => (
-          <div key={name} className="grid gap-2 py-5 sm:grid-cols-[150px_120px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
+      <div className="mt-7 overflow-hidden rounded-lg bg-white" style={{ border: `1px solid ${LINE}` }}>
+        {plans.map(([name, price, note, status], index) => (
+          <div
+            key={name}
+            className="grid gap-3 px-4 py-5 sm:grid-cols-[135px_120px_1fr_auto] sm:items-center"
+            style={{ borderTop: index === 0 ? "none" : `1px solid ${LINE}`, backgroundColor: index === 0 ? AMBER_BG : "#FFFFFF" }}
+          >
             <div className="text-sm font-black">{name}</div>
             <div className="font-mono text-2xl font-black">{price}</div>
             <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{note}</div>
+            <span
+              className="w-fit rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest"
+              style={{ backgroundColor: index === 0 ? "#FFFFFF" : BLUE_BG, color: index === 0 ? INK : BLUE, border: `1px solid ${index === 0 ? YELLOW : LINE}` }}
+            >
+              {status}
+            </span>
           </div>
         ))}
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[0.7fr_1fr] lg:items-start">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[0.75fr_1fr] lg:items-start">
         <div>
           <div className="text-xs font-black uppercase tracking-widest" style={{ color: BLUE }}>included</div>
           <ul className="mt-3 grid gap-2 text-sm font-bold" style={{ color: MUTED }}>
@@ -559,15 +610,15 @@ function PricingPage({ session }) {
           </ul>
           <div className="mt-5">
             <ButtonLink href={session ? hashForSection("dashboard") : publicPath("login")} tone="dark">
-              {session ? "Go to dashboard" : "Create account"}
+              {session ? "Go to dashboard" : "Create free account"}
             </ButtonLink>
           </div>
         </div>
         <div className="grid gap-3">
           {[
-            ["Billing next", "Stripe checkout and account billing are not connected yet."],
-            ["Solo first", "Keep the first paid offer focused on one reseller scanning books."],
-            ["Support email", `${SUPPORT_EMAIL} is planned once the domain and inbox are secured.`],
+            ["Billing", "Stripe checkout and account billing are not connected yet."],
+            ["Marketplace data", "Values are estimates until live pricing and fee data are connected."],
+            ["Support", `${SUPPORT_EMAIL} is planned once the domain and inbox are secured.`],
           ].map(([title, body]) => (
             <div key={title} className="grid gap-2 py-3 sm:grid-cols-[150px_1fr]" style={{ borderBottom: `1px solid ${LINE}` }}>
               <div className="text-sm font-black">{title}</div>
@@ -576,18 +627,10 @@ function PricingPage({ session }) {
           ))}
         </div>
       </div>
-      <div className="mt-8" style={{ borderTop: `1px solid ${LINE}` }}>
-        <div className="py-4 text-xs font-black uppercase tracking-widest" style={{ color: "#8A6100" }}>
-          what makes it worth paying for?
-        </div>
-        <div className="grid gap-0">
-          {paidSignals.map(([title, body]) => (
-            <div key={title} className="grid gap-2 py-4 sm:grid-cols-[180px_1fr]" style={{ borderTop: `1px solid ${LINE}` }}>
-              <div className="text-sm font-black">{title}</div>
-              <div className="text-sm font-bold leading-relaxed" style={{ color: MUTED }}>{body}</div>
-            </div>
-          ))}
-        </div>
+      <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        {valueChecks.map(([title, body]) => (
+          <Feature key={title} icon={CheckCircle2} title={title} body={body} tone="plain" />
+        ))}
       </div>
     </Band>
   );
@@ -680,6 +723,7 @@ function PublicFooter() {
         <div className="flex flex-wrap gap-4">
           <a href={publicPath("product")}>Product</a>
           <a href={publicPath("pricing")}>Pricing</a>
+          <a href={publicPath("security")}>Security</a>
           <a href={publicPath("privacy")}>Privacy</a>
           <a href={publicPath("terms")}>Terms</a>
         </div>
