@@ -40,6 +40,8 @@ browser on desktop and mobile before we build a native iOS app.
 
 - Prove that users can find or avoid enough buys to justify payment.
 - Track real scans, checked books, buy-list saves, exports, and repeat use.
+- Use `src/lib/mvpReadiness.js` as the local evidence model for deciding when
+  the product is ready for paid beta, live-data spend, and later iOS planning.
 - Use a simple pricing ladder: free beta, $15/month Starter, and $29/month Pro
   after live data is useful.
 - Treat Apple Watch alerts as a future paid Pro feature, not a free beta
