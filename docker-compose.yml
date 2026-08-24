@@ -3,5 +3,7 @@ services:
     build: .
     image: shelfmargin-web
     container_name: shelfmargin-preview
+    env_file:
+      - .env.local
     ports:
       - "5173:4173"

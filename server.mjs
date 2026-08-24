@@ -8,6 +8,7 @@ import {
   parseOpenLibraryBooks,
   parseOpenLibrarySearch,
 } from "./src/providers/liveProvider.js";
+import { publicStripeStatus } from "./src/lib/stripeConfig.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const distDir = join(__dirname, "dist");
@@ -197,6 +198,11 @@ export function createShelfMarginServer() {
           return;
         }
         sendJson(res, 200, { isbn, ...hit });
+        return;
+      }
+
+      if (url.pathname === "/api/stripe/status") {
+        sendJson(res, 200, publicStripeStatus());
         return;
       }
 

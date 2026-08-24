@@ -60,4 +60,20 @@ describe("server security protections", () => {
     expect(await res.text()).toBe("Not found");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
   });
+
+  it("reports Stripe configuration without exposing secret values", async () => {
+    process.env.VITE_STRIPE_PUBLISHABLE_KEY = `pk_test_${"a".repeat(100)}`;
+    process.env.STRIPE_SECRET_KEY = `sk_test_${"b".repeat(100)}`;
+    process.env.STRIPE_WEBHOOK_SECRET = `whsec_${"c".repeat(32)}`;
+
+    const res = await fetch(`${baseUrl}/api/stripe/status`);
+    const text = await res.text();
+    const body = JSON.parse(text);
+
+    expect(res.status).toBe(200);
+    expect(body.configured).toBe(true);
+    expect(body.mode).toBe("test");
+    expect(text).not.toContain("sk_test_");
+    expect(text).not.toContain("whsec_");
+  });
 });
