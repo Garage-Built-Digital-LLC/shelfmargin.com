@@ -18,6 +18,7 @@ Do not put the Supabase service role key in this Vite frontend app.
 - `first_user_admin`
 - `harden_rls_and_profile_updates`
 - `billing_accounts`
+- `harden_advisor_findings`
 
 ## Required Tables
 
@@ -64,6 +65,6 @@ Anonymous users should not be able to read billing account rows.
 - Confirm the free-beta billing row is created automatically.
 - Scan one book and confirm the row saves in `scans`.
 - Save one book-check row and confirm it upserts into `scan_verifications`.
-- Apply `0004_harden_rls_and_profile_updates.sql` and `0005_billing_accounts.sql` to hosted Supabase before public testing.
+- Apply `0004_harden_rls_and_profile_updates.sql`, `0005_billing_accounts.sql`, and `0006_harden_advisor_findings.sql` to hosted Supabase before public testing.
 - Run a two-user RLS check after the hosted migrations are applied.
 - Move export history from browser local storage into a database table when it becomes a product feature.
