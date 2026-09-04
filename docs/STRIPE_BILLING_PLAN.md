@@ -47,14 +47,18 @@ These must never be added to the Vite browser app:
 
 - `STRIPE_SECRET_KEY` or a restricted `STRIPE_RAK`
 - `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_STARTER_PRICE_ID`
+- `STRIPE_PRO_PRICE_ID`
 
 These can be public only if needed by a future client checkout helper:
 
 - `VITE_STRIPE_PUBLISHABLE_KEY`
 
-For the current Vite app, Stripe server calls require a backend boundary before
-implementation. That can be a Vercel Function, Supabase Edge Function, or a
-future Next.js route handler. Do not call Stripe secret APIs from browser code.
+The local server also reads `APP_BASE_URL` to build Stripe Checkout success and
+cancel redirect URLs.
+
+For the current Vite app, Stripe server calls must stay behind the local/server
+boundary. Do not call Stripe secret APIs from browser code.
 
 ## Checkout Flow
 
@@ -62,7 +66,7 @@ future Next.js route handler. Do not call Stripe secret APIs from browser code.
 2. User chooses Starter or Pro from the pricing/account screen.
 3. Browser calls a server endpoint with the requested plan ID.
 4. Server verifies the Supabase user.
-5. Server maps the plan ID to a trusted Stripe price ID or lookup key.
+5. Server maps the plan ID to a trusted Stripe price ID from server-only env.
 6. Server creates a Checkout Session with `mode: "subscription"`.
 7. Browser redirects to Stripe-hosted Checkout.
 8. Stripe redirects back to a success URL with `session_id`.
@@ -71,6 +75,14 @@ future Next.js route handler. Do not call Stripe secret APIs from browser code.
 
 Do not trust client-submitted price IDs, amounts, currencies, email addresses,
 or paid access state.
+
+Current implementation status: `/api/stripe/checkout` creates subscription
+Checkout Sessions only when Stripe keys, both plan price IDs, Supabase Auth, and
+the webhook signing secret are configured. Until then it fails closed with a
+server-side configuration error.
+
+The checkout endpoint is rate limited server-side. Keep this protection in
+place when moving from local preview to hosted deployment.
 
 ## Customer Portal Flow
 
@@ -84,6 +96,14 @@ Use Stripe Customer Portal for self-service billing management:
 The app should show this as `Manage subscription` inside the future account menu.
 The server must create the portal session from the authenticated user's stored
 Stripe customer ID.
+
+Current implementation status: `/api/stripe/portal` verifies the signed-in
+Supabase user, reads that user's stored Stripe customer ID from
+`billing_accounts`, and creates a Stripe Customer Portal session. Users without
+a Stripe customer ID are told to start a paid plan first.
+
+The portal endpoint is rate limited server-side and never accepts a customer ID
+from the browser.
 
 ## Webhook Trust Rules
 
@@ -135,6 +155,14 @@ create table private.stripe_events (
   processed_at timestamptz not null default now()
 );
 ```
+
+Webhook processing records event IDs through the service-role-only
+`public.record_stripe_event(...)` RPC before applying billing updates. Duplicate
+events are acknowledged but skipped.
+
+The webhook code also rejects paid-access updates unless the Stripe price maps
+to a known Shelf Margin lookup key or server-owned price ID, uses `usd`, and
+matches the expected monthly amount (`Starter` $15, `Pro` $29).
 
 ## Implementation Slices
 

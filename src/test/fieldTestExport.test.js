@@ -24,8 +24,8 @@ describe("book-check export", () => {
     expect(row.isbn).toBe("9780306406157");
     expect(row.copies).toBe(2);
     expect(row.app_status_est).toBe("buy");
-    expect(row.app_recommended_channel_est).toBe("amazon");
     expect(row.app_amazon_price_est).toBe("34.99");
+    expect(row.app_data_confidence).toBe("Amazon data");
     expect(row.actual_source_checked).toBe("");
     expect(row.real_decision).toBe("");
   });
@@ -45,7 +45,7 @@ describe("book-check export", () => {
       threshold: 5,
       verification: {
         "scan-1": {
-          actual_source_checked: "amazon+ebay",
+          actual_source_checked: "amazon",
           amazon_eligible: "yes",
           amazon_actual_price: "31.50",
           actual_net: "16.20",
@@ -55,7 +55,7 @@ describe("book-check export", () => {
       },
     });
 
-    expect(row.actual_source_checked).toBe("amazon+ebay");
+    expect(row.actual_source_checked).toBe("amazon");
     expect(row.amazon_eligible).toBe("yes");
     expect(row.actual_net).toBe("16.20");
     expect(row.real_decision).toBe("buy");

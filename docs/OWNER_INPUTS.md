@@ -17,13 +17,17 @@ real books, business decisions, or external service access.
 
 - Sign in with `dillonw@garagebuiltdigital.com`.
 - Confirm the admin badge shows next to the email in the app.
+- Treat the Amazon Professional plan as a one-month validation cost and cancel
+  it if live scanner proof does not justify keeping it.
+- Once Professional access is active, generate the Amazon LWA client ID, client
+  secret, and refresh token.
 - Use Scanner Test to confirm the barcode scanner sends one complete ISBN and presses Enter.
 - Scan 20 to 50 real books with the barcode scanner you plan to use.
 - Record whether each real scan matched the title on the physical book.
 - Set the real average cost per book.
 - Set the minimum profit that makes a book worth buying.
-- Check app estimates against real Amazon and eBay prices before buying.
-- Decide which live data source should be wired first.
+- Check app estimates against real Amazon data before buying.
+- Use Amazon as the first live data source.
 - Provide any marketplace API credentials only through server-side environment variables.
 - Secure the `shelfmargin.com` domain.
 - Activate the `support@shelfmargin.com` inbox before public launch.

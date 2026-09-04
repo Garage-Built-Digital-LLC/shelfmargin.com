@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, FileSpreadsheet, Scan, ShieldCheck } from "lucide-react";
 import { supabase, supabaseReady } from "../lib/supabase.js";
+import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath } from "../lib/siteRoutes.js";
 
 const BG = "#FFFBEB";
@@ -12,6 +13,7 @@ const RED = "#DC2626";
 const MUTED = "#6B7280";
 const LINE = "#E5E7EB";
 const BLUE_BG = "#EFF6FF";
+const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function StripeBar() {
   return (
@@ -186,7 +188,7 @@ export default function Auth({ initialMode = "signin" }) {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={10}
                     value={pw}
                     onChange={(e) => setPw(e.target.value)}
                     className="w-full mt-1 px-3 py-2 bg-transparent outline-none font-mono text-base normal-case"
@@ -200,7 +202,7 @@ export default function Auth({ initialMode = "signin" }) {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={10}
                     value={pwConfirm}
                     onChange={(e) => setPwConfirm(e.target.value)}
                     className="w-full mt-1 px-3 py-2 bg-transparent outline-none font-mono text-base normal-case"
@@ -241,7 +243,7 @@ export default function Auth({ initialMode = "signin" }) {
                     Forgot password?
                   </button>
                   <a
-                    href={publicPath("demo")}
+                    href={DEMO_SCAN_PATH}
                     className="text-xs font-black uppercase tracking-widest"
                     style={{ color: INK }}
                   >

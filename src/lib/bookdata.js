@@ -17,16 +17,22 @@ export function velocityToDb(tier) {
   return tier === "Fast" ? "fast" : tier === "Moderate" ? "medium" : tier === "Slow" ? "slow" : "unknown";
 }
 
+// Demo catalog — chosen to tell the true reseller story: technical books,
+// professional references, and evergreen nonfiction hold used value (clear BUYs),
+// while mass-market bestsellers and common kids' books are oversupplied penny
+// books (PASS). Prices are representative used Amazon prices for the demo only.
+// Order matters: index 0 is the featured/queued demo row; slice(0,5) drives the
+// tap-to-try chips, slice(0,6) seeds the demo ledger.
 const KNOWN = {
-  "9780143127550": { title: "The Goldfinch", author: "Donna Tartt", amazonPrice: 11.4, ebayPrice: 9.75 },
-  "9780062315007": { title: "The Alchemist", author: "Paulo Coelho", amazonPrice: 8.9, ebayPrice: 7.2 },
-  "9780307474278": { title: "The Da Vinci Code", author: "Dan Brown", amazonPrice: 4.25, ebayPrice: 6.1 },
-  "9780679783268": { title: "Pride and Prejudice", author: "Jane Austen", amazonPrice: 6.5, ebayPrice: 5.4 },
-  "9780451524935": { title: "1984", author: "George Orwell", amazonPrice: 7.8, ebayPrice: 6.3 },
-  "9780316769488": { title: "The Catcher in the Rye", author: "J.D. Salinger", amazonPrice: 9.15, ebayPrice: 7.9 },
-  "9780061120084": { title: "To Kill a Mockingbird", author: "Harper Lee", amazonPrice: 10.2, ebayPrice: 8.4 },
-  "9780743273565": { title: "The Great Gatsby", author: "F. Scott Fitzgerald", amazonPrice: 5.6, ebayPrice: 7.15 },
-  "9780544003415": { title: "The Lord of the Rings", author: "J.R.R. Tolkien", amazonPrice: 18.5, ebayPrice: 15.9 },
+  "9781449373320": { title: "Designing Data-Intensive Applications", author: "Martin Kleppmann", amazonPrice: 34.5 },
+  "9780143127741": { title: "The Body Keeps the Score", author: "Bessel van der Kolk", amazonPrice: 13.8 },
+  "9780735211292": { title: "Atomic Habits", author: "James Clear", amazonPrice: 10.2 },
+  "9780984782857": { title: "Cracking the Coding Interview", author: "Gayle Laakmann McDowell", amazonPrice: 28.0 },
+  "9780399226908": { title: "The Very Hungry Caterpillar", author: "Eric Carle", amazonPrice: 5.4 },
+  "9780062316097": { title: "Sapiens", author: "Yuval Noah Harari", amazonPrice: 14.4 },
+  "9780135957059": { title: "The Pragmatic Programmer", author: "David Thomas, Andrew Hunt", amazonPrice: 32.0 },
+  "9780399590504": { title: "Educated", author: "Tara Westover", amazonPrice: 12.6 },
+  "9780735219090": { title: "Where the Crawdads Sing", author: "Delia Owens", amazonPrice: 6.2 },
 };
 export const DEMO_ISBNS = Object.keys(KNOWN);
 
@@ -44,7 +50,6 @@ export function lookupCore(isbn) {
     title: "UNIDENTIFIED TITLE",
     author: "—",
     amazonPrice: 4 + (seed % 1800) / 100,
-    ebayPrice: 3 + (seed % 1400) / 100,
   };
 }
 
@@ -138,18 +143,20 @@ export function velocityInfo(history) {
   return { avg, trend, tier, current: history[history.length - 1] };
 }
 
-export function calcNet(price, platform, cost) {
+// Amazon net proceeds — matches the fee model in profit.js, including the
+// $1.80 media variable closing fee and the $0.30 minimum referral. Leaving the
+// closing fee out is the classic error that turns a "$2 profit" into a loss.
+export function calcNet(price, cost) {
   if (price == null) return null;
-  if (platform === "amazon") return price - price * 0.15 - 4.49 - cost;
-  return price - (price * 0.1325 + 0.3) - 4.0 - cost;
+  const referral = Math.max(price * 0.15, 0.3);
+  return Math.round((price - referral - 1.8 - 4.49 - cost) * 100) / 100;
 }
 
 // Build a full UI entry from an ISBN + CORE data (from the provider or a DB row).
 // `extra` carries persisted state: count, queued, condition, listPrice, restricted, dbId.
 export function buildEntry(isbn, core, cost, id, extra = {}) {
-  const amazonNet = calcNet(core.amazonPrice, "amazon", cost);
-  const ebayNet = calcNet(core.ebayPrice, "ebay", cost);
-  const winner = ebayNet == null || amazonNet >= ebayNet ? "amazon" : "ebay";
+  const amazonNet = calcNet(core.amazonPrice, cost);
+  const winner = "amazon";
   const history = rankHistory(isbn);
   const restricted = extra.restricted ?? isRestricted(isbn);
   return {
@@ -158,12 +165,13 @@ export function buildEntry(isbn, core, cost, id, extra = {}) {
     title: core.title,
     author: core.author,
     amazonPrice: core.amazonPrice,
-    ebayPrice: core.ebayPrice,
     source: core.source,
     catalogSource: core.catalogSource,
     priceSource: core.priceSource,
+    asin: core.asin,
+    amazonMode: core.amazonMode,
+    marketplaceId: core.marketplaceId,
     amazonNet,
-    ebayNet,
     winner,
     count: extra.count ?? 1,
     queued: extra.queued ?? false,

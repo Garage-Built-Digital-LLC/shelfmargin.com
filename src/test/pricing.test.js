@@ -4,7 +4,7 @@ import {
   pricingPlanById,
   PRICING_PLANS,
   PRICING_STATUS,
-} from "../lib/pricing.js";
+} from "../../packages/core/pricing.js";
 
 describe("pricing model", () => {
   it("keeps the starter plan locked at the first planned paid price", () => {

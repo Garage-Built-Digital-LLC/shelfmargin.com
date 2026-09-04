@@ -20,28 +20,33 @@ import {
   readExportHistory,
   writeExportHistory,
 } from "../lib/fieldTestSummary.js";
-import { scanSessionSummary } from "../lib/sessionSummary.js";
+import { scanSessionSummary } from "../../packages/core/sessionSummary.js";
 import { DEFAULT_SECTION, hashForSection, sectionFromHash } from "../lib/appRoutes.js";
 import { publicPath } from "../lib/siteRoutes.js";
-import { supabaseReady } from "../lib/supabase.js";
-import { cleanScan, normalizeToIsbn13 } from "../lib/isbn.js";
+import { supabase, supabaseReady } from "../lib/supabase.js";
+import { cleanScan, normalizeToIsbn13 } from "../../packages/core/isbn.js";
 
-// Scanner-console palette: neutral base, verdict colors do the work.
-const BG = "#F6F8FB";
-const INK = "#101828";
-const YELLOW = "#FDE047";
-const GREEN = "#16A34A";
-const GREEN_BG = "#ECFDF5";
-const RED = "#DC2626";
-const RED_BG = "#FEF2F2";
-const AMBER_BG = "#FFF7ED";
-const LINE = "#D6DDE8";
-const MUTED = "#667085";
-const BLUE = "#2563EB";
-const BLUE_BG = "#EFF6FF";
+// Slate Apricot palette: calm field-tool base, warm CTA, sharp verdict colors.
+const BG = "#F7F2E8";
+const INK = "#171717";
+const YELLOW = "#F4D35E";
+const GREEN = "#2E7D50";
+const GREEN_BG = "#E4EFE7";
+const RED = "#C24132";
+const RED_BG = "#F4E0DB";
+const AMBER_BG = "#F6E9D2";
+const LINE = "#D8CFBC";
+const MUTED = "#5E625F";
+const BLUE = "#1F5A7A";
+const BLUE_BG = "#E4EEF3";
 const SURFACE = "#FFFFFF";
-const DARK = "#0B1220";
-const EMPTY_SCAN_IMAGE = "/assets/images/product/empty-state-scan.webp";
+const SOFT = "#EFE7D6";
+const DARK = "#171717";
+const APP_BG = BG;
+const APP_PANEL = BG;
+const DARK_SURFACE = "#221D15";
+const DARK_MUTED = "#AA9F8B";
+const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function dbToDisplayCondition(c) {
   return c === "new" ? "Like New" : c === "used-acceptable" ? "Acceptable" : "Good";
@@ -53,7 +58,6 @@ function rowToEntry(row) {
     title: row.title,
     author: row.author,
     amazonPrice: row.amazon_price != null ? Number(row.amazon_price) : 0,
-    ebayPrice: row.ebay_price != null ? Number(row.ebay_price) : null,
   };
   const queued = row.lifecycle_status === "purchased";
   const entry = buildEntry(row.isbn, core, cost, row.id, {
@@ -63,12 +67,12 @@ function rowToEntry(row) {
     restricted: row.restricted,
     at: row.created_at,
   });
-  if (queued) entry.listPrice = entry.winner === "amazon" ? entry.amazonPrice : entry.ebayPrice;
+  if (queued) entry.listPrice = entry.amazonPrice;
   return entry;
 }
 
 function entryToRow(entry, userId, cost, threshold) {
-  const bestNet = Math.max(entry.amazonNet, entry.ebayNet ?? -Infinity);
+  const bestNet = entry.amazonNet ?? -Infinity;
   const status = entry.restricted ? "check" : bestNet >= threshold ? "buy" : "pass";
   return {
     user_id: userId,
@@ -78,12 +82,11 @@ function entryToRow(entry, userId, cost, threshold) {
     condition: "used-good",
     cost_per_book: cost,
     amazon_price: entry.amazonPrice,
-    ebay_price: entry.ebayPrice,
-    ebay_price_basis: "active-median",
+    ebay_price: null,
+    ebay_net: null,
     amazon_bsr: entry.velocity?.current ?? null,
     amazon_net: Number(entry.amazonNet.toFixed(2)),
-    ebay_net: entry.ebayNet != null ? Number(entry.ebayNet.toFixed(2)) : null,
-    recommended_platform: entry.winner,
+    recommended_platform: "amazon",
     velocity: velocityToDb(entry.velocity?.tier),
     status,
     restricted: entry.restricted,
@@ -166,16 +169,16 @@ function ShellButton({ active, icon: Icon, label, detail, href, onClick }) {
       data-href={href}
       className="min-w-0 rounded-xl px-3 py-2 text-left flex items-center gap-2"
       style={{
-        backgroundColor: active ? DARK : SURFACE,
-        color: active ? "#FFFFFF" : INK,
-        border: `1px solid ${active ? DARK : LINE}`,
-        boxShadow: active ? "0 10px 22px rgba(11, 18, 32, 0.18)" : "0 1px 2px rgba(16, 24, 40, 0.04)",
+        backgroundColor: active ? YELLOW : SURFACE,
+        color: INK,
+        border: `1px solid ${active ? YELLOW : LINE}`,
+        boxShadow: active ? "0 10px 22px rgba(255, 184, 107, 0.22)" : "none",
       }}
     >
       <Icon size={16} className="shrink-0" />
       <span className="min-w-0">
         <span className="block text-xs font-black truncate">{label}</span>
-        {detail && <span className="block text-[10px] font-mono truncate" style={{ color: active ? "#DDE6F4" : MUTED }}>{detail}</span>}
+        {detail && <span className="block text-[10px] font-mono truncate" style={{ color: MUTED }}>{detail}</span>}
       </span>
     </button>
   );
@@ -191,7 +194,7 @@ function BottomNav({ view, queuedCount, totalUnits, onNavigate }) {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-30 border-t px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:hidden"
-      style={{ backgroundColor: "rgba(255, 255, 255, 0.96)", borderColor: LINE, backdropFilter: "blur(14px)" }}
+      style={{ backgroundColor: "rgba(248, 250, 252, 0.96)", borderColor: LINE, backdropFilter: "blur(14px)" }}
       aria-label="Field workflow navigation"
     >
       <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
@@ -204,15 +207,15 @@ function BottomNav({ view, queuedCount, totalUnits, onNavigate }) {
               onClick={() => onNavigate(id)}
               className="min-h-14 rounded-2xl px-2 py-2 text-center"
               style={{
-                backgroundColor: active ? DARK : BG,
-                color: active ? "#FFFFFF" : INK,
-                border: `1px solid ${active ? DARK : LINE}`,
-                boxShadow: active ? "0 10px 24px rgba(11, 18, 32, 0.18)" : "none",
+                backgroundColor: active ? YELLOW : SURFACE,
+                color: INK,
+                border: `1px solid ${active ? YELLOW : LINE}`,
+                boxShadow: active ? "0 10px 24px rgba(255, 184, 107, 0.22)" : "none",
               }}
             >
               <Icon size={18} className="mx-auto" />
               <span className="mt-1 block text-[11px] font-black leading-none">{label}</span>
-              <span className="mt-0.5 block text-[9px] font-mono font-bold" style={{ color: active ? "#DDE6F4" : MUTED }}>
+              <span className="mt-0.5 block text-[9px] font-mono font-bold" style={{ color: MUTED }}>
                 {detail}
               </span>
             </button>
@@ -301,10 +304,10 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
 }
 
 function MetricBox({ label, value, tone = "plain" }) {
-  const toneBg = tone === "buy" ? GREEN_BG : tone === "warn" ? AMBER_BG : tone === "action" ? BLUE_BG : "#FFFFFF";
+  const toneBg = tone === "buy" ? GREEN_BG : tone === "warn" ? AMBER_BG : tone === "action" ? BLUE_BG : SURFACE;
   const toneColor = tone === "buy" ? GREEN : tone === "warn" ? "#8A6100" : tone === "action" ? BLUE : INK;
   return (
-    <div className="rounded-lg px-3 py-2" style={{ backgroundColor: toneBg, border: `1px solid ${LINE}`, boxShadow: "0 1px 2px rgba(31, 41, 55, 0.04)" }}>
+    <div className="rounded-xl px-3 py-2" style={{ backgroundColor: toneBg, border: `1px solid ${LINE}`, boxShadow: "0 6px 18px rgba(30, 41, 59, 0.08)" }}>
       <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>{label}</div>
       <div className="text-2xl font-black font-mono" style={{ color: toneColor }}>{value}</div>
     </div>
@@ -334,8 +337,45 @@ function AdminCheck({ done, label, detail }) {
   );
 }
 
+function catalogSourceLabel(entry) {
+  const source = entry.catalogSource || entry.source || LOOKUP_STATUS.mode;
+  if (source === "amazon-sp-api") return "Amazon catalog";
+  if (source === "amazon-sp-api-sandbox") return "Amazon sandbox catalog";
+  if (source === "openlibrary") return "Open Library catalog";
+  if (source === "openlibrary-search") return "Open Library search";
+  if (source === "google-books") return "Google Books catalog";
+  if (source === "estimated") return "Estimated sample data";
+  if (source === "sample") return "Sample data";
+  return source;
+}
+
+function DataSourceBadge({ entry }) {
+  const source = entry.catalogSource || entry.source || LOOKUP_STATUS.mode;
+  const amazon = source === "amazon-sp-api" || source === "amazon-sp-api-sandbox";
+  const color = amazon ? BLUE : "#8A6100";
+  const bg = amazon ? BLUE_BG : AMBER_BG;
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest"
+      style={{ color, backgroundColor: bg, border: `1px solid ${color}` }}
+    >
+      {catalogSourceLabel(entry)}
+    </span>
+  );
+}
+
+function typedIsbnStatus(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+  const cleaned = cleanScan(value);
+  const normalized = normalizeToIsbn13(value);
+  if (normalized) return normalized;
+  if (cleaned.length < 10) return "reading...";
+  return "check ISBN";
+}
+
 function decisionMeta(entry, threshold) {
-  const bestNet = Math.max(entry.amazonNet, entry.ebayNet ?? -Infinity);
+  const bestNet = entry.amazonNet ?? -Infinity;
   const meets = bestNet >= threshold;
   const label = entry.restricted ? "check" : meets ? "buy" : "pass";
   const color = entry.restricted ? "#8A6100" : meets ? GREEN : RED;
@@ -350,12 +390,12 @@ function StickyDecisionBar({ entry, threshold, onSave, onDetails }) {
   return (
     <div
       className="sticky bottom-20 z-20 -mx-3 mt-4 px-3 py-2 sm:bottom-0"
-      style={{ backgroundColor: "rgba(246, 248, 251, 0.96)", borderTop: `1px solid ${LINE}`, backdropFilter: "blur(10px)" }}
+      style={{ backgroundColor: "rgba(17, 24, 39, 0.96)", borderTop: `1px solid rgba(255,255,255,0.12)`, backdropFilter: "blur(10px)" }}
     >
       <div className="mb-2 flex items-center justify-between gap-3 text-xs font-bold">
         <div className="min-w-0">
           <div className="truncate font-black uppercase tracking-widest" style={{ color }}>last scan: {label}</div>
-          <div className="truncate normal-case" style={{ color: MUTED }}>{entry.title}</div>
+          <div className="truncate normal-case" style={{ color: DARK_MUTED }}>{entry.title}</div>
         </div>
         <div className="font-mono text-lg font-black" style={{ color }}>
           {bestNet >= 0 ? "+" : ""}${(bestNet * entry.count).toFixed(2)}
@@ -415,7 +455,7 @@ function PageHeader({ title, subtitle, action }) {
 
 function EmptyState({ icon: Icon, imageSrc, imageAlt = "", title, body, action }) {
   return (
-    <div className="rounded-lg px-4 py-10 text-center" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+    <div className="rounded-2xl px-4 py-10 text-center" style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE, boxShadow: "0 10px 28px rgba(30, 41, 59, 0.08)" }}>
       {imageSrc ? (
         <img
           src={imageSrc}
@@ -567,10 +607,14 @@ function ExportHistoryList({ history }) {
 function SyncStatus({ demoMode, verificationReady, loading }) {
   if (demoMode) {
     return (
-      <div className="mb-3 flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
-        style={{ backgroundColor: BLUE_BG, color: BLUE, border: `2px solid ${BLUE}` }}>
-        <CloudOff size={14} />
-        demo mode - sample data only - create an account to save real scans
+      <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full px-3 py-1.5 text-[11px] font-bold"
+        style={{ backgroundColor: BLUE_BG, color: BLUE }}>
+        <CloudOff size={13} />
+        <span className="font-black">Demo mode</span>
+        <span style={{ opacity: 0.7 }}>· sample data, nothing saves ·</span>
+        <a href={publicPath("login")} className="font-black" style={{ textDecoration: "underline", textUnderlineOffset: 2 }}>
+          Create a free account
+        </a>
       </div>
     );
   }
@@ -602,8 +646,8 @@ function VerifyInput({ label, value, onChange, type = "text", placeholder }) {
         value={value || ""}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full bg-transparent px-2 py-1.5 text-xs font-mono normal-case outline-none"
-        style={{ border: `2px solid ${LINE}`, color: INK }}
+        className="mt-1 w-full px-2 py-1.5 text-xs font-mono normal-case outline-none"
+        style={{ border: `2px solid ${LINE}`, color: INK, backgroundColor: SURFACE }}
       />
     </label>
   );
@@ -616,8 +660,8 @@ function VerifySelect({ label, value, onChange, options }) {
       <select
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full bg-transparent px-2 py-1.5 text-xs font-bold normal-case outline-none"
-        style={{ border: `2px solid ${LINE}`, color: INK }}
+        className="mt-1 w-full px-2 py-1.5 text-xs font-bold normal-case outline-none"
+        style={{ border: `2px solid ${LINE}`, color: INK, backgroundColor: SURFACE }}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
@@ -649,7 +693,7 @@ function buildDemoEntries(cost) {
       queued: index === 0,
       condition: "Good",
     });
-    if (entry.queued) entry.listPrice = entry.winner === "amazon" ? entry.amazonPrice : entry.ebayPrice;
+    if (entry.queued) entry.listPrice = entry.amazonPrice;
     return entry;
   });
 }
@@ -688,18 +732,253 @@ function useTones(enabled) {
   };
 }
 
+function downloadJson(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function AccountDataCard({ session, onSignOut, demoMode }) {
+  const [busy, setBusy] = useState("");
+  const [msg, setMsg] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const token = session?.access_token || "";
+
+  async function handleExport() {
+    if (!token) { setMsg({ tone: "err", text: "Sign in to export your data." }); return; }
+    setBusy("export"); setMsg(null);
+    try {
+      const res = await fetch("/api/account/export", { headers: { authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Export failed. Try again in a moment.");
+      const data = await res.json();
+      downloadJson(`shelfmargin-data-${new Date().toISOString().slice(0, 10)}.json`, data);
+      setMsg({ tone: "ok", text: "Your data downloaded as JSON." });
+    } catch (err) { setMsg({ tone: "err", text: err.message || "Export failed." }); }
+    finally { setBusy(""); }
+  }
+
+  async function handleDelete() {
+    if (!token) { setMsg({ tone: "err", text: "Sign in to delete your account." }); return; }
+    setBusy("delete"); setMsg(null);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST", headers: { authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Deletion failed. Try again or contact support.");
+      setMsg({ tone: "ok", text: "Account deleted. Signing you out..." });
+      setTimeout(() => { if (onSignOut) onSignOut(); }, 1200);
+    } catch (err) { setMsg({ tone: "err", text: err.message || "Deletion failed." }); setBusy(""); }
+  }
+
+  if (demoMode) {
+    return (
+      <div className="px-3 py-3" style={{ border: `2px solid ${LINE}` }}>
+        <div className="text-xs font-black uppercase tracking-widest mb-1">account &amp; data</div>
+        <div className="text-xs font-bold" style={{ color: MUTED }}>Sign in to export or delete your account data.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-3" style={{ border: `2px solid ${LINE}` }}>
+      <div className="text-xs font-black uppercase tracking-widest mb-3">account &amp; data</div>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={handleExport} disabled={busy === "export"}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
+            style={{ backgroundColor: BLUE, color: "#FFF", border: `2px solid ${LINE}` }}>
+            <FileDown size={14} /> {busy === "export" ? "preparing..." : "export my data"}
+          </button>
+          <span className="text-xs font-bold" style={{ color: MUTED }}>Download every scan, setting, and billing record as JSON.</span>
+        </div>
+        <div className="pt-3" style={{ borderTop: `2px solid ${LINE}` }}>
+          {!confirmDelete ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={() => { setConfirmDelete(true); setMsg(null); }}
+                className="flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
+                style={{ backgroundColor: RED_BG, color: RED, border: `2px solid ${RED}` }}>
+                <Trash2 size={14} /> delete account
+              </button>
+              <span className="text-xs font-bold" style={{ color: MUTED }}>Permanently removes your account and all data.</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 px-3 py-3" style={{ backgroundColor: RED_BG, border: `2px solid ${RED}` }}>
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest" style={{ color: RED }}>
+                <AlertTriangle size={14} /> this cannot be undone
+              </div>
+              <div className="text-xs font-bold" style={{ color: INK }}>
+                Deleting removes your profile, every scan and verification, and your billing record. Export first if you want a copy.
+              </div>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <button onClick={handleDelete} disabled={busy === "delete"}
+                  className="px-3 py-2 text-xs font-black uppercase tracking-widest"
+                  style={{ backgroundColor: RED, color: "#FFF", border: `2px solid ${RED}` }}>
+                  {busy === "delete" ? "deleting..." : "yes, delete everything"}
+                </button>
+                <button onClick={() => setConfirmDelete(false)} disabled={busy === "delete"}
+                  className="px-3 py-2 text-xs font-black uppercase tracking-widest"
+                  style={{ backgroundColor: SURFACE, color: INK, border: `2px solid ${LINE}` }}>
+                  cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        {msg && (
+          <div className="px-3 py-2 text-xs font-bold" style={{ border: `1px solid ${msg.tone === "err" ? RED : GREEN}`, color: msg.tone === "err" ? RED : GREEN }}>
+            {msg.text}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MfaCard({ demoMode }) {
+  const [state, setState] = useState("loading");
+  const [enroll, setEnroll] = useState(null);
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      const verified = (data?.totp || []).filter((f) => f.status === "verified");
+      setState(verified.length ? "verified" : "none");
+    } catch { setState("error"); setMsg({ tone: "err", text: "Could not load two-factor status." }); }
+  }, []);
+
+  useEffect(() => { if (!demoMode) refresh(); }, [demoMode, refresh]);
+
+  async function startEnroll() {
+    setBusy(true); setMsg(null);
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+      if (error) throw error;
+      setEnroll({ factorId: data.id, qr: data.totp?.qr_code, secret: data.totp?.secret });
+      setState("enrolling");
+    } catch (err) { setMsg({ tone: "err", text: err.message || "Could not start setup. Enable TOTP in Supabase Auth first." }); }
+    finally { setBusy(false); }
+  }
+
+  async function confirmEnroll() {
+    if (!enroll) return;
+    setBusy(true); setMsg(null);
+    try {
+      const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: enroll.factorId, code: code.trim() });
+      if (error) throw error;
+      setEnroll(null); setCode("");
+      setMsg({ tone: "ok", text: "Two-factor authentication is on." });
+      await refresh();
+    } catch (err) { setMsg({ tone: "err", text: err.message || "That code did not verify. Try again." }); }
+    finally { setBusy(false); }
+  }
+
+  async function cancelEnroll() {
+    if (enroll?.factorId) { try { await supabase.auth.mfa.unenroll({ factorId: enroll.factorId }); } catch { /* best effort */ } }
+    setEnroll(null); setCode(""); setMsg(null); setState("none");
+  }
+
+  async function removeMfa() {
+    setBusy(true); setMsg(null);
+    try {
+      const { data } = await supabase.auth.mfa.listFactors();
+      const verified = (data?.totp || []).filter((f) => f.status === "verified");
+      for (const f of verified) await supabase.auth.mfa.unenroll({ factorId: f.id });
+      setMsg({ tone: "ok", text: "Two-factor authentication removed." });
+      await refresh();
+    } catch (err) { setMsg({ tone: "err", text: err.message || "Could not remove two-factor." }); }
+    finally { setBusy(false); }
+  }
+
+  const notice = msg ? (
+    <div className="px-3 py-2 text-xs font-bold" style={{ border: `1px solid ${msg.tone === "err" ? RED : GREEN}`, color: msg.tone === "err" ? RED : GREEN }}>{msg.text}</div>
+  ) : null;
+
+  if (demoMode) {
+    return (
+      <div className="px-3 py-3" style={{ border: `2px solid ${LINE}` }}>
+        <div className="text-xs font-black uppercase tracking-widest mb-1">two-factor auth</div>
+        <div className="text-xs font-bold" style={{ color: MUTED }}>Sign in to add an extra layer of security to your account.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-3" style={{ border: `2px solid ${LINE}` }}>
+      <div className="flex items-center gap-2 mb-3">
+        <ShieldCheck size={16} color={state === "verified" ? GREEN : MUTED} />
+        <div className="text-xs font-black uppercase tracking-widest">two-factor auth</div>
+        {state === "verified" && <span className="text-[11px] font-black uppercase tracking-widest px-2 py-0.5" style={{ backgroundColor: GREEN_BG, color: GREEN }}>on</span>}
+      </div>
+      <div className="flex flex-col gap-3">
+        {state === "loading" && <div className="text-xs font-bold" style={{ color: MUTED }}>Checking status...</div>}
+        {state === "none" && (
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={startEnroll} disabled={busy}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
+              style={{ backgroundColor: BLUE, color: "#FFF", border: `2px solid ${LINE}` }}>
+              <Lock size={14} /> {busy ? "starting..." : "enable 2fa"}
+            </button>
+            <span className="text-xs font-bold" style={{ color: MUTED }}>Use an authenticator app (Google Authenticator, Authy, 1Password).</span>
+          </div>
+        )}
+        {state === "error" && (
+          <button onClick={refresh} className="px-3 py-2 text-xs font-black uppercase tracking-widest self-start" style={{ backgroundColor: SURFACE, color: INK, border: `2px solid ${LINE}` }}>retry</button>
+        )}
+        {state === "enrolling" && enroll && (
+          <div className="flex flex-col gap-3 px-3 py-3" style={{ backgroundColor: BLUE_BG, border: `2px solid ${BLUE}` }}>
+            <div className="text-xs font-bold" style={{ color: INK }}>1. Scan this QR code in your authenticator app.</div>
+            {enroll.qr ? <img src={enroll.qr} alt="Two-factor QR code" width={160} height={160} style={{ backgroundColor: "#FFF", padding: 8, border: `2px solid ${LINE}` }} /> : null}
+            {enroll.secret ? <div className="text-xs font-bold" style={{ color: MUTED }}>Can&rsquo;t scan? Enter this key: <span className="font-mono normal-case" style={{ color: INK }}>{enroll.secret}</span></div> : null}
+            <div className="text-xs font-bold" style={{ color: INK }}>2. Enter the 6-digit code it shows.</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <input inputMode="numeric" autoComplete="one-time-code" value={code}
+                onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="000000"
+                className="w-28 px-3 py-2 bg-transparent outline-none font-mono text-base tracking-widest" style={{ border: `1px solid ${LINE}`, color: INK }} />
+              <button onClick={confirmEnroll} disabled={busy || code.length !== 6}
+                className="px-3 py-2 text-xs font-black uppercase tracking-widest"
+                style={{ backgroundColor: busy || code.length !== 6 ? "#E5E7EB" : GREEN, color: "#FFF", border: `2px solid ${LINE}` }}>
+                {busy ? "verifying..." : "verify"}
+              </button>
+              <button onClick={cancelEnroll} disabled={busy}
+                className="px-3 py-2 text-xs font-black uppercase tracking-widest"
+                style={{ backgroundColor: SURFACE, color: INK, border: `2px solid ${LINE}` }}>cancel</button>
+            </div>
+          </div>
+        )}
+        {state === "verified" && (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-bold" style={{ color: MUTED }}>Your account is protected by an authenticator app.</span>
+            <button onClick={removeMfa} disabled={busy}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-black uppercase tracking-widest"
+              style={{ backgroundColor: RED_BG, color: RED, border: `2px solid ${RED}` }}>
+              <Trash2 size={14} /> {busy ? "removing..." : "remove 2fa"}
+            </button>
+          </div>
+        )}
+        {notice}
+      </div>
+    </div>
+  );
+}
+
 function Ledger({ session, onSignOut, demoMode = false }) {
   const [view, setView] = useState(() => (
     typeof window === "undefined" ? DEFAULT_SECTION : sectionFromHash(window.location.hash)
   ));
   const [isbn, setIsbn] = useState("");
-  const [cost, setCost] = useState(1.5);
-  const [threshold, setThreshold] = useState(5.0);
+  const [cost, setCost] = useState(1.0);
+  const [threshold, setThreshold] = useState(3.0);
   const [soundOn, setSoundOn] = useState(true);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [openId, setOpenId] = useState(null);
+  const [openCheckId, setOpenCheckId] = useState(null);
   const [toast, setToast] = useState(null);
   const [selected, setSelected] = useState({});
   const [verification, setVerification] = useState({});
@@ -707,6 +986,11 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const [verificationReady, setVerificationReady] = useState(true);
   const [exportHistory, setExportHistory] = useState([]);
   const [profileRole, setProfileRole] = useState("");
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [stripeStatusError, setStripeStatusError] = useState("");
+  const [amazonStatus, setAmazonStatus] = useState(null);
+  const [amazonStatusError, setAmazonStatusError] = useState("");
+  const [amazonTest, setAmazonTest] = useState({ loading: false, message: "", ok: false });
   const [scannerTestValue, setScannerTestValue] = useState("");
   const [scannerTestRows, setScannerTestRows] = useState([]);
   const inputRef = useRef(null);
@@ -728,21 +1012,22 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     (async () => {
       try {
         if (demoMode) {
-          setEntries(buildDemoEntries(cost));
-          setVerification({
+          const demoSection = sectionFromHash(window.location.hash);
+          const shouldSeedDemo = !["scan", "scannerTest", "settings"].includes(demoSection);
+          setEntries(shouldSeedDemo ? buildDemoEntries(cost) : []);
+          setVerification(shouldSeedDemo ? {
             [`demo-${DEMO_ISBNS[0]}`]: {
-              actual_source_checked: "amazon+ebay",
+              actual_source_checked: "amazon",
               amazon_eligible: "yes",
-              amazon_actual_price: "18.50",
-              amazon_actual_rank: "3043",
-              ebay_sold_comp: "15.90",
-              actual_shipping: "4.00",
-              actual_fees: "2.77",
-              actual_net: "9.73",
+              amazon_actual_price: "33.90",
+              amazon_actual_rank: "48210",
+              actual_shipping: "4.49",
+              actual_fees: "6.89",
+              actual_net: "21.52",
               real_decision: "buy",
-              notes: "Demo row showing a completed verification.",
+              notes: "Verified on Amazon — technical titles hold their used value.",
             },
-          });
+          } : {});
           setVerificationReady(true);
           return;
         }
@@ -790,6 +1075,56 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     setExportHistory(readExportHistory(window.localStorage, exportHistoryKey));
   }, [exportHistoryKey]);
 
+  useEffect(() => {
+    let alive = true;
+    if (profileRole !== "admin") {
+      setStripeStatus(null);
+      setStripeStatusError("");
+      setAmazonStatus(null);
+      setAmazonStatusError("");
+      setAmazonTest({ loading: false, message: "", ok: false });
+      return () => {
+        alive = false;
+      };
+    }
+
+    fetch("/api/stripe/status")
+      .then((response) => {
+        if (!response.ok) throw new Error("status unavailable");
+        return response.json();
+      })
+      .then((data) => {
+        if (!alive) return;
+        setStripeStatus(data);
+        setStripeStatusError("");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setStripeStatus(null);
+        setStripeStatusError("Stripe status unavailable");
+      });
+
+    fetch("/api/amazon/status")
+      .then((response) => {
+        if (!response.ok) throw new Error("status unavailable");
+        return response.json();
+      })
+      .then((data) => {
+        if (!alive) return;
+        setAmazonStatus(data);
+        setAmazonStatusError("");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setAmazonStatus(null);
+        setAmazonStatusError("Amazon status unavailable");
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [profileRole]);
+
   function showToast(msg, tone) {
     setToast({ msg, tone });
     clearTimeout(toastTimer.current);
@@ -828,15 +1163,32 @@ function Ledger({ session, onSignOut, demoMode = false }) {
 
   async function addEntry(e) {
     e.preventDefault();
-    const raw = isbn.trim();
+    await scanValue(isbn);
+  }
+
+  async function scanValue(rawInput) {
+    const raw = String(rawInput || "").trim();
     if (!raw || scanning) return;
+    const normalizedIsbn = normalizeToIsbn13(raw);
+    if (!normalizedIsbn) {
+      playPass();
+      setIsbn("");
+      showToast("scan a full ISBN barcode", "pass");
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return;
+    }
     setScanning(true);
     setIsbn("");
     try {
-      const core = await lookupBook(raw);
+      const core = await lookupBook(normalizedIsbn);
       if (!core) {
         playPass();
         showToast("not found — check the ISBN", "pass");
+        return;
+      }
+      if (!core.title || core.title === "UNIDENTIFIED TITLE") {
+        playPass();
+        showToast("title not found — check the ISBN", "pass");
         return;
       }
       const existing = entries.find((en) => en.isbn === core.isbn);
@@ -850,7 +1202,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
         return;
       }
       const temp = buildEntry(core.isbn, core, cost, demoMode ? `demo-${core.isbn}` : `tmp-${core.isbn}`);
-      const bestNet = Math.max(temp.amazonNet, temp.ebayNet ?? -Infinity);
+      const bestNet = temp.amazonNet;
       const meets = bestNet >= threshold;
       setEntries((prev) => [temp, ...prev]);
       if (temp.restricted) { playPass(); showToast(`check — ${temp.title}`, "check"); }
@@ -896,7 +1248,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
 
   function addToQueue(id) {
     setEntries((prev) => prev.map((en) =>
-      en.id === id ? { ...en, queued: true, listPrice: en.winner === "amazon" ? en.amazonPrice : en.ebayPrice, condition: "Good" } : en
+      en.id === id ? { ...en, queued: true, listPrice: en.amazonPrice, condition: "Good" } : en
     ));
     playAction();
     showToast("saved to buy list", "action");
@@ -911,10 +1263,10 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   function toggleSelect(id) { setSelected((s) => ({ ...s, [id]: !s[id] })); }
 
   const totalProfit = entries.reduce((sum, en) => {
-    const bestNet = Math.max(en.amazonNet, en.ebayNet ?? -Infinity);
+    const bestNet = en.amazonNet ?? -Infinity;
     return bestNet >= threshold ? sum + bestNet * en.count : sum;
   }, 0);
-  const buyCount = entries.filter((en) => Math.max(en.amazonNet, en.ebayNet ?? -Infinity) >= threshold).length;
+  const buyCount = entries.filter((en) => (en.amazonNet ?? -Infinity) >= threshold).length;
   const checkCount = entries.filter((en) => en.restricted).length;
   const duplicateUnits = entries.reduce((sum, en) => sum + Math.max(0, (en.count ?? 1) - 1), 0);
   const queued = entries.filter((en) => en.queued);
@@ -998,27 +1350,94 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     }
   }
 
+  async function testAmazonConnectionFromAdmin() {
+    if (!session?.access_token) {
+      setAmazonTest({ loading: false, message: "Sign in as admin first.", ok: false });
+      return;
+    }
+
+    setAmazonTest({ loading: true, message: "", ok: false });
+    try {
+      const res = await fetch("/api/amazon/test", {
+        method: "POST",
+        headers: { authorization: `Bearer ${session.access_token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.connected) throw new Error(body?.error || "Amazon connection test failed.");
+      setAmazonTest({
+        loading: false,
+        message: `Amazon token test passed in ${body.mode || "sandbox"} mode.`,
+        ok: true,
+      });
+      setAmazonStatus((current) => current ? { ...current, configured: true } : current);
+    } catch (err) {
+      setAmazonTest({
+        loading: false,
+        message: err?.message || "Amazon connection test failed.",
+        ok: false,
+      });
+    }
+  }
+
   const toastColor = toast?.tone === "buy" ? GREEN : toast?.tone === "pass" ? RED : toast?.tone === "action" ? BLUE : "#B8860B";
   const toastBg = toast?.tone === "buy" ? GREEN_BG : toast?.tone === "pass" ? RED_BG : toast?.tone === "action" ? BLUE_BG : AMBER_BG;
   const verifiedCount = entries.filter((entry) => verification[verificationKey(entry)]?.real_decision).length;
   const summary = fieldTestSummary(entries, verification);
   const latestEntry = entries[0] || null;
+  const sampleBooks = DEMO_ISBNS.slice(0, 5).map((code) => {
+    const core = lookupCore(code);
+    return { isbn: code, title: core?.title || code };
+  });
   const queuedEstimatedTotal = queued.reduce((sum, en) => {
-    const bestNet = Math.max(en.amazonNet, en.ebayNet ?? -Infinity);
+    const bestNet = en.amazonNet ?? -Infinity;
     return sum + bestNet * en.count;
   }, 0);
+  const stripeConfigured = Boolean(stripeStatus?.configured);
+  const amazonConfigured = Boolean(amazonStatus?.configured);
+  const amazonMetricValue = amazonConfigured
+    ? amazonStatus?.mode === "production" ? "Live" : "Sandbox"
+    : "Waiting";
+  const missingAmazonPieces = amazonStatus?.pieces
+    ? Object.entries(amazonStatus.pieces).filter(([, present]) => !present).map(([key]) => key)
+    : [];
+  const amazonPieceLabels = {
+    endpoint: "API endpoint",
+    marketplaceId: "marketplace ID",
+    lwaClientId: "LWA client ID",
+    lwaClientSecret: "LWA client secret",
+    refreshToken: "refresh token",
+  };
+  const missingAmazonLabels = missingAmazonPieces.map((key) => amazonPieceLabels[key] || key);
+  const amazonReadinessDetail = amazonStatusError || (amazonConfigured
+    ? `${amazonStatus.mode || "sandbox"} credentials ready for ${amazonStatus.marketplaceId || "Amazon marketplace"}.`
+    : missingAmazonPieces.length
+      ? `Use the paid Amazon month to add: ${missingAmazonLabels.join(", ")}.`
+      : "Waiting on Amazon SP-API credentials.");
+  const adminProofChecks = [
+    ["Real scans", totalUnits > 0, totalUnits > 0 ? `${totalUnits} scanned` : "Scan real books next."],
+    ["Verified checks", summary.verifiedRows > 0, summary.verifiedRows > 0 ? `${summary.verifiedRows} checked` : "Add real Amazon checks."],
+    ["Buy list", queued.length > 0, queued.length > 0 ? `${queued.length} saved` : "Save at least one possible buy."],
+    ["CSV export", exportHistory.length > 0, exportHistory.length > 0 ? `${exportHistory.length} recent export${exportHistory.length === 1 ? "" : "s"}` : "Export one field-test CSV."],
+  ];
+  const adminLaunchChecks = [
+    ["Supabase", supabaseReady, supabaseReady ? "Accounts and scans can save." : "Add Supabase URL and anon key."],
+    ["Admin account", profileRole === "admin", session?.user?.email || "Signed in account"],
+    ["Stripe test billing", stripeConfigured, stripeStatusError || (stripeConfigured ? "Checkout, webhook, and portal config are present." : "Add all Stripe keys and price IDs.")],
+    ["Amazon SP-API", amazonConfigured, amazonReadinessDetail],
+    ["Evidence quality", summary.verificationRate >= 0.5, summary.totalRows ? `${Math.round(summary.verificationRate * 100)}% verified` : "No scans to verify yet."],
+  ];
 
   return (
-    <div className="min-h-screen w-full" style={{ backgroundColor: BG, color: INK }}>
+    <div className="shelf-theme min-h-screen w-full" style={{ backgroundColor: APP_BG, color: INK }}>
       <StripeBar />
-      <div className="max-w-3xl mx-auto px-3 pb-28 pt-4 sm:pb-4">
-        <div className="mb-3 rounded-2xl px-3 py-3 shadow-sm" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
+      <div className="mx-auto min-h-screen max-w-3xl px-3 pb-28 pt-4 sm:pb-4" style={{ backgroundColor: APP_PANEL }}>
+        <div className="mb-3 rounded-2xl px-3 py-3 shadow-sm" style={{ backgroundColor: SURFACE, color: INK, border: `1px solid ${LINE}` }}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <BrandMark />
                 {demoMode && (
-                  <span className="rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: BLUE, backgroundColor: BLUE_BG }}>
+                  <span className="rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: INK, backgroundColor: YELLOW }}>
                     demo
                   </span>
                 )}
@@ -1063,7 +1482,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
 
         <SyncStatus demoMode={demoMode} verificationReady={verificationReady} loading={loading} />
 
-        <div className="sticky top-0 z-10 -mx-3 mb-3 hidden px-3 pb-3 pt-2 sm:block" style={{ backgroundColor: BG, borderBottom: `1px solid ${LINE}` }}>
+        <div className="sticky top-0 z-10 -mx-3 mb-3 hidden px-3 pb-3 pt-2 sm:block" style={{ backgroundColor: APP_BG, borderBottom: `1px solid ${LINE}` }}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <ShellButton active={view === "scan"} icon={Scan} label="Scan" detail="barcode" href={hashForSection("scan")} onClick={() => navigate("scan")} />
             <ShellButton active={view === "queue"} icon={PackagePlus} label="Buy List" detail={`${queued.length} saved`} href={hashForSection("queue")} onClick={() => navigate("queue")} />
@@ -1173,7 +1592,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 onCostChange={(v) => { setCost(v); persistProfile({ cost_per_book: v }); }}
                 onThresholdChange={(v) => { setThreshold(v); persistProfile({ buy_threshold: v }); }}
                 onScan={() => navigate("scan")}
-                onDemo={publicPath("demo")}
+                onDemo={DEMO_SCAN_PATH}
               />
             )}
           </div>
@@ -1269,38 +1688,79 @@ function Ledger({ session, onSignOut, demoMode = false }) {
 
         {view === "scan" && (
           <>
-            <PageHeader
-              title="Field Scanner"
-              subtitle="Scan fast. Decide where the book should go."
-            />
-
-            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-xs font-black"
-              style={{ backgroundColor: SURFACE, color: "#8A6100", border: `1px solid ${LINE}` }}>
-              <span className="rounded-full px-2 py-1 uppercase tracking-widest" style={{ backgroundColor: AMBER_BG, border: "1px solid #FED7AA" }}>
-                {LOOKUP_STATUS.mode === "live-catalog" ? "catalog lookup" : "sample catalog"}
-              </span>
-              <span style={{ color: MUTED }}>prices are estimates until checked</span>
-            </div>
+            {!demoMode && (
+              <>
+                <PageHeader
+                  title="Field Scanner"
+                  subtitle="Scan fast. Decide where the book should go."
+                />
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-widest"
+                  style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: "1px solid #B8860B" }}>
+                  <span>{LOOKUP_STATUS.mode === "live-catalog" ? "catalog lookup" : "sample catalog"}</span>
+                  <span style={{ opacity: 0.5 }}>•</span>
+                  <span>estimates until you verify</span>
+                </div>
+              </>
+            )}
 
             <form onSubmit={addEntry} className="mb-3">
-              <div className="scanner-pulse relative overflow-hidden rounded-2xl p-3" style={{ border: `2px solid ${DARK}`, backgroundColor: SURFACE, boxShadow: "0 16px 36px rgba(16, 24, 40, 0.10)" }}>
-                <div className="flex items-center gap-3 rounded-xl px-3 py-5" style={{ border: `1px dashed ${MUTED}`, backgroundColor: "#FAFBFD" }}>
+              <div className="scanner-pulse relative overflow-hidden rounded-2xl p-3" style={{ border: `2px solid ${DARK}`, backgroundColor: DARK, boxShadow: "0 18px 44px rgba(17, 24, 39, 0.26)" }}>
+                <div className="flex items-center gap-3 rounded-xl px-3 py-5" style={{ border: `1px dashed rgba(255,255,255,0.35)`, backgroundColor: DARK_SURFACE }}>
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: DARK, color: "#FFF" }}>
                     <Scan size={23} />
                   </div>
                   <input ref={inputRef} autoFocus value={isbn} onChange={(e) => setIsbn(e.target.value)}
-                    placeholder={scanning ? "Looking up book..." : "Scan ISBN"}
+                    disabled={scanning}
+                    placeholder={scanning ? "Looking up book..." : "Scan or type ISBN"}
                     className="flex-1 bg-transparent outline-none text-xl font-mono font-black tracking-wide"
-                    style={{ color: INK }} />
+                    style={{ color: "#FFFFFF" }} />
+                  <button
+                    type="submit"
+                    disabled={scanning || !isbn.trim()}
+                    className="shrink-0 rounded-xl px-3 py-3 text-xs font-black uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ backgroundColor: YELLOW, color: INK }}
+                  >
+                    {scanning ? "..." : "look up"}
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-xs font-bold">
+                  <span style={{ color: DARK_MUTED }}>
+                    {scanning ? "Looking up ISBN. Amazon sandbox may fall back to public catalog." : "Type an ISBN and press Enter, or click Look up."}
+                  </span>
+                  <span className="font-mono" style={{ color: DARK_MUTED }}>
+                    {typedIsbnStatus(isbn)}
+                  </span>
                 </div>
               </div>
             </form>
+
+            {demoMode && (
+              <div className="mb-4">
+                <div className="mb-2 text-[11px] font-black uppercase tracking-widest" style={{ color: MUTED }}>
+                  No book handy? Tap one to try
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {sampleBooks.map((b) => (
+                    <button
+                      key={b.isbn}
+                      type="button"
+                      onClick={() => scanValue(b.isbn)}
+                      disabled={scanning}
+                      className="rounded-full px-3 py-2 text-xs font-black transition disabled:opacity-40"
+                      style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}`, color: INK }}
+                    >
+                      {b.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold">
               <span style={{ color: MUTED }}>
                 {demoMode ? "Demo scans do not save." : `${LOOKUP_STATUS.label}. ${supabaseReady ? "Scans save to your account." : "Scans will not save yet."}`}
               </span>
-              <a href={publicPath("demo")} className="font-black uppercase tracking-widest" style={{ color: BLUE }}>
+              <a href={DEMO_SCAN_PATH} className="font-black uppercase tracking-widest" style={{ color: BLUE }}>
                 Demo
               </a>
             </div>
@@ -1320,6 +1780,15 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               </div>
             </div>
 
+            {!loading && entries.length > 0 && !demoMode && (
+              <StickyDecisionBar
+                entry={latestEntry}
+                threshold={threshold}
+                onSave={addToQueue}
+                onDetails={(id) => setOpenId((current) => (current === id ? null : id))}
+              />
+            )}
+
             {loading ? (
               <div className="text-center py-16 text-sm font-black uppercase tracking-widest" style={{ color: MUTED }}>
                 loading your scans…
@@ -1327,8 +1796,6 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             ) : entries.length === 0 ? (
               <EmptyState
                 icon={Scan}
-                imageSrc={EMPTY_SCAN_IMAGE}
-                imageAlt="Barcode scanner and used book ready for the first ShelfMargin scan."
                 title="No scans yet"
                 body="Scan a book barcode or type an ISBN above. The field stays focused for Bluetooth scanners."
               />
@@ -1339,28 +1806,34 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 const { bestNet, meets, label: statusLabel, color: statusColor, bg: statusBg } = decisionMeta(en, threshold);
                 const score = sourcingScore(bestNet, threshold, en.velocity, en.offers);
                 const scoreColor = score.band === "Strong" ? GREEN : score.band === "Moderate" ? "#B8860B" : RED;
-                const sparkColor = en.velocity.trend === "up" ? GREEN : en.velocity.trend === "down" ? RED : MUTED;
-                const routeLabel = en.restricted ? "Verify first" : meets ? `List on ${en.winner}` : "Skip";
+                const sparkColor = en.velocity.trend === "up" ? GREEN : en.velocity.trend === "down" ? RED : DARK_MUTED;
+                const routeLabel = en.restricted
+                  ? "Check Amazon first"
+                  : meets
+                    ? "Possible Amazon buy"
+                    : bestNet >= 0
+                      ? `Below your $${threshold} buy line`
+                      : "No profit after fees";
                 return (
-                  <div key={en.id} className="scan-result-row overflow-hidden rounded-2xl" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}`, boxShadow: "0 10px 24px rgba(16, 24, 40, 0.07)" }}>
-                    <div className="w-full flex items-stretch gap-2 px-2 py-2 sm:px-3">
-                      <button onClick={() => setOpenId(open ? null : en.id)} className="grid flex-1 grid-cols-[96px_1fr_auto] items-center gap-3 text-left min-w-0 sm:grid-cols-[112px_1fr_auto]">
-                        <span className="decision-badge flex min-h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl px-2 text-sm font-black text-white sm:min-h-24" style={{ backgroundColor: statusColor }}>
-                          <span className="text-[10px] uppercase tracking-widest opacity-80">action</span>
-                          <span className="flex items-center gap-1 text-2xl uppercase leading-none">
+                  <div key={en.id} className="scan-result-row overflow-hidden rounded-2xl" style={{ backgroundColor: SURFACE, color: INK, border: `1px solid ${LINE}`, boxShadow: "0 10px 26px rgba(23, 23, 23, 0.08)" }}>
+                    <div className="w-full flex items-stretch gap-2 px-3 py-3">
+                      <button onClick={() => setOpenId(open ? null : en.id)} className="grid flex-1 grid-cols-[84px_1fr_auto] items-center gap-3 text-left min-w-0 sm:grid-cols-[104px_1fr_auto]">
+                        <span className="flex min-h-16 shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-2 text-white sm:min-h-20" style={{ backgroundColor: statusColor }}>
+                          <span className="text-[10px] font-black uppercase tracking-widest opacity-80">action</span>
+                          <span className="flex items-center gap-1 text-2xl font-black uppercase leading-none">
                             {en.restricted && <Lock size={14} />}
                             {statusLabel}
                           </span>
                         </span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-black uppercase tracking-widest" style={{ color: statusColor }}>
+                          <div className="text-[11px] font-black uppercase tracking-widest" style={{ color: statusColor }}>
                             {routeLabel}
                           </div>
                           <div className="mt-1 text-base font-black truncate">
                             {en.title}
                             {en.count > 1 && <span className="ml-1 font-mono" style={{ color: MUTED }}>×{en.count}</span>}
                           </div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span className="hidden sm:inline-flex"><Sparkline history={en.history} color={sparkColor} /></span>
                             <VelocityBadge velocity={en.velocity} />
                             <span className="text-xs font-mono" style={{ color: MUTED }}>
@@ -1372,14 +1845,14 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                             >
                               <Users size={11} /> {en.offers}
                             </span>
-                            <span className="text-xs font-black px-1" style={{ color: "#FFF", backgroundColor: scoreColor }}>
+                            <span className="text-xs font-black rounded px-1" style={{ color: "#FFF", backgroundColor: scoreColor }}>
                               {score.total}
                             </span>
                           </div>
                         </div>
-                        <span className="rounded-xl px-3 py-2 text-right shrink-0" style={{ color: statusColor, backgroundColor: statusBg }}>
+                        <span className="rounded-xl px-3 py-2 text-right shrink-0" style={{ color: MUTED, backgroundColor: SOFT, border: `1px solid ${LINE}` }}>
                           <span className="block text-[9px] font-black uppercase tracking-widest">net</span>
-                          <span className="block text-xl font-black font-mono">
+                          <span className="block text-xl font-black font-mono" style={{ color: bestNet >= 0 ? GREEN : RED }}>
                             {bestNet >= 0 ? "+" : ""}${(bestNet * en.count).toFixed(2)}
                           </span>
                         </span>
@@ -1390,30 +1863,44 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         </button>
                       )}
                       {en.queued && <span className="text-xs font-black uppercase shrink-0" style={{ color: BLUE }}>saved</span>}
-                      <button onClick={() => setOpenId(open ? null : en.id)}>
+                      <button onClick={() => setOpenId(open ? null : en.id)} style={{ color: MUTED }}>
                         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                     </div>
                     {open && (
-                      <div className="px-4 pb-3 text-xs font-mono" style={{ borderTop: `1px dashed ${LINE}` }}>
+                      <div className="px-4 pb-3 text-xs font-mono" style={{ borderTop: `1px dashed ${LINE}`, color: INK }}>
                         <div className="pt-3 mb-3 text-sm font-bold normal-case" style={{ color: MUTED }}>
                           {reasonForEntry(en, bestNet, threshold)}
                         </div>
-                        <div className="grid grid-cols-2 gap-3 pt-1 mb-3">
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                          <DataSourceBadge entry={en} />
+                          <span
+                            className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest"
+                            style={{ color: "#8A6100", backgroundColor: AMBER_BG, border: "1px solid #B8860B" }}
+                          >
+                            profit estimated
+                          </span>
+                          {en.asin && (
+                            <span className="text-[10px] font-mono font-bold" style={{ color: MUTED }}>
+                              ASIN {en.asin}
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid gap-3 pt-1 mb-3 sm:grid-cols-[1fr_1fr]">
                           <div>
-                            <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>amazon</div>
+                            <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>Amazon estimate</div>
                             <div>list ${en.amazonPrice.toFixed(2)}</div>
                             <div>profit ${en.amazonNet.toFixed(2)}</div>
                           </div>
                           <div>
-                            <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>ebay</div>
-                            <div>list {en.ebayPrice != null ? `$${en.ebayPrice.toFixed(2)}` : "—"}</div>
-                            <div>profit {en.ebayNet != null ? `$${en.ebayNet.toFixed(2)}` : "—"}</div>
+                            <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>Data confidence</div>
+                            <div>{catalogSourceLabel(en)}</div>
+                            <div>{en.amazonMode ? `${en.amazonMode} mode` : "fallback catalog"}</div>
                           </div>
                         </div>
                         {en.restricted && (
                           <div
-                            className="flex items-center gap-2 px-2 py-2 mb-3 text-xs font-bold"
+                            className="flex items-center gap-2 px-2 py-2 mb-3 text-xs font-bold rounded-lg"
                             style={{ backgroundColor: AMBER_BG, border: `2px solid #B8860B`, color: "#8A6100" }}
                           >
                             <Lock size={14} />
@@ -1421,8 +1908,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 mb-3 px-2 py-2" style={{ border: `1px solid ${LINE}` }}>
-                          <span className="text-lg font-black px-2 py-1" style={{ color: "#FFF", backgroundColor: scoreColor }}>
+                        <div className="flex items-center gap-3 mb-3 px-2 py-2 rounded-lg" style={{ border: `1px solid ${LINE}`, backgroundColor: SOFT }}>
+                          <span className="text-lg font-black px-2 py-1 rounded" style={{ color: "#FFF", backgroundColor: scoreColor }}>
                             {score.total}
                           </span>
                           <div>
@@ -1447,7 +1934,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         <div className="mt-2" style={{ color: MUTED }}>{en.isbn} · {en.author} · copies: {en.count}</div>
                         {en.priceSource === "estimated" && (
                           <div className="mt-1" style={{ color: MUTED }}>
-                            catalog: {en.catalogSource || en.source || LOOKUP_STATUS.mode} · resale prices estimated
+                            catalog: {catalogSourceLabel(en)} · resale prices estimated
                           </div>
                         )}
                       </div>
@@ -1456,15 +1943,6 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 );
               })}
             </div>
-            )}
-
-            {!loading && entries.length > 0 && (
-              <StickyDecisionBar
-                entry={latestEntry}
-                threshold={threshold}
-                onSave={addToQueue}
-                onDetails={(id) => setOpenId((current) => (current === id ? null : id))}
-              />
             )}
 
             {entries.length > 0 && (
@@ -1503,25 +1981,25 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               <MetricBox label="Possible Buys" value={buyCount} tone="buy" />
               <MetricBox label="Checks" value={checkCount} tone="warn" />
             </div>
-            <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: summary.verifiedRows ? GREEN_BG : "transparent" }}>
+            <div className="rounded-2xl px-3 py-3" style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: summary.verifiedRows ? GREEN_BG : DARK, color: summary.verifiedRows ? INK : "#FFFFFF" }}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-xs font-black uppercase tracking-widest">check summary</div>
-                  <div className="mt-1 text-xs font-bold" style={{ color: MUTED }}>
+                  <div className="mt-1 text-xs font-bold" style={{ color: summary.verifiedRows ? MUTED : DARK_MUTED }}>
                     {summary.verifiedRows}/{summary.totalRows} books checked · {Math.round(summary.verificationRate * 100)}% done
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>real profit</div>
+                  <div className="text-xs font-bold uppercase tracking-widest" style={{ color: summary.verifiedRows ? MUTED : DARK_MUTED }}>real profit</div>
                   <div className="text-xl font-black font-mono" style={{ color: summary.actualNet >= 0 ? GREEN : RED }}>
                     ${summary.actualNet.toFixed(2)}
                   </div>
                 </div>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-black uppercase tracking-widest">
-                <div className="py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: GREEN_BG }}>buy {summary.buyRows}</div>
-                <div className="py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: RED_BG }}>pass {summary.passRows}</div>
-                <div className="py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: AMBER_BG }}>watch {summary.watchRows}</div>
+                <div className="rounded-lg py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: GREEN_BG, color: INK }}>buy {summary.buyRows}</div>
+                <div className="rounded-lg py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: RED_BG, color: INK }}>pass {summary.passRows}</div>
+                <div className="rounded-lg py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: AMBER_BG, color: INK }}>watch {summary.watchRows}</div>
               </div>
             </div>
             <div className="px-3 py-3 text-sm font-bold" style={{ border: `2px solid ${LINE}` }}>
@@ -1545,81 +2023,114 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   const key = verificationKey(en);
                   const actual = verification[key] || {};
                   const sync = verificationSync[key];
-                  const bestNet = Math.max(en.amazonNet, en.ebayNet ?? -Infinity);
-                  const statusLabel = en.restricted ? "check" : bestNet >= threshold ? "buy" : "pass";
+                  const open = openCheckId === key;
+                  const { bestNet, label: statusLabel, color: statusColor, bg: statusBg } = decisionMeta(en, threshold);
+                  const finalDecision = actual.real_decision || "";
+                  const finalColor = finalDecision === "buy" ? GREEN : finalDecision === "pass" ? RED : finalDecision === "watch" ? "#8A6100" : MUTED;
                   return (
-                    <div key={key} className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: actual.real_decision ? GREEN_BG : "transparent" }}>
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="min-w-0">
-                          <div className="text-sm font-black truncate">{en.title}</div>
-                          <div className="text-xs font-mono" style={{ color: MUTED }}>{en.isbn} · app says {statusLabel} · est. profit ${bestNet.toFixed(2)}</div>
+                    <div key={key} className="overflow-hidden rounded-2xl" style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: DARK, color: "#FFFFFF", boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
+                      <div className="px-3 py-3">
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest text-white" style={{ backgroundColor: statusColor }}>
+                                app says {statusLabel}
+                              </span>
+                              <span className="font-mono text-xs font-black" style={{ color: statusColor }}>
+                                {bestNet >= 0 ? "+" : ""}${bestNet.toFixed(2)} est.
+                              </span>
+                            </div>
+                            <div className="mt-2 text-base font-black leading-tight">{en.title}</div>
+                            <div className="mt-1 truncate text-xs font-mono" style={{ color: DARK_MUTED }}>{en.isbn} · {en.author}</div>
+                          </div>
+                          {finalDecision ? (
+                            <span className="shrink-0 rounded-lg px-2 py-1 text-xs font-black uppercase tracking-widest text-white" style={{ backgroundColor: finalColor }}>
+                              {finalDecision}
+                            </span>
+                          ) : <EstimateBadge />}
                         </div>
-                        {actual.real_decision ? (
-                          <span className="text-xs font-black uppercase px-2 py-1 shrink-0" style={{ color: "#FFF", backgroundColor: actual.real_decision === "buy" ? GREEN : RED }}>
-                            {actual.real_decision}
+
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            ["buy", GREEN, "Buy"],
+                            ["pass", RED, "Pass"],
+                            ["watch", "#8A6100", "Watch"],
+                          ].map(([value, color, label]) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => updateVerification(en, { real_decision: value })}
+                              className="min-h-11 rounded-xl text-xs font-black uppercase tracking-widest"
+                              style={{
+                                backgroundColor: finalDecision === value ? color : statusBg,
+                                color: finalDecision === value ? "#FFFFFF" : color,
+                                border: `1px solid ${finalDecision === value ? color : LINE}`,
+                              }}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <span className="text-xs font-bold" style={{ color: sync === "error" ? RED : sync === "saved" ? GREEN : DARK_MUTED }}>
+                            {sync === "saving" ? "saving..." : sync === "saved" ? "saved" : sync === "error" ? "save failed" : sync === "unsaved" ? "unsaved changes" : "not checked"}
                           </span>
-                        ) : <EstimateBadge />}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setOpenCheckId(open ? null : key)}
+                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-black uppercase tracking-widest"
+                              style={{ color: "#FFFFFF", border: `1px solid rgba(255,255,255,0.16)`, backgroundColor: DARK_SURFACE }}
+                            >
+                              details {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                            </button>
+                            <button
+                              onClick={() => saveVerification(en)}
+                              disabled={sync === "saving"}
+                              className="px-3 py-1.5 text-xs font-black uppercase tracking-widest"
+                              style={{ backgroundColor: sync === "saving" ? "#CFCFC5" : BLUE, color: "#FFF", border: `1px solid ${BLUE}` }}
+                            >
+                              save
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <VerifySelect
-                          label="Checked where"
-                          value={actual.actual_source_checked}
-                          onChange={(value) => updateVerification(en, { actual_source_checked: value })}
-                          options={[
-                            { value: "", label: "not checked" },
-                            { value: "amazon", label: "Amazon" },
-                            { value: "ebay", label: "eBay" },
-                            { value: "amazon+ebay", label: "Amazon + eBay" },
-                          ]}
-                        />
-                        <VerifySelect
-                          label="Can sell on Amazon"
-                          value={actual.amazon_eligible}
-                          onChange={(value) => updateVerification(en, { amazon_eligible: value })}
-                          options={[
-                            { value: "", label: "unknown" },
-                            { value: "yes", label: "yes" },
-                            { value: "no", label: "no" },
-                            { value: "restricted", label: "restricted" },
-                          ]}
-                        />
-                        <VerifyInput label="Amazon price" value={actual.amazon_actual_price} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { amazon_actual_price: value })} />
-                        <VerifyInput label="Amazon rank" value={actual.amazon_actual_rank} type="number" placeholder="rank" onChange={(value) => updateVerification(en, { amazon_actual_rank: value })} />
-                        <VerifyInput label="eBay sold price" value={actual.ebay_sold_comp} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { ebay_sold_comp: value })} />
-                        <VerifyInput label="Shipping" value={actual.actual_shipping} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { actual_shipping: value })} />
-                        <VerifyInput label="Fees" value={actual.actual_fees} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { actual_fees: value })} />
-                        <VerifyInput label="Real profit" value={actual.actual_net} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { actual_net: value })} />
-                      </div>
-
-                      <div className="grid sm:grid-cols-[160px_1fr] gap-2 mt-2">
-                        <VerifySelect
-                          label="Final decision"
-                          value={actual.real_decision}
-                          onChange={(value) => updateVerification(en, { real_decision: value })}
-                          options={[
-                            { value: "", label: "undecided" },
-                            { value: "buy", label: "buy" },
-                            { value: "pass", label: "pass" },
-                            { value: "watch", label: "watch" },
-                          ]}
-                        />
-                        <VerifyInput label="Notes" value={actual.notes} placeholder="condition, damage, bad comps..." onChange={(value) => updateVerification(en, { notes: value })} />
-                      </div>
-
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <span className="text-xs font-bold" style={{ color: sync === "error" ? RED : sync === "saved" ? GREEN : MUTED }}>
-                          {sync === "saving" ? "saving..." : sync === "saved" ? "saved" : sync === "error" ? "save failed" : sync === "unsaved" ? "unsaved changes" : "not checked"}
-                        </span>
-                        <button
-                          onClick={() => saveVerification(en)}
-                          disabled={sync === "saving"}
-                          className="px-3 py-1.5 text-xs font-black uppercase tracking-widest"
-                          style={{ backgroundColor: sync === "saving" ? "#CFCFC5" : BLUE, color: "#FFF", border: `2px solid ${LINE}` }}
-                        >
-                          save check
-                        </button>
-                      </div>
+                      {open && (
+                        <div className="border-t px-3 py-3" style={{ borderColor: "rgba(255,255,255,0.16)", backgroundColor: DARK_SURFACE }}>
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                            <VerifySelect
+                              label="Checked source"
+                              value={actual.actual_source_checked}
+                              onChange={(value) => updateVerification(en, { actual_source_checked: value })}
+                              options={[
+                                { value: "", label: "not checked" },
+                                { value: "amazon", label: "Amazon" },
+                              ]}
+                            />
+                            <VerifySelect
+                              label="Can sell on Amazon"
+                              value={actual.amazon_eligible}
+                              onChange={(value) => updateVerification(en, { amazon_eligible: value })}
+                              options={[
+                                { value: "", label: "unknown" },
+                                { value: "yes", label: "yes" },
+                                { value: "no", label: "no" },
+                                { value: "restricted", label: "restricted" },
+                              ]}
+                            />
+                            <VerifyInput label="Amazon price" value={actual.amazon_actual_price} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { amazon_actual_price: value })} />
+                            <VerifyInput label="Amazon rank" value={actual.amazon_actual_rank} type="number" placeholder="rank" onChange={(value) => updateVerification(en, { amazon_actual_rank: value })} />
+                            <VerifyInput label="Shipping" value={actual.actual_shipping} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { actual_shipping: value })} />
+                            <VerifyInput label="Fees" value={actual.actual_fees} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { actual_fees: value })} />
+                            <VerifyInput label="Real profit" value={actual.actual_net} type="number" placeholder="0.00" onChange={(value) => updateVerification(en, { actual_net: value })} />
+                          </div>
+                          <div className="mt-2">
+                            <VerifyInput label="Notes" value={actual.notes} placeholder="condition, damage, bad comps..." onChange={(value) => updateVerification(en, { notes: value })} />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1726,8 +2237,10 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 </button>
               </div>
             </div>
+            <AccountDataCard session={session} onSignOut={onSignOut} demoMode={demoMode} />
+            <MfaCard demoMode={demoMode} />
             <div className="px-3 py-3 text-xs font-bold" style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: `2px solid #B8860B` }}>
-              Prices are still estimates. Always check real marketplaces before buying. Saving: {supabaseReady ? "on" : "off"}.
+                  Prices are still estimates. Always check Amazon before buying. Saving: {supabaseReady ? "on" : "off"}.
             </div>
           </div>
         )}
@@ -1735,8 +2248,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
         {view === "admin" && (
           <div className="flex flex-col gap-3">
             <PageHeader
-              title="Admin"
-              subtitle="Simple setup checks for this account."
+              title="ShelfMargin admin"
+              subtitle="Private business readiness, billing setup, and field-test proof."
               action={<ShieldCheck size={22} color={profileRole === "admin" ? GREEN : MUTED} />}
             />
 
@@ -1755,18 +2268,77 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <MetricBox label="Account" value="Admin" tone="action" />
-                  <MetricBox label="Books" value={totalUnits} />
+                  <MetricBox label="Stripe" value={stripeConfigured ? "Ready" : "Check"} tone={stripeConfigured ? "buy" : "warn"} />
+                  <MetricBox label="Amazon" value={amazonMetricValue} tone={amazonConfigured ? "buy" : "warn"} />
+                  <MetricBox label="Scans" value={totalUnits} />
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <MetricBox label="Buy List" value={queued.length} tone="buy" />
+                  <MetricBox label="Est. Profit" value={`$${totalProfit.toFixed(2)}`} tone="buy" />
                   <MetricBox label="Avg Est." value={`$${averageProfit.toFixed(2)}`} />
+                  <MetricBox label="Verified" value={`${Math.round(summary.verificationRate * 100)}%`} tone={summary.verificationRate >= 0.5 ? "buy" : "warn"} />
+                </div>
+
+                <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: SURFACE }}>
+                  <div className="text-xs font-black uppercase tracking-widest mb-3">business readiness</div>
+                  <div className="flex flex-col gap-2">
+                    {adminLaunchChecks.map(([label, done, detail]) => (
+                      <AdminCheck key={label} done={done} label={label} detail={detail} />
+                    ))}
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-[220px_1fr] sm:items-center">
+                    <button
+                      type="button"
+                      onClick={testAmazonConnectionFromAdmin}
+                      disabled={amazonTest.loading}
+                      className="rounded-xl px-3 py-2 text-xs font-black uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-60"
+                      style={{ backgroundColor: amazonConfigured ? GREEN : YELLOW, color: amazonConfigured ? "#FFFFFF" : INK, border: `1px solid ${amazonConfigured ? GREEN : YELLOW}` }}
+                    >
+                      {amazonTest.loading ? "Testing Amazon..." : "Test Amazon connection"}
+                    </button>
+                    {(amazonTest.message || !amazonConfigured) && (
+                      <div
+                        className="rounded-xl px-3 py-2 text-xs font-bold"
+                        style={{
+                          backgroundColor: amazonTest.ok ? GREEN_BG : AMBER_BG,
+                          color: amazonTest.ok ? GREEN : "#8A6100",
+                          border: `1px solid ${amazonTest.ok ? GREEN : "#B8860B"}`,
+                        }}
+                      >
+                        {amazonTest.message || "Now that Amazon is approved, add the client ID, client secret, and refresh token, then run this test."}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="px-3 py-3" style={{ border: `2px solid ${LINE}` }}>
-                  <div className="text-xs font-black uppercase tracking-widest mb-3">setup checks</div>
+                  <div className="text-xs font-black uppercase tracking-widest mb-3">field-test proof</div>
                   <div className="flex flex-col gap-2">
-                    <AdminCheck done={supabaseReady} label="Supabase connected" detail="Accounts and scans can save." />
-                    <AdminCheck done={profileRole === "admin"} label="Admin account ready" detail={session?.user?.email || "Signed in account"} />
-                    <AdminCheck done={totalUnits > 0} label="First scan tested" detail={totalUnits > 0 ? `${totalUnits} book${totalUnits === 1 ? "" : "s"} scanned` : "Scan a real book next."} />
-                    <AdminCheck done={queued.length > 0} label="Buy list tested" detail={queued.length > 0 ? `${queued.length} saved for checking` : "Save one good-looking book."} />
+                    {adminProofChecks.map(([label, done, detail]) => (
+                      <AdminCheck key={label} done={done} label={label} detail={detail} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: BLUE_BG }}>
+                    <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: BLUE }}>revenue path</div>
+                    <div className="text-sm font-bold leading-relaxed" style={{ color: INK }}>
+                      Free beta first. Starter at $15/mo after real scans prove the scanner saves time or prevents bad buys.
+                    </div>
+                  </div>
+                  <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: GREEN_BG }}>
+                    <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: GREEN }}>current proof</div>
+                    <div className="text-sm font-bold leading-relaxed" style={{ color: INK }}>
+                      {summary.verifiedRows} verified of {summary.totalRows} scanned. Actual net recorded on {summary.actualNetCount} book{summary.actualNetCount === 1 ? "" : "s"}.
+                    </div>
+                  </div>
+                  <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: AMBER_BG }}>
+                    <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: "#8A6100" }}>launch blockers</div>
+                    <div className="text-sm font-bold leading-relaxed" style={{ color: INK }}>
+                      Amazon Professional developer access, live scan proof, support inbox/domain, legal review, and paid-access webhook proof still need final verification.
+                    </div>
                   </div>
                 </div>
 
@@ -1776,8 +2348,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                     <OwnerInputItem label="Confirm admin login" detail="Sign in and make sure the admin badge shows by your email." />
                     <OwnerInputItem label="Scan real books" detail="Test 20 to 50 books with the scanner you plan to use." />
                     <OwnerInputItem label="Set buy rules" detail="Choose your true cost per book and minimum profit." />
-                    <OwnerInputItem label="Check real prices" detail="Compare app estimates against Amazon, eBay, and any buyback source." />
-                    <OwnerInputItem label="Pick data source" detail="Decide which live marketplace provider we should wire first." />
+                    <OwnerInputItem label="Check real prices" detail="Compare app estimates against Amazon before buying." />
+                    <OwnerInputItem label="Finish Amazon setup" detail="Use the paid Professional month to add credentials and prove live data quickly." />
                     <OwnerInputItem label="Legal pages" detail="Check privacy, terms, and support email before public launch." />
                   </div>
                 </div>
@@ -1819,84 +2391,94 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               />
             ) : (
               <>
-                <div className="mb-3 overflow-hidden rounded-lg bg-white" style={{ border: `1px solid ${LINE}` }}>
+                <div className="mb-3 overflow-hidden rounded-2xl" style={{ backgroundColor: DARK, color: "#FFFFFF", border: `1px solid rgba(255,255,255,0.12)`, boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
                   <div className="grid grid-cols-3 text-center">
                     <div className="px-3 py-3">
-                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>saved</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: DARK_MUTED }}>saved</div>
                       <div className="font-mono text-2xl font-black">{queued.length}</div>
                     </div>
-                    <div className="border-l px-3 py-3" style={{ borderColor: LINE, backgroundColor: GREEN_BG }}>
-                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>est. net</div>
+                    <div className="border-l px-3 py-3" style={{ borderColor: "rgba(255,255,255,0.16)", backgroundColor: "rgba(22, 163, 74, 0.16)" }}>
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#86EFAC" }}>est. net</div>
                       <div className="font-mono text-2xl font-black" style={{ color: GREEN }}>${queuedEstimatedTotal.toFixed(2)}</div>
                     </div>
-                    <div className="border-l px-3 py-3">
-                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>selected</div>
+                    <div className="border-l px-3 py-3" style={{ borderColor: "rgba(255,255,255,0.16)" }}>
+                      <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: DARK_MUTED }}>selected</div>
                       <div className="font-mono text-2xl font-black">{selectedQueued.length}</div>
                     </div>
                   </div>
-                  <div className="border-t px-3 py-2 text-xs font-bold" style={{ borderColor: LINE, color: MUTED }}>
-                    Prices are estimates. Use this as a checkout list, then verify real marketplace data.
+                  <div className="border-t px-3 py-2 text-xs font-bold" style={{ borderColor: "rgba(255,255,255,0.16)", color: DARK_MUTED }}>
+                    Use this as a checkout list. Estimates still need a real Amazon check before buying.
                   </div>
                 </div>
 
-                <div className="mb-2 flex items-center justify-between px-1">
+                <div className="mb-2 flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: DARK_SURFACE, color: "#FFFFFF", border: `1px solid rgba(255,255,255,0.12)` }}>
                   <button onClick={selectAll} className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
                     {allSelected ? <CheckSquare size={16} /> : <Square size={16} />} select all
                   </button>
-                  <span className="text-xs font-bold" style={{ color: MUTED }}>{selectedQueued.length || queued.length} ready to export</span>
+                  <span className="text-xs font-bold" style={{ color: DARK_MUTED }}>{selectedQueued.length || queued.length} ready to export</span>
                 </div>
-                <div className="mb-4 overflow-hidden rounded-lg bg-white font-mono text-xs" style={{ border: `1px solid ${LINE}` }}>
+                <div className="mb-4 flex flex-col gap-2 font-mono text-xs">
                   {queued.map((en) => {
                     const { bestNet, color } = decisionMeta(en, threshold);
+                    const isSelected = Boolean(selected[en.id]);
                     return (
-                    <div key={en.id} className="px-3 py-3" style={{ borderBottom: `1px dashed ${LINE}` }}>
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => toggleSelect(en.id)} className="shrink-0">
-                          {selected[en.id] ? <CheckSquare size={18} color={BLUE} /> : <Square size={18} />}
+                    <div key={en.id} className="rounded-2xl px-3 py-3" style={{ backgroundColor: isSelected ? DARK : DARK_SURFACE, color: "#FFFFFF", border: `1px solid ${isSelected ? YELLOW : "rgba(255,255,255,0.12)"}`, boxShadow: isSelected ? "0 14px 30px rgba(255, 184, 107, 0.16)" : "0 10px 22px rgba(17, 24, 39, 0.16)" }}>
+                      <div className="grid grid-cols-[28px_1fr_auto] items-center gap-3">
+                        <button onClick={() => toggleSelect(en.id)} className="shrink-0" style={{ color: isSelected ? YELLOW : DARK_MUTED }}>
+                          {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}
                         </button>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-sans text-sm font-black truncate">
-                            {en.title} {en.count > 1 && <span className="font-mono" style={{ color: MUTED }}>×{en.count}</span>}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-md px-2 py-1 font-sans text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: GREEN_BG, color: GREEN }}>
+                              buy
+                            </span>
+                            <span className="font-sans text-sm font-black truncate">
+                              {en.title}
+                            </span>
+                            {en.count > 1 && <span className="font-mono" style={{ color: DARK_MUTED }}>x{en.count}</span>}
                           </div>
-                          <div className="text-xs font-mono" style={{ color: MUTED }}>{en.isbn} · via {en.winner}</div>
+                          <div className="mt-1 truncate text-xs font-mono" style={{ color: DARK_MUTED }}>{en.isbn} · Amazon-first check</div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-black" style={{ color }}>
+                          <div className="rounded-xl px-3 py-2 font-black" style={{ color, backgroundColor: bestNet >= 0 ? GREEN_BG : RED_BG }}>
+                            <span className="block font-sans text-[9px] font-black uppercase tracking-widest">est.</span>
                             {bestNet >= 0 ? "+" : ""}${(bestNet * en.count).toFixed(2)}
                           </div>
-                          <div className="font-sans text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>est.</div>
                         </div>
                       </div>
-                      <div className="mt-3 grid grid-cols-[1fr_auto] gap-3 pl-8 text-xs font-bold uppercase tracking-widest sm:grid-cols-[auto_auto_1fr]">
-                        <div className="flex items-center gap-1">
+                      <div className="mt-3 grid gap-2 pl-8 text-xs font-bold uppercase tracking-widest sm:grid-cols-[auto_auto_1fr]">
+                        <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ backgroundColor: APP_PANEL, color: INK }}>
                           <span style={{ color: MUTED }}>price</span><span>$</span>
                           <input type="number" step="0.5" value={en.listPrice ?? 0}
                             onChange={(e) => updateQueued(en.id, { listPrice: parseFloat(e.target.value) || 0 })}
-                            className="w-14 bg-transparent border-b-2 outline-none font-mono normal-case" style={{ borderColor: LINE }} />
+                            className="w-14 bg-transparent border-b-2 outline-none font-mono normal-case" style={{ borderColor: LINE, color: INK }} />
                         </div>
                         <select value={en.condition || "Good"} onChange={(e) => updateQueued(en.id, { condition: e.target.value })}
-                          className="bg-transparent border-b-2 outline-none normal-case text-xs font-bold" style={{ borderColor: LINE }}>
+                          className="rounded-xl px-3 py-2 outline-none normal-case text-xs font-bold" style={{ backgroundColor: APP_PANEL, border: `1px solid ${LINE}`, color: INK }}>
                           {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
+                        <div className="hidden items-center text-[10px] font-black uppercase tracking-widest sm:flex" style={{ color: DARK_MUTED }}>
+                          verify before checkout
+                        </div>
                       </div>
                     </div>
                     );
                   })}
                 </div>
-                <div className="sticky bottom-20 flex flex-wrap gap-2 p-2 sm:bottom-0" style={{ backgroundColor: BG, borderTop: `2px solid ${LINE}` }}>
+                <div className="sticky bottom-20 flex flex-wrap gap-2 rounded-2xl p-2 sm:bottom-0" style={{ backgroundColor: DARK, border: `1px solid rgba(255,255,255,0.12)`, boxShadow: "0 -10px 30px rgba(17, 24, 39, 0.20)" }}>
                   <button onClick={pushOffers} disabled={selectedQueued.length === 0}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-black uppercase tracking-widest"
                     style={{ backgroundColor: selectedQueued.length ? GREEN : "#CFCFC5", color: "#FFF" }}>
                     <Send size={14} /> mark checked
                   </button>
                   <button onClick={exportBuyList}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-widest"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-black uppercase tracking-widest"
                     style={{ backgroundColor: BLUE, color: "#FFF" }}>
                     <FileDown size={14} /> {selectedQueued.length > 0 ? "export selected" : "export CSV"}
                   </button>
                   <button onClick={removeFromQueue} disabled={selectedQueued.length === 0}
-                    className="flex items-center justify-center gap-2 py-2 px-3 text-xs font-black uppercase tracking-widest"
-                    style={{ border: `2px solid ${LINE}`, color: selectedQueued.length ? RED : MUTED }}>
+                    className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-black uppercase tracking-widest"
+                    style={{ border: `1px solid rgba(255,255,255,0.16)`, color: selectedQueued.length ? RED : DARK_MUTED }}>
                     <Trash2 size={14} />
                   </button>
                 </div>

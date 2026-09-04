@@ -7,6 +7,8 @@ describe("Stripe configuration status", () => {
       VITE_STRIPE_PUBLISHABLE_KEY: `pk_test_${"a".repeat(100)}`,
       STRIPE_SECRET_KEY: `sk_test_${"b".repeat(100)}`,
       STRIPE_WEBHOOK_SECRET: `whsec_${"c".repeat(32)}`,
+      STRIPE_STARTER_PRICE_ID: "price_starter123",
+      STRIPE_PRO_PRICE_ID: "price_pro123",
     });
 
     expect(status.configured).toBe(true);
@@ -19,6 +21,8 @@ describe("Stripe configuration status", () => {
       VITE_STRIPE_PUBLISHABLE_KEY: `pk_test_${"a".repeat(100)}`,
       STRIPE_SECRET_KEY: `sk_test_${"b".repeat(100)}`,
       STRIPE_WEBHOOK_SECRET: "whsec_...",
+      STRIPE_STARTER_PRICE_ID: "price_starter123",
+      STRIPE_PRO_PRICE_ID: "price_pro123",
     });
 
     expect(status.configured).toBe(false);
@@ -32,6 +36,8 @@ describe("Stripe configuration status", () => {
       VITE_STRIPE_PUBLISHABLE_KEY: `pk_live_${"a".repeat(100)}`,
       STRIPE_SECRET_KEY: `sk_test_${"b".repeat(100)}`,
       STRIPE_WEBHOOK_SECRET: `whsec_${"c".repeat(32)}`,
+      STRIPE_STARTER_PRICE_ID: "price_starter123",
+      STRIPE_PRO_PRICE_ID: "price_pro123",
     });
 
     expect(status.configured).toBe(false);
@@ -44,9 +50,24 @@ describe("Stripe configuration status", () => {
       VITE_STRIPE_PUBLISHABLE_KEY: `pk_test_${"a".repeat(100)}`,
       STRIPE_SECRET_KEY: `sk_test_${"b".repeat(100)}`,
       STRIPE_WEBHOOK_SECRET: `whsec_${"c".repeat(32)}`,
+      STRIPE_STARTER_PRICE_ID: "price_starter123",
+      STRIPE_PRO_PRICE_ID: "price_pro123",
     });
 
     expect(JSON.stringify(status)).not.toContain("sk_test_");
     expect(JSON.stringify(status)).not.toContain("whsec_");
+  });
+
+  it("requires server-side Stripe price IDs for both paid plans", () => {
+    const status = stripeConfigStatus({
+      VITE_STRIPE_PUBLISHABLE_KEY: `pk_test_${"a".repeat(100)}`,
+      STRIPE_SECRET_KEY: `sk_test_${"b".repeat(100)}`,
+      STRIPE_WEBHOOK_SECRET: `whsec_${"c".repeat(32)}`,
+      STRIPE_STARTER_PRICE_ID: "price_starter123",
+    });
+
+    expect(status.configured).toBe(false);
+    expect(status.checks.starterPriceId.validPrefix).toBe(true);
+    expect(status.checks.proPriceId.present).toBe(false);
   });
 });

@@ -2,6 +2,7 @@ const secretPrefixes = {
   publishable: ["pk_test_", "pk_live_"],
   secret: ["sk_test_", "sk_live_", "rk_test_", "rk_live_"],
   webhook: ["whsec_"],
+  price: ["price_"],
 };
 
 function valueFor(env, key) {
@@ -22,6 +23,8 @@ export function stripeConfigStatus(env = process.env) {
   const publishableKey = valueFor(env, "VITE_STRIPE_PUBLISHABLE_KEY");
   const secretKey = valueFor(env, "STRIPE_SECRET_KEY");
   const webhookSecret = valueFor(env, "STRIPE_WEBHOOK_SECRET");
+  const starterPriceId = valueFor(env, "STRIPE_STARTER_PRICE_ID");
+  const proPriceId = valueFor(env, "STRIPE_PRO_PRICE_ID");
   const publishableMode = modeFromKey(publishableKey);
   const secretMode = modeFromKey(secretKey);
 
@@ -41,6 +44,14 @@ export function stripeConfigStatus(env = process.env) {
       validPrefix: hasPrefix(webhookSecret, secretPrefixes.webhook),
       // Stripe webhook signing secrets are normally much longer than the prefix.
       likelyComplete: webhookSecret.length >= 20,
+    },
+    starterPriceId: {
+      present: Boolean(starterPriceId),
+      validPrefix: hasPrefix(starterPriceId, secretPrefixes.price),
+    },
+    proPriceId: {
+      present: Boolean(proPriceId),
+      validPrefix: hasPrefix(proPriceId, secretPrefixes.price),
     },
   };
 
@@ -73,5 +84,7 @@ export function publicStripeStatus(env = process.env) {
       mode: status.checks.secretKey.mode,
     },
     webhookSecret: status.checks.webhookSecret,
+    starterPriceId: status.checks.starterPriceId,
+    proPriceId: status.checks.proPriceId,
   };
 }

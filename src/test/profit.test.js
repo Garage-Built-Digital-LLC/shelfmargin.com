@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
-  amazonNet, ebayNet, evaluate, velocityBucket, DEFAULT_FEE_MODEL,
-} from '../lib/profit.js';
+  amazonNet, evaluate, velocityBucket, DEFAULT_FEE_MODEL,
+} from '../../packages/core/profit.js';
 import {
   normalizeToIsbn13, isbn10To13, cleanScan, isValidIsbn10, isValidIsbn13,
-} from '../lib/isbn.js';
+} from '../../packages/core/isbn.js';
 
 describe('amazonNet', () => {
   it('subtracts referral, closing, FBA, and cost', () => {
@@ -20,13 +20,6 @@ describe('amazonNet', () => {
   });
 });
 
-describe('ebayNet', () => {
-  it('subtracts fvf, per-order, shipping, cost', () => {
-    // price 20: fvf 2.65+0.30=2.95, shipping 4.00, cost 1 => 12.05
-    expect(ebayNet(20, 1)).toBe(12.05);
-  });
-});
-
 describe('velocityBucket', () => {
   it('buckets by BSR', () => {
     expect(velocityBucket(1000)).toBe('fast');
@@ -39,36 +32,32 @@ describe('velocityBucket', () => {
 describe('evaluate', () => {
   const settings = { costPerBook: 1, buyThreshold: 5 };
 
-  it('recommends the higher-net platform', () => {
-    const v = evaluate({ amazonPrice: 20, ebayPrice: 20, amazonBsr: 1000 }, settings);
-    // eBay nets 12.05 vs Amazon 9.71 here
-    expect(v.recommendedPlatform).toBe('ebay');
+  it('recommends Amazon when the net clears the buy line', () => {
+    // amazonNet(20,1) = 9.71, above threshold 5
+    const v = evaluate({ amazonPrice: 20, amazonBsr: 1000 }, settings);
+    expect(v.recommendedPlatform).toBe('amazon');
+    expect(v.amazonNet).toBe(9.71);
     expect(v.status).toBe('buy');
     expect(v.velocity).toBe('fast');
   });
 
-  it('flags pass when best net is below threshold', () => {
-    const v = evaluate({ amazonPrice: 7, ebayPrice: 6, amazonBsr: 3000000 }, settings);
+  it('flags pass when the Amazon net is below threshold', () => {
+    const v = evaluate({ amazonPrice: 7, amazonBsr: 3000000 }, settings);
     expect(v.status).toBe('pass');
     expect(v.velocity).toBe('slow');
   });
 
   it('gated overrides to check even when profitable', () => {
-    const v = evaluate({ amazonPrice: 50, ebayPrice: 40, amazonBsr: 500, gated: true }, settings);
+    const v = evaluate({ amazonPrice: 50, amazonBsr: 500, gated: true }, settings);
     expect(v.status).toBe('check');
     expect(v.gated).toBe(true);
   });
 
   it('passes when there is no price data at all', () => {
-    const v = evaluate({ amazonPrice: null, ebayPrice: null }, settings);
+    const v = evaluate({ amazonPrice: null }, settings);
     expect(v.status).toBe('pass');
     expect(v.recommendedPlatform).toBeNull();
-  });
-
-  it('handles single-channel data (amazon only)', () => {
-    const v = evaluate({ amazonPrice: 30, ebayPrice: null, amazonBsr: 1000 }, settings);
-    expect(v.recommendedPlatform).toBe('amazon');
-    expect(v.ebayNet).toBeNull();
+    expect(v.bestNet).toBeNull();
   });
 });
 
@@ -85,6 +74,9 @@ describe('isbn utils', () => {
   });
   it('strips a 5-digit price add-on', () => {
     expect(cleanScan('978030640615751595')).toBe('9780306406157');
+  });
+  it('extracts an ISBN from scanner payload noise', () => {
+    expect(normalizeToIsbn13(']E09780132350884\\r')).toBe('9780132350884');
   });
   it('returns null for a non-book / invalid barcode', () => {
     expect(normalizeToIsbn13('012345678905')).toBeNull();

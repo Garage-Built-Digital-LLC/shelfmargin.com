@@ -1,78 +1,32 @@
-# Asset Audit
+# ShelfMargin Asset Audit
 
-## Project
+## Current State
 
-- Project name: ShelfMargin
-- Audit date: 2026-08-07
-- Auditor: Codex, acting as GBD asset manager
+The rejected generated asset set was removed. The app currently uses code-rendered UI previews and lucide icons instead of runtime image assets.
 
-## Audit Method
+## Needed Asset Set
 
-Reviewed Vite entry metadata, public assets, current routes, public site components, routed Ledger app views, auth page, legacy scanner component, CSS, and project docs. No browser screenshot capture was performed in this pass.
+| Priority | Asset ID | Placement | Save path |
+|---:|---|---|---|
+| 1 | `brand-logo-primary` | Header, auth, social source | `public/assets/brand/logo-primary.png` |
+| 1 | `brand-mark` | Header icon, app mark source | `public/assets/brand/brand-mark.png` |
+| 1 | `favicon-svg` | Browser tab | `public/assets/icons/favicon.svg` |
+| 1 | `apple-touch-icon` | iOS home screen | `public/assets/icons/apple-touch-icon.png` |
+| 1 | `pwa-icon-192` | Web app manifest | `public/assets/icons/icon-192.png` |
+| 1 | `pwa-icon-512` | Web app manifest | `public/assets/icons/icon-512.png` |
+| 1 | `home-hero-desktop` | Homepage first viewport | `public/assets/images/home/home-hero-desktop.webp` |
+| 1 | `home-hero-mobile` | Mobile homepage first viewport | `public/assets/images/home/home-hero-mobile.webp` |
+| 1 | `product-screenshot-scan` | Product page and scanner proof | `public/assets/images/product/app-screenshot-scan.webp` |
+| 2 | `feature-notebook-workflow` | Workflow section | `public/assets/images/features/feature-notebook-workflow.webp` |
+| 2 | `product-buy-list-notebook` | Product page buy-list proof | `public/assets/images/product/buy-list-notebook.webp` |
+| 2 | `empty-state-scan` | App scan empty state | `public/assets/images/product/empty-state-scan.webp` |
+| 2 | `empty-state-buy-list` | App buy-list empty state | `public/assets/images/product/empty-state-buy-list.webp` |
+| 2 | `social-og-default` | Link preview | `public/assets/images/social/og-default.webp` |
+| 3 | `pricing-value-proof` | Pricing page visual | `public/assets/images/product/pricing-value-proof.webp` |
+| 3 | `ios-app-store-scan` | iOS/app-store screenshot source | `public/assets/images/product/ios-app-store-scan.webp` |
 
-## Required Asset Checklist
+## Notes
 
-| Asset category | Needed? | Current status | Priority | Notes |
-|---|---:|---|---|---|
-| Logo files | Yes | `needed` | High | Current brand exists only as live text + icon |
-| Favicon/app icon | Yes | `needed` | High | Required before launch and iOS/PWA testing |
-| Homepage hero image | Yes | `prompt_ready` | High | Use book-sourcing context plus current app mockup |
-| Product mockups | Yes | `prompt_ready` | High | Capture real `/demo` screenshots first |
-| Dashboard/app screenshots | Yes | `needed` | High | Needed for marketing, iOS App Store later, and credibility |
-| Feature graphics | Yes | `prompt_ready` | Medium | Scanner/check-books/export workflow |
-| Social OG images | Yes | `prompt_ready` | High | `index.html` has no image tags |
-| Ad backgrounds | Later | `prompt_ready` | Low | Useful after offer and pricing are clearer |
-| Email headers | Later | `needed` | Low | Only when transactional/marketing emails exist |
-| Empty states | Yes | `prompt_ready` | Medium | Current empty states are icon-only |
-| Loading states | No | current UI ok | Low | Text loading state is acceptable |
-| Video assets | Later | `needed` | Low | Product walkthrough after workflow stabilizes |
-
-## Route-Level Findings
-
-| Route/component | Current visual state | Missing assets | Recommended action |
-|---|---|---|---|
-| `index.html` | Metadata text only | Favicon, Apple icon, app manifest, OG image, Twitter image | Add files after generation and update metadata |
-| `/` in `PublicSite.jsx` | Strong copy plus React product preview | Real hero/product image and social preview | Generate hero and use app screenshot treatment |
-| `/product` | Product copy plus same React preview | More credible product screenshot | Use captured demo screens in a device/mockup treatment |
-| `/login` in `Auth.jsx` | Strong layout, no external asset | Brand mark and optional auth visual | Add logo and optional scanner/shelf-side visual |
-| `#/dashboard` in `Ledger.jsx` | Functional cards/checklist | Optional empty/new-session graphic | Add restrained illustration only if it improves onboarding |
-| `#/scout` in `Ledger.jsx` | Primary app workflow | Screenshot source, empty scan graphic | Capture live screen; add small empty state |
-| `#/queue` | Functional empty state | Small buy-list empty visual | Optional medium-priority image |
-| `#/check-books` | Most differentiated workflow | Feature graphic and screenshot | Prioritize screenshot/mockup here |
-| `#/inventory` | Basic saved-list state | Small inventory empty visual | Optional |
-| `src/components/App.jsx` | Legacy dark scanner app | Visual system drift | Treat as legacy unless still routed elsewhere |
-
-## iOS App Consideration
-
-Start with PWA/iOS home-screen readiness before native iOS:
-
-- Add `manifest.webmanifest`.
-- Add `apple-touch-icon.png` at 180x180.
-- Add app icons at 192x192 and 512x512.
-- Keep viewport/scanner behavior mobile-safe.
-- Capture mobile screenshots at 390x844 and 430x932.
-- Native iOS should wait until scanner workflow, live pricing source, account persistence, and paid value are proven.
-
-## Launch Blockers
-
-- `brand-logo-primary`
-- `brand-mark`
-- `favicon-svg`
-- `apple-touch-icon`
-- `pwa-icon-192`
-- `pwa-icon-512`
-- `social-og-default`
-- `product-screenshot-scan`
-- `product-screenshot-check-books`
-
-## Post-Launch Assets
-
-- Paid ad backgrounds
-- Email headers
-- Blog/editorial headers
-- Video walkthrough
-- Route-specific social images
-
-## Notes For Prompt Pack
-
-Prompts should use the current light shop-label palette, physical used-book sourcing context, scanner/barcode cues, and clear live-text safe zones. Avoid generated marketplace logos and avoid any visual that implies guaranteed profit or live pricing accuracy.
+- Logo/app-icon outputs may need manual vector cleanup after image generation.
+- Product screenshots should preserve real app language where possible and avoid fake marketplace claims.
+- Large hero images should leave negative space for live page text.

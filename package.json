@@ -5,6 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "security:rls:hosted": "node scripts/security/hosted-rls-check.mjs",
+    "docker": "docker compose --env-file .env.local up -d --build web",
+    "docker:logs": "docker compose logs -f web",
+    "docker:down": "docker compose down",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
@@ -19,6 +23,7 @@
     "lucide-react": "^1.27.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "stripe": "^22.4.0",
     "tailwindcss": "^4.3.3",
     "vitest": "^4.1.10"
   },

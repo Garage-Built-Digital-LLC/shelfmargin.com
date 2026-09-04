@@ -14,18 +14,15 @@ export const FIELD_TEST_HEADERS = [
   "cost_per_book",
   "buy_threshold",
   "app_status_est",
-  "app_recommended_channel_est",
   "app_amazon_price_est",
-  "app_ebay_price_est",
   "app_amazon_net_est",
-  "app_ebay_net_est",
   "app_velocity_est",
   "app_restricted_est",
+  "app_data_confidence",
   "actual_source_checked",
   "amazon_eligible",
   "amazon_actual_price",
   "amazon_actual_rank",
-  "ebay_sold_comp",
   "actual_shipping",
   "actual_fees",
   "actual_net",
@@ -52,7 +49,7 @@ function verificationForEntry(entry, verification = {}) {
 
 export function fieldTestRows(entries, { cost, threshold, verification = {} }) {
   return entries.map((entry) => {
-    const bestNet = Math.max(entry.amazonNet, entry.ebayNet ?? -Infinity);
+    const bestNet = entry.amazonNet ?? -Infinity;
     const appStatus = entry.restricted ? "check" : bestNet >= threshold ? "buy" : "pass";
     const actual = {
       ...ACTUAL_FIELD_DEFAULTS,
@@ -68,13 +65,11 @@ export function fieldTestRows(entries, { cost, threshold, verification = {} }) {
       cost_per_book: cost,
       buy_threshold: threshold,
       app_status_est: appStatus,
-      app_recommended_channel_est: entry.winner,
       app_amazon_price_est: entry.amazonPrice?.toFixed?.(2) ?? entry.amazonPrice,
-      app_ebay_price_est: entry.ebayPrice?.toFixed?.(2) ?? entry.ebayPrice,
       app_amazon_net_est: entry.amazonNet?.toFixed?.(2) ?? entry.amazonNet,
-      app_ebay_net_est: entry.ebayNet?.toFixed?.(2) ?? entry.ebayNet,
       app_velocity_est: entry.velocity?.tier ?? "",
       app_restricted_est: entry.restricted ? "yes" : "no",
+      app_data_confidence: entry.priceSource === "estimated" ? "catalog live, Amazon estimate" : "Amazon data",
       ...actual,
     };
   });

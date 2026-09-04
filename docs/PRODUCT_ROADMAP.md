@@ -2,18 +2,53 @@
 
 ## Direction
 
-Shelf Margin is a webapp first. The first profitable product should work in a
-browser on desktop and mobile before we build a native iOS app.
+Shelf Margin has a 30-day MVP build window. The first 14 days should finish the
+webapp foundation, then native iOS work starts while the webapp continues to be
+the source of truth for accounts, scan history, billing, and exports.
 
 ## Priorities
 
 1. Webapp first.
 2. Strong SEO for used-book reseller searches.
 3. Real field testing with barcode scanners and real books.
-4. Live marketplace data after the workflow is proven.
+4. Use one Amazon Professional month to prove live Amazon data quickly.
 5. Paid plan only after users can see clear sourcing value.
-6. iOS app after the webapp has a proven workflow and retention.
+6. Start iOS app development on day 14 with a narrow scanner-first scope.
 7. Apple Watch companion alerts after iPhone scanning is reliable.
+
+## 30-Day MVP Window
+
+Days 1 to 14 are webapp-first:
+
+- Finish auth, admin readiness, Stripe test billing, and Amazon sandbox proof.
+- Connect ISBN scans to the server-side Amazon catalog boundary.
+- Keep price/rank/profit labels honest until production Amazon data is verified.
+- Tighten the public site so the product is clear enough for early users.
+- Prepare the scanner field-test workflow and export evidence.
+
+Days 14 to 30 add native iOS in parallel:
+
+- Start a narrow iPhone scanner shell that uses the same account model.
+- Reuse the webapp backend boundaries instead of creating a separate data model.
+- Keep Apple Watch as a paid companion feature, not a blocker for the MVP.
+- Use the last week to decide what can ship as beta and what stays internal.
+
+## Amazon Professional Month
+
+The Amazon Professional selling plan should be treated as a one-month validation
+window because it adds a roughly $40/month operating cost.
+
+During that month, the product work should focus on:
+
+- Getting LWA credentials and refresh-token exchange working server-side.
+- Connecting ISBN scans to live Amazon lookup results.
+- Running 50 to 100 real book scans.
+- Measuring lookup success rate, title match rate, scan speed, buy-list saves,
+  CSV exports, and estimate accuracy.
+- Deciding whether live Amazon data justifies keeping the Professional plan.
+
+See `docs/AMAZON_PROFESSIONAL_MONTH_PLAN.md` for the sprint plan and
+keep-or-cancel criteria.
 
 ## Webapp First
 
@@ -29,7 +64,7 @@ browser on desktop and mobile before we build a native iOS app.
   - used book scanner app
   - book reseller profit calculator
   - ISBN scanner for resellers
-  - Amazon and eBay book sourcing tool
+  - Amazon book sourcing tool
   - book buy list app
 - Public pages use real paths like `/pricing`, `/faq`, and `/privacy` locally.
 - Keep app-only routes hash-based for now so scanner navigation stays simple.
@@ -39,6 +74,8 @@ browser on desktop and mobile before we build a native iOS app.
 ## Profitability Plan
 
 - Prove that users can find or avoid enough buys to justify payment.
+- Do not treat the Amazon Professional plan as permanent until live scanner
+  tests prove it pays for itself.
 - Track real scans, checked books, buy-list saves, exports, and repeat use.
 - Use `src/lib/mvpReadiness.js` as the local evidence model for deciding when
   the product is ready for paid beta, live-data spend, and later iOS planning.
@@ -50,15 +87,15 @@ browser on desktop and mobile before we build a native iOS app.
 - Avoid building expensive native apps, complex dashboards, or marketplace
   automation before the core sourcing workflow pays for itself.
 
-## iOS Later
+## iOS Starts Day 14
 
-The iOS app should wait until:
+The first iOS build should start on day 14, but stay narrow:
 
-- The web scanner workflow is stable.
-- Real scanner tests show repeated use.
-- Live data is connected.
-- Pricing is validated.
-- Users ask for camera scanning, push reminders, or offline sourcing enough to
-  justify native development.
+- Sign in.
+- Scan ISBNs.
+- Show buy, check, or pass.
+- Save to the cloud-backed buy list.
+- Sync with the webapp.
+- Leave Apple Watch alerts for the paid Pro path once iPhone scanning works.
 
 See `docs/IOS_WATCH_ROADMAP.md` for the iOS and Apple Watch build sequence.

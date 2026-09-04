@@ -1,0 +1,14 @@
+{
+  "name": "@shelfmargin/core",
+  "version": "1.0.0",
+  "description": "Shared framework-agnostic Shelf Margin logic (ISBN, profit/decision engine, pricing, session summaries, types). Single source of truth for web + iOS so buy/check/pass can't drift.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./isbn": "./isbn.js",
+    "./profit": "./profit.js",
+    "./pricing": "./pricing.js",
+    "./sessionSummary": "./sessionSummary.js",
+    "./types": "./types.js"
+  }
+}

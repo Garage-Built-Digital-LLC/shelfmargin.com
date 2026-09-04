@@ -1,5 +1,5 @@
 import { fieldTestSummary } from "./fieldTestSummary.js";
-import { scanSessionSummary } from "./sessionSummary.js";
+import { scanSessionSummary } from "../../packages/core/sessionSummary.js";
 
 export const MVP_THRESHOLDS = {
   minScans: 50,
@@ -103,7 +103,7 @@ export function nextMvpAction(report) {
   if (!next) return "Review pricing, live data cost, and paid beta onboarding before charging.";
   if (next.id === "real-scans") return "Scan more real books with the Bluetooth scanner.";
   if (next.id === "repeat-sessions") return "Run the scanner on separate sourcing trips, not only one desk test.";
-  if (next.id === "verified-books") return "Check scanned books against real marketplace facts before buying.";
+  if (next.id === "verified-books") return "Check scanned books against real Amazon facts before buying.";
   if (next.id === "buy-list") return "Save more possible buys so the buy-list workflow gets tested.";
   if (next.id === "actual-buys") return "Find enough real buy candidates to prove the app can create value.";
   if (next.id === "exports") return "Export the book-check list so results can be reviewed outside the app.";

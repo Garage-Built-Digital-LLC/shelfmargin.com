@@ -1,260 +1,183 @@
-# Asset Prompt Pack
+# ShelfMargin Reseller Notebook Prompt Pack
 
-## Project
-
-- Project name: ShelfMargin
-- Prompt pack date: 2026-08-07
-- Brand profile: `docs/assets/brand-profile.md`
-- Manifest: `docs/assets/asset-manifest.json`
-
-## Global Style Rules
+Use this universal context before every prompt:
 
 ```text
-Used-book reseller field workflow, mobile-first scanner app, practical shop-label aesthetic, warm paper background, heavy ink linework, shelf yellow accent, trust blue secondary action, buy green and pass red decision cues, realistic book stacks, barcode scanner, thrift store or library-sale sourcing context, clean copy-safe space, professional and operational.
+ShelfMargin is a scanner-first app for used-book resellers. The user scans ISBN barcodes while sourcing books, estimates resale value, marks BUY / CHECK / PASS, saves a buy list, and exports CSV. Visual direction: Reseller Notebook. Use notebook paper, black ink, denim blue, highlighter yellow, profit green, clean white app panels, ruled lines, checklists, barcode stickers, used-book stacks, and scanner beam cues. The brand should feel practical, organized, field-ready, and professional. Avoid fake marketplace logos, guaranteed profit claims, dense unreadable UI text, childish doodles, generic SaaS gradients, purple blobs, mascots, and clutter.
 ```
 
-## Global Negative Prompt
+## 1. Primary Logo
 
 ```text
-No random decorative clutter, no fake unreadable UI text, no glossy startup gradient look, no pastel SaaS illustration style, no floating abstract shapes, no cartoon mascot, no generic stock-photo handshake, no fake marketplace logos, no guaranteed profit claims, no tiny illegible typography, no busy barcode texture behind important text.
+Asset name: Primary logo
+File name: logo-primary.png
+Save path: public/assets/brand/logo-primary.png
+Dimensions: 2400x800
+Prompt: Create a clean brand logo concept for ShelfMargin in a Reseller Notebook visual direction. Combine a simple barcode scanner cue, notebook margin line, or highlighted checklist mark with a strong readable ShelfMargin wordmark. Use ink black #171717, denim blue #1F5A7A, highlighter yellow #F4D35E, and clean white/notebook paper background #F7F2E8. The logo should feel practical, organized, scanner-first, and professional for used-book resellers. Flat vector-friendly design, high contrast, readable in a small web header. Include only the word “ShelfMargin”.
+Negative prompt: no fake marketplace logos, no Amazon or eBay marks, no book-title text, no tiny unreadable copy, no glossy 3D effect, no purple gradients, no cartoon mascot, no cluttered badge, no guaranteed profit claim.
 ```
 
-## Primary ShelfMargin Logo
-
-- Asset ID: `brand-logo-primary`
-- Purpose: Exportable logo for site header, auth page, future social creative, and docs.
-- Dimensions: `vector`
-- File name: `logo-primary.svg`
-- Save path: `public/assets/brand/logo-primary.svg`
-
-### Main Prompt
+## 2. Brand Mark
 
 ```text
-Create a clean vector-style logo concept for ShelfMargin, a scanner-first app for used-book resellers. Combine a simple barcode scanner or shelf-label mark with a strong readable ShelfMargin wordmark. Use warm paper, black ink, shelf yellow, and restrained trust blue accents. The logo should feel practical, fast, and professional, like a field tool for book sourcing and resale math. Keep it flat, high contrast, and readable in a small web header.
+Asset name: Brand mark
+File name: brand-mark.png
+Save path: public/assets/brand/brand-mark.png
+Dimensions: 1024x1024
+Prompt: Create a square app-style brand mark for ShelfMargin with no text. Use a simple barcode sticker, notebook check mark, and scanner beam or magnifier cue. Visual direction is Reseller Notebook: ink black linework, denim blue accent, highlighter yellow scan/highlight stroke, profit green only as a tiny confirmation detail, notebook paper background. The mark must be recognizable at 32x32 and suitable as the source for favicon and iOS app icon. Flat, crisp, high contrast, centered composition.
+Negative prompt: no words, no letters, no fake marketplace logos, no detailed book titles, no tiny UI, no glossy 3D, no mascot, no complex illustration, no clutter.
 ```
 
-### Negative Prompt
+## 3. Favicon
 
 ```text
-No fake marketplace logos, no cartoon books, no cute mascot, no complex 3D rendering, no glossy gradient, no tiny unreadable barcode detail, no ornate typography.
+Asset name: Favicon source
+File name: favicon.svg
+Save path: public/assets/icons/favicon.svg
+Dimensions: 512x512 source, final exported as SVG if possible
+Prompt: Create a minimal vector-friendly favicon mark for ShelfMargin. Use only a barcode sticker with one highlighter yellow bar and a small notebook check or scanner corner cue. No text. Ink black on transparent or notebook paper background. It must stay readable at 16x16 and 32x32.
+Negative prompt: no wordmark, no detailed scanner, no book stack, no tiny text, no complex gradients, no photo texture, no fake logo.
 ```
 
-### Implementation Notes
-
-Keep as draft until user approval. If the generator cannot output clean SVG, generate a high-resolution PNG concept and redraw or vectorize manually before implementation.
-
-## ShelfMargin App Mark
-
-- Asset ID: `brand-mark`
-- Purpose: Source mark for favicon, app icons, social card accent, and future native iOS.
-- Dimensions: `1024x1024`
-- File name: `brand-mark.png`
-- Save path: `public/assets/brand/brand-mark.png`
-
-### Main Prompt
+## 4. Apple Touch Icon
 
 ```text
-Create a simple square app mark for ShelfMargin. Use a bold black scanner beam crossing a book spine or shelf label, with one clean barcode-like cue and a small shelf yellow accent. Background should be warm paper `#F6F5F0`; linework should be ink black `#151512`; optional trust blue `#1F5FAD` detail. The mark must remain recognizable at 32x32 and work as an iOS app icon source.
+Asset name: Apple touch icon
+File name: apple-touch-icon.png
+Save path: public/assets/icons/apple-touch-icon.png
+Dimensions: 180x180
+Prompt: Create an iOS home-screen icon for ShelfMargin using the approved brand mark idea: barcode sticker plus highlighter yellow scan mark and notebook-check cue. Rounded-square safe composition, no text, no transparent edges, notebook paper background #F7F2E8, ink black #171717, denim blue #1F5A7A, highlighter yellow #F4D35E. Keep the shape bold and readable at small size.
+Negative prompt: no words, no fake marketplace logos, no realistic phone, no clutter, no tiny details, no glossy app-icon shine.
 ```
 
-### Negative Prompt
+## 5. PWA Icons
 
 ```text
-No text, no detailed bookshelf scene, no fake logos, no thin unreadable barcode lines, no glossy 3D icon, no gradients, no clutter.
+Asset name: PWA icon set
+File names: icon-192.png and icon-512.png
+Save paths: public/assets/icons/icon-192.png and public/assets/icons/icon-512.png
+Dimensions: generate 1024x1024 master, export 192x192 and 512x512
+Prompt: Create a square PWA icon master for ShelfMargin matching the Reseller Notebook brand mark. Show a bold barcode sticker, one highlighter yellow bar, and a simple scanner/check cue. No text. Keep the design centered with generous padding for maskable icon cropping. Notebook paper background, ink black linework, denim blue support accent, highlighter yellow scan accent.
+Negative prompt: no words, no app UI, no fake logos, no detailed book scene, no tiny lines that disappear, no glossy 3D, no drop-shadow-heavy icon.
 ```
 
-## iOS And PWA Icons
-
-- Asset IDs: `apple-touch-icon`, `pwa-icon-192`, `pwa-icon-512`
-- Purpose: iOS home-screen and installable app identity.
-- Dimensions: `180x180`, `192x192`, `512x512`
-- File names: `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`
-- Save paths: `public/assets/icons/apple-touch-icon.png`, `public/assets/icons/icon-192.png`, `public/assets/icons/icon-512.png`
-
-### Main Prompt
+## 6. Homepage Hero Desktop
 
 ```text
-Using the approved ShelfMargin app mark direction, create app icon exports that are simple, centered, and readable. Use warm paper background, heavy black ink shape, shelf yellow accent, and optional blue detail. The icon should suggest scanning book barcodes and saving resale decisions without any text.
+Asset name: Homepage hero desktop
+File name: home-hero-desktop.webp
+Save path: public/assets/images/home/home-hero-desktop.webp
+Dimensions: 1800x1100
+Prompt: Create a polished homepage hero image for ShelfMargin in the Reseller Notebook direction. Scene: a used-book sourcing table with a small stack of books, barcode stickers, a Bluetooth scanner, a phone showing a clean scanner UI, and a notebook buy list with highlighted check marks. Leave clear negative space on the left for live website headline text. Use notebook paper, black ink, denim blue, highlighter yellow, and profit green accents. The scene should feel practical, realistic, organized, and professional, not decorative. The app UI should be simple and readable with only short words like Scan, Buy, Check, Pass, Profit, CSV.
+Negative prompt: no fake Amazon or eBay logos, no guaranteed profit claims, no unreadable tiny UI, no cluttered desk, no random book titles, no purple SaaS gradient, no cartoon style, no heavy glossy reflections.
 ```
 
-### Negative Prompt
+## 7. Homepage Hero Mobile
 
 ```text
-No wordmark, no tiny barcode detail, no marketplace logos, no book cover titles, no glossy iOS glass effect, no complex scene.
+Asset name: Homepage hero mobile
+File name: home-hero-mobile.webp
+Save path: public/assets/images/home/home-hero-mobile.webp
+Dimensions: 1080x1920
+Prompt: Create a vertical mobile homepage hero image for ShelfMargin in the Reseller Notebook direction. Composition should place the phone scanner UI and notebook buy list in the lower half, with clean notebook-paper negative space in the upper half for live headline text. Include a used-book stack, barcode sticker, Bluetooth scanner, highlighter yellow scan line, denim blue action accent, and profit green BUY cue. Practical field-sourcing mood, clean and professional.
+Negative prompt: no fake marketplace logos, no unreadable UI, no dense text, no clutter, no mascot, no generic startup gradient, no overdramatic lighting, no random brand names.
 ```
 
-### Implementation Notes
-
-Generate from the same mark source so all icon sizes match. Add `manifest.webmanifest` after icons exist.
-
-## Homepage Hero Desktop
-
-- Asset ID: `home-hero-desktop`
-- Purpose: First-viewport homepage/product visual.
-- Dimensions: `2400x1400`
-- File name: `home-hero-desktop.webp`
-- Save path: `public/assets/images/home/home-hero-desktop.webp`
-
-### Main Prompt
+## 8. Product Scanner Screenshot
 
 ```text
-Create a professional homepage hero image for ShelfMargin, a mobile-first scanner app for used-book resellers. Scene: a thrift store or library-sale book shelf with a handheld Bluetooth barcode scanner, a small stack of used paperbacks, shelf price stickers, and a phone showing a simplified scanner app shape. Use warm paper tones, strong black ink edges, shelf yellow highlights, trust blue accents, and realistic controlled lighting. Leave clean headline-safe space on the left. The image should feel practical, fast, field-tested, and professional.
+Asset name: Product scanner screenshot
+File name: app-screenshot-scan.webp
+Save path: public/assets/images/product/app-screenshot-scan.webp
+Dimensions: 1290x2796
+Prompt: Create a clean iPhone-style product screenshot mockup for ShelfMargin’s scanner screen. The phone UI should look like a practical reseller notebook app: scan ISBN input, barcode scan frame, simple book result card, BUY / CHECK / PASS decision buttons, estimated profit, rank, cost, and save-to-list action. Use clean white panels, notebook paper background, ink black, denim blue buttons, highlighter yellow scan line, profit green positive values. Keep UI text large and readable. Show only generic sample book/result labels; do not invent marketplace data claims.
+Negative prompt: no Amazon or eBay logos, no fake official marketplace data, no guaranteed profit language, no tiny unreadable text, no excessive phone reflections, no 3D perspective that hides the UI.
 ```
 
-### Negative Prompt
+## 9. Notebook Workflow Feature
 
 ```text
-No fake readable marketplace logos, no guaranteed profit numbers, no fake unreadable UI text, no generic office desk, no glossy startup gradient, no smiling stock-photo person, no clutter over the text-safe area.
+Asset name: Notebook workflow feature
+File name: feature-notebook-workflow.webp
+Save path: public/assets/images/features/feature-notebook-workflow.webp
+Dimensions: 1600x1000
+Prompt: Create a feature graphic showing the ShelfMargin workflow as a clean notebook spread: 1 Scan ISBN, 2 Mark BUY/CHECK/PASS, 3 Save to buy list, 4 Export CSV. Use ruled notebook paper, highlighter strokes, simple barcode sticker icons, small scanner cue, denim blue arrows, profit green check marks, amber check state, red pass state. Keep the graphic professional and readable, with clean spacing and no childish doodles.
+Negative prompt: no fake marketplace logos, no tiny paragraphs, no cluttered infographic, no glossy SaaS dashboard, no purple gradient, no mascot, no random book titles.
 ```
 
-### Implementation Notes
-
-Use in `src/components/PublicSite.jsx` homepage hero after generation. Keep live H1 and CTAs as real text, not baked into image.
-
-## Homepage Hero Mobile
-
-- Asset ID: `home-hero-mobile`
-- Purpose: Mobile-specific hero crop.
-- Dimensions: `1200x1600`
-- File name: `home-hero-mobile.webp`
-- Save path: `public/assets/images/home/home-hero-mobile.webp`
-
-### Main Prompt
+## 10. Buy List Notebook Product Visual
 
 ```text
-Create a portrait mobile hero image for ShelfMargin. Show a close, practical used-book sourcing moment: a barcode scanner pointed at a book ISBN, a small book stack, and a phone with a clean scanner-app silhouette. Keep the top third calm and copy-safe, with warm paper background, black ink linework, shelf yellow accent, and trust blue detail. The image should look professional and useful on an iPhone landing page.
+Asset name: Buy list notebook visual
+File name: buy-list-notebook.webp
+Save path: public/assets/images/product/buy-list-notebook.webp
+Dimensions: 1600x1000
+Prompt: Create a product visual for ShelfMargin showing a phone beside a physical notebook buy list. The phone screen shows a clean saved buy-list UI with rows, check marks, estimated profit, rank, and CSV export. The physical notebook has simple checked lines and highlighter marks, not long readable text. Include used books and barcode stickers in the background. Reseller Notebook style: organized, practical, warm paper, black ink, denim blue, highlighter yellow, profit green.
+Negative prompt: no fake marketplace logos, no guaranteed profits, no dense small UI text, no messy desk, no random brand names, no cartoon look, no glossy unrealistic phone.
 ```
 
-### Negative Prompt
+## 11. Scan Empty State
 
 ```text
-No fake readable UI text, no marketplace logos, no face-focused stock photo, no busy bookshelf filling the whole frame, no glossy gradients, no decorative abstract shapes.
+Asset name: Scan empty state
+File name: empty-state-scan.webp
+Save path: public/assets/images/product/empty-state-scan.webp
+Dimensions: 1200x900
+Prompt: Create a restrained empty-state illustration for ShelfMargin’s scan screen. Show a clean notebook page with a barcode sticker, a small scanner beam/highlighter stroke, and one empty checklist line waiting for the first scan. Flat illustration, ink black, denim blue, highlighter yellow, notebook paper, lots of whitespace. Professional and quiet.
+Negative prompt: no mascot, no sad face, no long text, no fake UI, no clutter, no glossy 3D, no childish doodles.
 ```
 
-## Default Social OG Image
-
-- Asset ID: `social-og-default`
-- Purpose: Default Open Graph and Twitter/X preview.
-- Dimensions: `1200x630`
-- File name: `og-default.webp`
-- Save path: `public/assets/images/social/og-default.webp`
-
-### Main Prompt
+## 12. Buy List Empty State
 
 ```text
-Create a 1200x630 social preview image for ShelfMargin. Use a clean warm paper background with heavy black border lines, a shelf yellow diagonal safety-label accent, a simple scanner/book/barcode mark on the right, and clear empty space on the left for real live title text. The visual should communicate scan books, estimate profit, save the list, and check before buying. Professional used-book reseller tool, not generic SaaS.
+Asset name: Buy list empty state
+File name: empty-state-buy-list.webp
+Save path: public/assets/images/product/empty-state-buy-list.webp
+Dimensions: 1200x900
+Prompt: Create a restrained empty-state illustration for ShelfMargin’s buy list. Show a clean notebook checklist with three empty rows, a small barcode sticker, a denim blue CSV tab, and one highlighter yellow margin line. It should suggest organized sourcing without showing fake data. Flat, clear, professional, lots of whitespace.
+Negative prompt: no mascot, no long text, no fake profit numbers, no cluttered desk, no glossy 3D, no cartoon character.
 ```
 
-### Negative Prompt
+## 13. Default Social OG Image
 
 ```text
-No tiny text, no fake logos, no fake marketplace dashboards, no unreadable UI, no glossy gradient, no cluttered book pile, no cartoon mascot.
+Asset name: Default social image
+File name: og-default.webp
+Save path: public/assets/images/social/og-default.webp
+Dimensions: 1200x630
+Prompt: Create a social preview image for ShelfMargin in the Reseller Notebook direction. Layout: left side has the ShelfMargin wordmark area and room for live overlay text if needed; right side shows a phone scanner UI, notebook buy list, used-book stack, barcode sticker, and highlighter yellow scan mark. Use ink black, notebook paper, denim blue, highlighter yellow, and profit green. Professional and readable at small link-preview size. Text may include only “ShelfMargin” and “Scan. Save. Check.”
+Negative prompt: no fake marketplace logos, no guaranteed profit claim, no dense tiny text, no clutter, no purple gradient, no cartoon mascot, no app store badge.
 ```
 
-### Implementation Notes
-
-After file exists, update `index.html` with `og:image`, `twitter:card` as `summary_large_image`, and `twitter:image`.
-
-## Scan Screen Screenshot Treatment
-
-- Asset ID: `product-screenshot-scan`
-- Purpose: Marketing product mockup and future iOS screenshot source.
-- Dimensions: source screenshot plus `1800x1200` treatment
-- File name: `app-screenshot-scan.webp`
-- Save path: `public/assets/images/product/app-screenshot-scan.webp`
-
-### Main Prompt
+## 14. Pricing Value Proof
 
 ```text
-Use the provided real ShelfMargin Scan screen screenshot. Preserve the actual UI and readable text. Present it as a clean mobile product screenshot on a warm paper and black ink product surface with a subtle shelf yellow accent and small scanner/book context nearby. Keep perspective minimal, avoid glare, and make the app screen easy to inspect.
+Asset name: Pricing value proof
+File name: pricing-value-proof.webp
+Save path: public/assets/images/product/pricing-value-proof.webp
+Dimensions: 1400x1000
+Prompt: Create a pricing-page proof visual for ShelfMargin. Show a clean notebook-style comparison of a sourcing trip: scanned books, saved buys, CSV export, and avoided bad buys. Use simple cards/rows with generic labels only, profit green for saved value, amber for needs check, red for pass, denim blue for export. Include a phone UI thumbnail and a notebook checklist. Keep it credible and non-promissory.
+Negative prompt: no guaranteed earnings, no fake marketplace logos, no exact revenue claims, no tiny unreadable tables, no stock-photo business scene, no cartoon look.
 ```
 
-### Negative Prompt
+## 15. iOS App Store Scan Screenshot
 
 ```text
-Do not rewrite UI text, do not invent marketplace data, do not blur the app, no extreme 3D perspective, no glossy device reflection, no fake logos, no extra unreadable panels.
+Asset name: iOS app store scan screenshot
+File name: ios-app-store-scan.webp
+Save path: public/assets/images/product/ios-app-store-scan.webp
+Dimensions: 1290x2796
+Prompt: Create a polished iOS App Store screenshot concept for ShelfMargin. Vertical composition with a real-looking phone UI centered over a clean Reseller Notebook background. The UI shows the scanner workflow: Scan ISBN, barcode frame, BUY/CHECK/PASS, estimated profit, rank, and Save to List. Add a short large headline area outside the phone: “Scan books. Save the right buys.” Use notebook paper, ink black, denim blue, highlighter yellow, profit green. Keep all text readable and sparse.
+Negative prompt: no Apple App Store badge, no fake marketplace logos, no guaranteed profit claims, no tiny UI, no cluttered background, no cartoon mascot, no glossy over-reflected phone.
 ```
 
-### Implementation Notes
-
-Capture from `/demo#/scout` or signed-in `#/scout`. Redact email if using account mode.
-
-## Check Books Screenshot Treatment
-
-- Asset ID: `product-screenshot-check-books`
-- Purpose: Show the verification workflow that differentiates ShelfMargin from a simple scanner.
-- Dimensions: source screenshot plus `1800x1200` treatment
-- File name: `app-screenshot-check-books.webp`
-- Save path: `public/assets/images/product/app-screenshot-check-books.webp`
-
-### Main Prompt
+## 16. Beta Ad Background
 
 ```text
-Use the provided real ShelfMargin Check Books screen screenshot. Preserve the actual UI and readable text. Present it as a clean mobile product screenshot with used-book sourcing context: book stack, pencil/checklist cue, barcode scanner nearby, warm paper background, black ink borders, shelf yellow and trust blue accents. The composition should make the check-before-buy workflow feel credible and professional.
-```
-
-### Negative Prompt
-
-```text
-Do not rewrite UI text, do not invent fake data, no marketplace logos, no glossy phone reflection, no extreme perspective, no clutter, no decorative abstract shapes.
-```
-
-## Scan Check Export Feature Graphic
-
-- Asset ID: `feature-scan-check-export`
-- Purpose: Visual support for product feature section.
-- Dimensions: `1600x1000`
-- File name: `feature-scan-check-export.webp`
-- Save path: `public/assets/images/features/feature-scan-check-export.webp`
-
-### Main Prompt
-
-```text
-Create a focused feature graphic for ShelfMargin showing the workflow: scan a book barcode, mark buy/pass/check, save to a buy list, then export a CSV. Use simple structured panels, book shelf labels, scanner beam, checklist marks, and export sheet cue. Use warm paper, black ink, shelf yellow, trust blue, buy green, and pass red. Keep the graphic clean and readable without fake detailed UI text.
-```
-
-### Negative Prompt
-
-```text
-No fake dashboards full of unreadable text, no abstract blobs, no puzzle metaphor, no mascot, no marketplace logos, no guaranteed profit claims.
-```
-
-## Scanner Empty State
-
-- Asset ID: `empty-state-scan`
-- Purpose: Small visual for no scans state in Ledger scan page.
-- Dimensions: `800x600`
-- File name: `empty-state-scan.webp`
-- Save path: `public/assets/images/product/empty-state-scan.webp`
-
-### Main Prompt
-
-```text
-Create a restrained empty-state visual for ShelfMargin's scanner page. Show a simple barcode scanner resting beside one blank book spine and a small shelf label, drawn with black ink linework on warm paper, with a small shelf yellow accent. It should feel functional and calm, sized for an app empty state, not decorative.
-```
-
-### Negative Prompt
-
-```text
-No cartoon mascot, no sad face, no fake UI text, no busy book pile, no glossy gradients, no cute illustration style.
-```
-
-## Beta Tester Ad Background
-
-- Asset ID: `ad-background-beta`
-- Purpose: Future beta tester paid/social creative.
-- Dimensions: `1600x900`
-- File name: `ad-background-beta.webp`
-- Save path: `public/assets/images/ads/ad-background-beta.webp`
-
-### Main Prompt
-
-```text
-Create a campaign background for ShelfMargin beta testers: used-book reseller scanning barcodes in a real sourcing environment, practical and professional. Leave strong copy-safe space for headline and CTA. Use warm paper, black ink, shelf yellow, trust blue, and subtle book shelf context. The image should make the offer feel like a useful field tool for resellers, not a generic tech app.
-```
-
-### Negative Prompt
-
-```text
-No guaranteed profit claims, no fake marketplace logos, no smiling stock-photo shopper, no cluttered background, no tiny text, no glossy SaaS gradient.
+Asset name: Beta ad background
+File name: beta-ad-background.webp
+Save path: public/assets/images/ads/beta-ad-background.webp
+Dimensions: 1080x1350
+Prompt: Create a square-ish social ad background for ShelfMargin beta testers. Reseller Notebook style. Show a thrift-store book table, barcode sticker, scanner, phone scanner UI, and notebook checklist, with clean negative space for live ad copy. Use practical lighting, notebook paper texture, denim blue action color, highlighter yellow scan cue, profit green check. No baked offer text except optional small “ShelfMargin” wordmark.
+Negative prompt: no fake marketplace logos, no guaranteed profit, no clutter, no tiny UI, no purple gradient, no influencer/person posing, no stock-photo look.
 ```

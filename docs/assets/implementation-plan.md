@@ -1,99 +1,53 @@
-# Asset Implementation Plan
+# ShelfMargin Asset Implementation Plan
 
-## Project
+## Rule
 
-- Project name: ShelfMargin
-- Date: 2026-08-07
-- Manifest: `docs/assets/asset-manifest.json`
-- Prompt pack: `docs/assets/prompt-pack.md`
+Generate and review assets first. Wire only approved or selected draft assets into runtime code after the files exist under `public/assets`.
 
-## Instructions For Coding Agent
+## Runtime Wiring
 
-Read the manifest first. Implement only assets that exist at their expected `save_path`, unless the task is specifically to add metadata paths for generated files. Do not mark assets `implemented` or `approved` without file existence and user confirmation where required.
+| Asset ID | Public URL | Primary code location |
+|---|---|---|
+| `brand-logo-primary` | `/assets/brand/logo-primary.png` | `src/components/PublicSite.jsx`, `src/components/Auth.jsx` |
+| `brand-mark` | `/assets/brand/brand-mark.png` | `src/components/PublicSite.jsx`, app shell header |
+| `favicon-svg` | `/assets/icons/favicon.svg` | `index.html` |
+| `apple-touch-icon` | `/assets/icons/apple-touch-icon.png` | `index.html` |
+| `pwa-icon-192` | `/assets/icons/icon-192.png` | `public/manifest.webmanifest` |
+| `pwa-icon-512` | `/assets/icons/icon-512.png` | `public/manifest.webmanifest` |
+| `home-hero-desktop` | `/assets/images/home/home-hero-desktop.webp` | Homepage hero in `src/components/PublicSite.jsx` |
+| `home-hero-mobile` | `/assets/images/home/home-hero-mobile.webp` | Homepage hero mobile crop in `src/components/PublicSite.jsx` |
+| `product-screenshot-scan` | `/assets/images/product/app-screenshot-scan.webp` | Product page proof visual |
+| `feature-notebook-workflow` | `/assets/images/features/feature-notebook-workflow.webp` | Product workflow section |
+| `product-buy-list-notebook` | `/assets/images/product/buy-list-notebook.webp` | Product page after-scan section |
+| `empty-state-scan` | `/assets/images/product/empty-state-scan.webp` | `src/components/Ledger.jsx` scan empty state |
+| `empty-state-buy-list` | `/assets/images/product/empty-state-buy-list.webp` | `src/components/Ledger.jsx` queue/check-books empty states |
+| `social-og-default` | `/assets/images/social/og-default.webp` | `index.html` Open Graph and Twitter metadata |
+| `pricing-value-proof` | `/assets/images/product/pricing-value-proof.webp` | Pricing page proof section |
+| `ios-app-store-scan` | `/assets/images/product/ios-app-store-scan.webp` | iOS planning/app-store source docs |
 
-## Asset Placement
+## Recommended Generation Order
 
-| Asset ID | Save path | Used in | Implementation type | Status |
-|---|---|---|---|---|
-| `brand-logo-primary` | `public/assets/brand/logo-primary.svg` | `PublicSite.jsx`, `Auth.jsx`, `Ledger.jsx` | Header/auth logo | `needed` |
-| `brand-mark` | `public/assets/brand/brand-mark.png` | Icons/social source | Brand source image | `prompt_ready` |
-| `favicon-svg` | `public/assets/icons/favicon.svg` | `index.html` | Favicon link | `needed` |
-| `apple-touch-icon` | `public/assets/icons/apple-touch-icon.png` | `index.html` | iOS home-screen icon | `prompt_ready` |
-| `pwa-icon-192` | `public/assets/icons/icon-192.png` | `manifest.webmanifest` | PWA icon | `prompt_ready` |
-| `pwa-icon-512` | `public/assets/icons/icon-512.png` | `manifest.webmanifest` | PWA icon | `prompt_ready` |
-| `home-hero-desktop` | `public/assets/images/home/home-hero-desktop.webp` | `PublicSite.jsx` | Responsive hero/product image | `prompt_ready` |
-| `home-hero-mobile` | `public/assets/images/home/home-hero-mobile.webp` | `PublicSite.jsx` | Responsive mobile hero image | `prompt_ready` |
-| `social-og-default` | `public/assets/images/social/og-default.webp` | `index.html` | OG/Twitter metadata | `prompt_ready` |
-| `product-screenshot-scan` | `public/assets/images/product/app-screenshot-scan.webp` | `PublicSite.jsx` | Product screenshot/mockup | `needed` |
-| `product-screenshot-check-books` | `public/assets/images/product/app-screenshot-check-books.webp` | `PublicSite.jsx` | Product screenshot/mockup | `needed` |
-| `feature-scan-check-export` | `public/assets/images/features/feature-scan-check-export.webp` | `PublicSite.jsx` | Feature image | `prompt_ready` |
-| `empty-state-scan` | `public/assets/images/product/empty-state-scan.webp` | `Ledger.jsx` | Empty-state inline image | `prompt_ready` |
+1. Generate `brand-logo-primary` and `brand-mark`.
+2. Pick/approve one brand direction.
+3. Derive favicon, Apple touch icon, and PWA icons from the selected mark.
+4. Generate homepage desktop/mobile hero assets.
+5. Generate product screenshot and workflow visuals.
+6. Generate empty states and social/ad assets.
+7. Implement selected files in code.
+8. Run `npm test`, `npm run build`, and browser visual QA at desktop and mobile widths.
 
-## Immediate Implementation Sequence
+## Metadata To Restore After Icons Exist
 
-1. Generate or design `brand-mark`, then derive favicon and app icons.
-2. Add `index.html` links:
-   - `/assets/icons/favicon.svg`
-   - `/assets/icons/apple-touch-icon.png`
-   - `/manifest.webmanifest`
-3. Create `public/manifest.webmanifest` after icon files exist.
-4. Generate `social-og-default` and update `index.html`:
-   - `og:image`
-   - `twitter:card` to `summary_large_image`
-   - `twitter:image`
-5. Capture real screenshots from `/demo#/scout` and `/demo#/check-books`.
-6. Generate screenshot treatments from the real screenshots.
-7. Add homepage/product imagery to `src/components/PublicSite.jsx` with stable aspect ratios and meaningful `alt` text.
-8. Add the scan empty-state image to `Ledger.jsx` only if it improves the compact mobile layout.
+Add these back to `index.html` only after files exist:
 
-## iOS/PWA Readiness Plan
+```html
+<link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg" />
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta property="og:image" content="/assets/images/social/og-default.webp" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:image" content="/assets/images/social/og-default.webp" />
+```
 
-Before considering a native iOS app, complete this webapp-first asset pass:
-
-- Icons: 180x180, 192x192, 512x512.
-- Manifest: `name`, `short_name`, `start_url`, `display`, `theme_color`, `background_color`, and icons.
-- Screenshots: mobile portrait app screenshots for Scan and Check Books.
-- Metadata: app title, description, social image, favicon, touch icon.
-- Visual QA: iPhone-sized viewport at public home, login, demo scan, and check-books route.
-
-Native iOS should come after field testing proves the workflow and live data/provider assumptions. The current public copy already says the webapp is first and iOS comes later.
-
-## Screenshot Capture Guidance
-
-Use current rendered UI as source, not generated fake app screens:
-
-- `http://localhost:5173/demo#/scout`
-- `http://localhost:5173/demo#/check-books`
-- `http://localhost:5173/demo#/dashboard`
-
-Capture at:
-
-- 390x844 for iPhone 12/13/14 common viewport.
-- 430x932 for large iPhone.
-- 1440x1100 for desktop marketing context.
-
-Redact real account email if using signed-in routes instead of demo.
-
-## Verification Checklist
-
-- Manifest paths exist for every implemented asset.
-- `npm run build` passes after code references are added.
-- Browser loads public home and app routes without broken image requests.
-- Hero text remains readable on mobile and desktop.
-- Product screenshot is inspectable and not distorted.
-- iOS icon looks recognizable at 32x32 and 180x180.
-- Metadata image URL resolves directly.
-
-## User Generation Required
-
-Generate or approve these first:
-
-- `public/assets/brand/logo-primary.svg`
-- `public/assets/brand/brand-mark.png`
-- `public/assets/icons/favicon.svg`
-- `public/assets/icons/apple-touch-icon.png`
-- `public/assets/icons/icon-192.png`
-- `public/assets/icons/icon-512.png`
-- `public/assets/images/social/og-default.webp`
-- `public/assets/images/home/home-hero-desktop.webp`
-- `public/assets/images/home/home-hero-mobile.webp`
+Create `public/manifest.webmanifest` only after `icon-192.png` and `icon-512.png` exist.

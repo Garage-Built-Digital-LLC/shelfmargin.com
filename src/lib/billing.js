@@ -21,6 +21,19 @@ export const STRIPE_PRICE_LOOKUP_KEYS = {
   pro: "shelfmargin_pro_monthly",
 };
 
+export const STRIPE_PRICE_RULES = {
+  [BILLING_PLANS.starter]: {
+    lookupKey: STRIPE_PRICE_LOOKUP_KEYS.starter,
+    currency: "usd",
+    unitAmount: 1500,
+  },
+  [BILLING_PLANS.pro]: {
+    lookupKey: STRIPE_PRICE_LOOKUP_KEYS.pro,
+    currency: "usd",
+    unitAmount: 2900,
+  },
+};
+
 const paidPlans = new Set([BILLING_PLANS.starter, BILLING_PLANS.pro]);
 const entitledStatuses = new Set([
   BILLING_STATUSES.freeBeta,
@@ -56,4 +69,26 @@ export function hasPaidAccess(account) {
   if (!account) return false;
   if (!paidPlans.has(account.plan)) return false;
   return [BILLING_STATUSES.trialing, BILLING_STATUSES.active].includes(account.subscription_status);
+}
+
+export function billingPlanLabel(plan) {
+  if (plan === BILLING_PLANS.starter) return "Starter";
+  if (plan === BILLING_PLANS.pro) return "Pro";
+  if (plan === BILLING_PLANS.freeBeta) return "Free beta";
+  return "Unknown plan";
+}
+
+export function billingStatusLabel(status) {
+  const labels = {
+    [BILLING_STATUSES.freeBeta]: "Free beta",
+    [BILLING_STATUSES.trialing]: "Trialing",
+    [BILLING_STATUSES.active]: "Active",
+    [BILLING_STATUSES.pastDue]: "Past due",
+    [BILLING_STATUSES.canceled]: "Canceled",
+    [BILLING_STATUSES.unpaid]: "Unpaid",
+    [BILLING_STATUSES.incomplete]: "Incomplete",
+    [BILLING_STATUSES.incompleteExpired]: "Incomplete expired",
+    [BILLING_STATUSES.paused]: "Paused",
+  };
+  return labels[status] || "Unknown status";
 }

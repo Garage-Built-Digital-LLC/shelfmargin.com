@@ -2,15 +2,17 @@
 
 ## Position
 
-Shelf Margin should stay webapp-first until the scanner workflow, saved lists,
-exports, pricing, and live data value are proven with real book resellers.
+Shelf Margin is in a 30-day MVP build window. The webapp remains first because
+it owns accounts, admin readiness, billing, scan history, exports, and Amazon
+integration. Native iOS development starts on day 14 with a narrow scanner-first
+scope.
 
 The iOS app is a second product surface, not the first milestone. The Apple
 Watch experience is a companion to the iPhone app, not a standalone scanner.
 Apple Watch alerts should be treated as a future paid feature, most likely in
 the Pro plan once native iOS is ready.
 
-## Why Wait
+## Why Webapp First For 14 Days
 
 - The current risk is product value, not native app polish.
 - A browser-based workflow is faster to test with real books and barcode scanners.
@@ -20,12 +22,12 @@ the Pro plan once native iOS is ready.
 
 ## Build Order
 
-1. Finish the core webapp workflow.
-2. Prove real scanner sessions with physical books.
-3. Wire live marketplace data behind the webapp.
-4. Validate paid conversion on the web.
-5. Build a PWA-quality mobile web experience.
-6. Start the native iOS app when repeat usage is proven.
+1. Finish the core webapp workflow in days 1 to 14.
+2. Prove Amazon sandbox auth and catalog lookup server-side.
+3. Prepare real scanner sessions with physical books.
+4. Tighten billing, scan history, buy list, and exports on the web.
+5. Start native iOS on day 14 with sign-in, ISBN scan, result, and save.
+6. Keep production Amazon pricing/fees and beta user proof moving in parallel.
 7. Add Apple Watch companion alerts as a paid Pro feature after iPhone scanning
    is reliable.
 
@@ -86,15 +88,15 @@ Each watch notification should stay simple:
 
 No long explanations, charts, or full marketplace detail on the watch.
 
-## Readiness Criteria
+## Day 14 Start Criteria
 
-Start native iOS planning only when these are true:
+Start native iOS work on day 14 if these are true:
 
-- Real scanner tests show the workflow is useful.
+- The web scanner can accept real ISBNs reliably.
 - Saved scans and buy lists work reliably from the webapp.
-- Live data source is connected or clearly scoped.
-- Pricing is ready to test with real users.
-- At least one reseller says mobile-native speed would improve sourcing.
+- Amazon sandbox auth is verified and production data is clearly scoped.
+- Pricing labels still distinguish estimated data from live data.
+- The iOS scope is limited to sign-in, scan, decision, save, and sync.
 
 Start Apple Watch work only when these are true:
 

@@ -48,10 +48,37 @@ describe("live catalog provider", () => {
     const hit = await provider.lookup(ISBN);
 
     expect(hit.title).toBe("Real Catalog Title");
+    expect(hit.isbn).toBe(ISBN);
     expect(hit.author).toBe("Catalog Author");
     expect(hit.catalogSource).toBe("openlibrary");
     expect(hit.priceSource).toBe("estimated");
     expect(hit.amazonPrice).toEqual(expect.any(Number));
+  });
+
+  it("preserves Amazon catalog metadata while keeping resale pricing estimated", async () => {
+    const fetchImpl = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        title: "Clean Code",
+        author: "Robert C. Martin",
+        asin: "B001234567",
+        source: "amazon-sp-api-sandbox",
+        catalogSource: "amazon-sp-api-sandbox",
+        amazonMode: "sandbox",
+        marketplaceId: "ATVPDKIKX0DER",
+      }),
+    });
+    const provider = createLiveProvider({ fetchImpl });
+    const hit = await provider.lookup(ISBN);
+
+    expect(hit.title).toBe("Clean Code");
+    expect(hit.isbn).toBe(ISBN);
+    expect(hit.asin).toBe("B001234567");
+    expect(hit.catalogSource).toBe("amazon-sp-api-sandbox");
+    expect(hit.amazonMode).toBe("sandbox");
+    expect(hit.marketplaceId).toBe("ATVPDKIKX0DER");
+    expect(hit.priceSource).toBe("estimated");
   });
 
   it("falls back to estimated catalog data when public APIs miss", async () => {

@@ -11,7 +11,7 @@ real prices before spending money, and export the list.
 - ISBN-10/13 cleanup and price-add-on stripping in `src/lib/isbn.js`.
 - Profit calculation with Amazon media fee assumptions in `src/lib/profit.js`.
 - Live ISBN title/author lookup when `VITE_USE_LIVE=true`.
-- Dual-channel scan results for Amazon and eBay estimates.
+- Amazon-first scan results with an estimated buy / check / pass verdict.
 - Duplicate detection with copy counts.
 - Buy list, saved scans, book-check notes, and CSV export.
 - Dated scan-session summaries based on saved scan timestamps.
@@ -44,8 +44,8 @@ http://localhost:5173
 
 Shelf Margin can pull live title/author catalog metadata when
 `VITE_USE_LIVE=true`. Marketplace prices, ranks, seller counts, fees, and
-buy/pass/check verdicts are still estimates until Amazon/eBay or another resale
-data provider is wired through a server-side endpoint. Always check real
+buy/pass/check verdicts are still estimates until live Amazon data is wired
+through a server-side endpoint. Always check real
 marketplace prices, fees, condition, and seller restrictions before buying
 books.
 
@@ -61,7 +61,7 @@ Webapp-first, SEO, profitability, and iOS-later direction is tracked in
 
 ## Demo ISBNs
 
-- `9780306406157` clear buy
-- `9780743273565` clear pass
-- `9781591847786` check first
-- `9780132350884` Amazon-only sample
+- `9781449373320` Designing Data-Intensive Applications — clear buy
+- `9780984782857` Cracking the Coding Interview — clear buy
+- `9780735211292` Atomic Habits — oversupplied bestseller, pass
+- `9780399226908` The Very Hungry Caterpillar — common kids' penny book, pass

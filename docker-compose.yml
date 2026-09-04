@@ -1,6 +1,12 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
+        VITE_USE_LIVE: ${VITE_USE_LIVE}
     image: shelfmargin-web
     container_name: shelfmargin-preview
     env_file:

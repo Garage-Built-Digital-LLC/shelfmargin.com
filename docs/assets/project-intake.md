@@ -1,77 +1,58 @@
-# Project Intake
+# ShelfMargin Project Intake
 
-## Project Basics
+## Project
 
-- Project name: ShelfMargin
-- Project type: Mobile-first Vite React webapp and public marketing site
-- Target customer: Used-book resellers sourcing books from thrift stores, library sales, garage sales, and bulk lots
-- Primary business goal: Prove the scanner workflow and value before paid launch or native iOS build
-- Primary conversion goal: Get testers into demo or account-based scan sessions
-- Offer/product type: Early free scanner webapp for validating buy/pass/check decisions
-- Brand maturity: draft
-- Launch priority: Improve professional polish without hiding the current estimate-only/provider-readiness boundary
+- Name: ShelfMargin
+- Type: Vite React webapp with public marketing pages and authenticated scanner workflow
+- Audience: used-book resellers sourcing books in thrift stores, library sales, garage sales, and used-book shops
+- Product promise: scan ISBNs, estimate resale value, mark BUY/CHECK/PASS, save a buy list, export CSV, and check real marketplace data before purchasing
 
-## Tech Stack
+## Current Routes
 
-- Framework: Vite 8, React 19
-- Styling: Tailwind CSS utilities plus component-local constants; older scanner CSS remains in `src/index.css`
-- Hosting: Docker/Vite local preview currently documented from prior work as `localhost:5173`
-- Database/auth: Supabase client and migrations; live provider status must be revalidated before public claims
-- Image handling notes: Static files should live in `public/assets` and be referenced as `/assets/...`
+Public routes:
 
-## Main Pages And Routes
+- `/`
+- `/product`
+- `/pricing`
+- `/faq`
+- `/security`
+- `/privacy`
+- `/terms`
+- `/login`
+- `/demo`
 
-| Route | Page purpose | Asset needs |
-|---|---|---|
-| `/` | Public homepage | Hero/product visual, default OG image |
-| `/product` | Product explanation | Product mockup or screenshot treatment |
-| `/pricing` | Early free pricing | No heavy image needed; use shared brand assets |
-| `/faq` | Objection handling | No image needed |
-| `/security` | Account/data trust | Small trust/security graphic optional |
-| `/privacy` | Legal content | Logo/favicon only |
-| `/terms` | Legal content | Logo/favicon only |
-| `/login` | Auth and signup | Brand mark, optional auth-side visual |
-| `/demo` | Demo Ledger app | Screenshot source for product mockups |
-| `#/dashboard` | User home | Empty-state illustration optional |
-| `#/scout` | Scanner | Screenshot source and empty scan state |
-| `#/queue` | Buy list | Empty-state illustration optional |
-| `#/check-books` | Verification workflow | Feature graphic and screenshot source |
-| `#/inventory` | Saved books | Empty-state illustration optional |
-| `#/settings` | Scan rules | No image needed |
-| `#/admin` | Setup checks | No image needed |
+App routes:
 
-## Existing Assets
+- `#/dashboard`
+- `#/scout`
+- `#/queue`
+- `#/check-books`
+- `#/inventory`
+- `#/settings`
+- `#/admin`
 
-| Asset | Current path/location | Quality | Notes |
-|---|---|---|---|
-| Logo | Icon+text rendered in React with Lucide `Scan` | Draft | No exported logo file |
-| Favicon | Missing | Blocking | `index.html` does not link favicon |
-| App icon | Missing | Blocking for iOS/PWA consideration | No manifest or touch icon |
-| Product screenshots | Missing | Needed | App can produce real screenshots from `/demo` |
-| Social image | Missing | Blocking | `index.html` lacks `og:image` and `twitter:image` |
-| Hero image | Missing | Supporting/blocking for professional marketing polish | Homepage uses component mockup only |
+## Selected Visual Direction
 
-## Visual Direction
+Reseller Notebook: notebook paper, black ink, denim blue, highlighter yellow, profit green, scanner and barcode cues, used-book sourcing context.
 
-Use a used-book sourcing visual language: bookstore shelf edges, price stickers, barcode scanner beam, paperback stacks, clipboard/export cues, and mobile UI screens. Keep the current cream/yellow/blue shop-label palette unless the user explicitly asks for a darker rebrand.
+## Asset Folder Structure
 
-## Asset Generation Constraints
+Runtime media should be saved under:
 
-- AI-generated imagery can be used for hero, social, ads, empty states, and stylized screenshot treatments.
-- Real app screenshots should be captured from the current app for product mockups.
-- Avoid real people/faces unless explicitly requested.
-- Avoid customer and marketplace logos unless supplied and licensed.
-- Avoid claims that estimated pricing is live/final.
-- App icons and logo drafts need user approval before `approved` status.
+```text
+public/assets/
+  brand/
+  icons/
+  images/home/
+  images/features/
+  images/product/
+  images/social/
+  images/ads/
+  video/
+```
 
-## Launch Priority
+Public URLs should use `/assets/...`.
 
-- Launch-blocking assets: favicon, Apple/app icons, default social OG image, primary logo export.
-- Launch-supporting assets: homepage hero, product screenshot mockups, auth visual, feature/check-books visual.
-- Post-launch assets: ad backgrounds, email headers, blog headers, alternate social crops, video walkthrough.
+## Implementation Rule
 
-## Open Questions
-
-- Final logo direction: wordmark-only, scanner mark, barcode/shelf mark, or current Lucide-style mark.
-- Native iOS timing: keep PWA/iOS home-screen support first, then consider native after field testing.
-- Whether to preserve the current light shop-label palette or move the whole product toward darker GBD defaults.
+Generated assets remain drafts until reviewed. Do not mark anything approved without owner confirmation. Do not wire an image path into code until the file exists in `public/assets`.

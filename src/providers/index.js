@@ -1,7 +1,7 @@
 // The data-provider seam. The Ledger calls lookupBook(isbn) and never cares
 // whether the data is sample or live catalog metadata.
 
-import { normalizeToIsbn13 } from "../lib/isbn.js";
+import { normalizeToIsbn13 } from "../../packages/core/isbn.js";
 import { lookupCore } from "../lib/bookdata.js";
 import { createLiveProvider } from "./liveProvider.js";
 
@@ -20,7 +20,7 @@ export const LOOKUP_STATUS = USE_LIVE
       detail: "Titles, prices, ranks, and verdicts are generated for testing.",
     };
 
-// Returns CORE book data: { isbn, title, author, amazonPrice, ebayPrice } or null.
+// Returns CORE book data: { isbn, title, author, amazonPrice, amazonBsr, gated } or null.
 export async function lookupBook(rawIsbn) {
   const isbn = normalizeToIsbn13(rawIsbn);
   if (!isbn) return null; // invalid / non-book barcode

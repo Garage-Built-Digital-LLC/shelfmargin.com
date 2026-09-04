@@ -5,6 +5,8 @@ import {
   BILLING_STATUSES,
   STRIPE_PRICE_LOOKUP_KEYS,
   billingPlanFromLookupKey,
+  billingPlanLabel,
+  billingStatusLabel,
   hasAppAccess,
   hasPaidAccess,
   isKnownBillingPlan,
@@ -23,6 +25,14 @@ describe("billing model", () => {
     expect(isKnownBillingPlan("team")).toBe(false);
     expect(isKnownSubscriptionStatus(BILLING_STATUSES.active)).toBe(true);
     expect(isKnownSubscriptionStatus("comped")).toBe(false);
+  });
+
+  it("returns plain billing labels for customer-facing account UI", () => {
+    expect(billingPlanLabel(BILLING_PLANS.freeBeta)).toBe("Free beta");
+    expect(billingPlanLabel(BILLING_PLANS.starter)).toBe("Starter");
+    expect(billingPlanLabel("custom")).toBe("Unknown plan");
+    expect(billingStatusLabel(BILLING_STATUSES.active)).toBe("Active");
+    expect(billingStatusLabel("custom")).toBe("Unknown status");
   });
 
   it("allows free beta app access without treating it as paid", () => {

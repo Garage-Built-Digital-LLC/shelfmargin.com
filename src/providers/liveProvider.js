@@ -2,10 +2,10 @@
 //
 // This intentionally does not claim live marketplace pricing. It pulls real
 // ISBN metadata from public book APIs, then keeps resale prices/rank/velocity as
-// estimates until Amazon SP-API, eBay, or another marketplace source is wired
+// estimates until Amazon SP-API is wired
 // through a server-side endpoint.
 
-import { normalizeToIsbn13 } from "../lib/isbn.js";
+import { normalizeToIsbn13 } from "../../packages/core/isbn.js";
 import { lookupCore } from "../lib/bookdata.js";
 
 const LOCAL_CATALOG_URL = "/api/catalog";
@@ -20,6 +20,7 @@ function cleanText(value) {
 function estimatedCore(isbn) {
   const core = lookupCore(isbn);
   return {
+    isbn,
     ...core,
     source: "estimated",
     priceSource: "estimated",
@@ -34,6 +35,9 @@ function mergeWithEstimatedPricing(isbn, metadata, source) {
     author: cleanText(metadata.author) || estimate.author,
     source,
     catalogSource: source,
+    asin: metadata.asin,
+    amazonMode: metadata.amazonMode,
+    marketplaceId: metadata.marketplaceId,
     priceSource: "estimated",
   };
 }
@@ -89,6 +93,10 @@ export function parseCatalogEndpoint(json) {
     title: json.title,
     author: json.author,
     source: json.source,
+    catalogSource: json.catalogSource || json.source,
+    asin: json.asin,
+    amazonMode: json.amazonMode,
+    marketplaceId: json.marketplaceId,
   };
 }
 

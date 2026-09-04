@@ -1,78 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Caveat:wght@600;700&display=swap');
 @import "tailwindcss";
 
+/* ============================================================
+   ShelfMargin brand tokens — "Reseller Notebook" (modern)
+   ============================================================ */
+:root {
+  --sm-paper:#F7F2E8;      /* notebook paper ground */
+  --sm-paper-2:#EFE7D6;    /* alt band */
+  --sm-panel:#FFFFFF;      /* cards / surfaces */
+  --sm-ink:#171717;        /* primary text */
+  --sm-muted:#5E625F;      /* secondary text */
+  --sm-line:#D8CFBC;       /* ruled lines / borders */
+  --sm-denim:#1F5A7A;      /* primary action / links */
+  --sm-denim-deep:#164056;
+  --sm-highlight:#F4D35E;  /* scan beam / active */
+  --sm-buy:#2E7D50;
+  --sm-check:#C98224;
+  --sm-pass:#C24132;
+  --font-display:"Bricolage Grotesque","Hanken Grotesk",system-ui,sans-serif;
+  --font-body:"Hanken Grotesk",system-ui,-apple-system,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+  --font-hand:"Caveat","Bricolage Grotesque",cursive;
+}
+
+/* ---- base typography + ruled notebook-paper ground ---- */
+html, body { background: var(--sm-paper); }
+body {
+  font-family: var(--font-body);
+  color: var(--sm-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* faint ruled-paper lines, like a reseller's notebook */
+  background-image: linear-gradient(to bottom, transparent 0, transparent calc(2.15rem - 1px), rgba(31, 90, 122, 0.10) calc(2.15rem - 1px), rgba(31, 90, 122, 0.10) 2.15rem);
+  background-size: 100% 2.15rem;
+}
+::selection { background: var(--sm-highlight); color: var(--sm-ink); }
+
+/* ============================================================
+   Reseller-Notebook signature pieces (concept #8)
+   ============================================================ */
+/* Handwritten accent — for taglines, notes, and margin marks only. */
+.sm-hand { font-family: var(--font-hand); font-weight: 700; letter-spacing: 0; }
+
+/* Highlighter marker swipe — uneven edges + clone so it wraps like ink. */
+.sm-mk {
+  display: inline-block;
+  padding: 0.05em 0.4em 0.12em;
+  border-radius: 0.4em 0.9em 0.5em 0.8em / 0.9em 0.4em 1em 0.4em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: var(--sm-ink);
+}
+.sm-mk-buy   { background: rgba(46, 125, 80, 0.30);  color: #1e5236; }
+.sm-mk-check { background: rgba(244, 211, 94, 0.62); color: #7a5410; }
+.sm-mk-pass  { background: rgba(194, 65, 50, 0.28);  color: #8a2b20; }
+.sm-mk-blue  { background: rgba(31, 90, 122, 0.20);  color: var(--sm-denim-deep); }
+
+/* Blue-ballpoint underlined link, like a note in the margin. */
+.sm-inklink { color: var(--sm-denim); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Map Tailwind weight/mono utilities the components already use onto the
+   brand faces — re-skins headings and numerics without touching the JSX. */
+.font-black, .font-extrabold { font-family: var(--font-display); letter-spacing: -0.015em; }
+.font-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Scanner / notebook helper classes (kept from prior build)
+   ============================================================ */
 .field-pattern {
   background-image:
-    linear-gradient(90deg, rgba(31, 41, 55, 0.055) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(31, 41, 55, 0.045) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(23, 23, 23, 0.05) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
 .pos-grid {
   background-image:
-    linear-gradient(90deg, rgba(250, 204, 21, 0.16) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(37, 99, 235, 0.045) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(244, 211, 94, 0.22) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(23, 23, 23, 0.05) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
-.phone-float {
-  transform: translateZ(0);
-}
+.shelf-theme .bg-white { background-color: var(--sm-panel); }
+.shelf-theme .border-white { border-color: var(--sm-panel); }
 
-.scan-reticle {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-color: #1f2937;
-}
+.phone-float { transform: translateZ(0); }
 
-.scan-reticle-tl {
-  left: 10px;
-  top: 10px;
-  border-left-width: 2px;
-  border-top-width: 2px;
-}
+.scan-reticle { position: absolute; width: 18px; height: 18px; border-color: var(--sm-denim); }
+.scan-reticle-tl { left: 10px; top: 10px; border-left-width: 2px; border-top-width: 2px; }
+.scan-reticle-tr { right: 10px; top: 10px; border-right-width: 2px; border-top-width: 2px; }
+.scan-reticle-bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; }
+.scan-reticle-br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; }
 
-.scan-reticle-tr {
-  right: 10px;
-  top: 10px;
-  border-right-width: 2px;
-  border-top-width: 2px;
-}
-
-.scan-reticle-bl {
-  bottom: 10px;
-  left: 10px;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-}
-
-.scan-reticle-br {
-  bottom: 10px;
-  right: 10px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
-}
-
-.barcode-bar {
-  transform-origin: bottom center;
-}
-
-.scan-readout {
-  opacity: 1;
-}
-
-.scan-decision-chip {
-  transform: none;
-}
-
-.scan-result-row {
-  opacity: 1;
-}
-
-.decision-badge {
-  transform: none;
-}
-
-.scanner-pulse {
-  box-shadow: none;
-}
+.barcode-bar { transform-origin: bottom center; }
+.scan-readout { opacity: 1; }
+.scan-decision-chip { transform: none; }
+.scan-result-row { opacity: 1; }
+.decision-badge { transform: none; }
+.scanner-pulse { box-shadow: none; }
