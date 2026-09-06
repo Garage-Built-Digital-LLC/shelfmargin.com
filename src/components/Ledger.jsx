@@ -27,25 +27,29 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { cleanScan, normalizeToIsbn13 } from "../../packages/core/isbn.js";
 
 // Slate Apricot palette: calm field-tool base, warm CTA, sharp verdict colors.
-const BG = "#F7F2E8";
-const INK = "#171717";
-const YELLOW = "#F4D35E";
-const GREEN = "#2E7D50";
-const GREEN_BG = "#E4EFE7";
-const RED = "#C24132";
-const RED_BG = "#F4E0DB";
-const AMBER_BG = "#F6E9D2";
-const LINE = "#D8CFBC";
-const MUTED = "#5E625F";
-const BLUE = "#1F5A7A";
-const BLUE_BG = "#E4EEF3";
-const SURFACE = "#FFFFFF";
-const SOFT = "#EFE7D6";
-const DARK = "#171717";
-const APP_BG = BG;
-const APP_PANEL = BG;
-const DARK_SURFACE = "#221D15";
-const DARK_MUTED = "#AA9F8B";
+/* Forest & Gold brand (locked 2026-09) */
+const BG = "#13201A";        // app ground
+const INK = "#EAF2EC";       // cream text
+const YELLOW = "#E8B23A";    // brand gold (primary/active)
+const GREEN = "#17A85C";     // buy
+const GREEN_BG = "#16281F";  // buy tint
+const RED = "#E8493D";       // pass
+const RED_BG = "#2A1A17";    // pass tint
+const AMBER_BG = "#2A2416";  // check tint
+const LINE = "#2E4D3D";
+const MUTED = "#93A89B";
+const BLUE = "#E8B23A";      // remapped: primary action/link -> gold
+const BLUE_BG = "#26311D";   // gold tint (dark green)
+const SURFACE = "#1B2C23";   // card surface
+const SOFT = "#17261E";      // alt panel
+const DARK = "#1B2C23";      // (was near-black bg) -> forest card
+const APP_BG = "#0D1512";    // deepest ground
+const APP_PANEL = "#13201A";
+const DARK_SURFACE = "#17261E";
+const DARK_MUTED = "#93A89B";
+const GOLD_INK = "#13201A";  // text on gold
+const CHECK_TXT = "#F2C87A"; // amber text on dark tint
+const CHECK_BORDER = "#8A6A1E";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function dbToDisplayCondition(c) {
@@ -147,7 +151,7 @@ function Sparkline({ history, color, width = 56, height = 20 }) {
 }
 
 function VelocityBadge({ velocity }) {
-  const color = velocity.tier === "Fast" ? GREEN : velocity.tier === "Moderate" ? "#B8860B" : RED;
+  const color = velocity.tier === "Fast" ? GREEN : velocity.tier === "Moderate" ? CHECK_BORDER : RED;
   const Icon = velocity.trend === "up" ? TrendingUp : velocity.trend === "down" ? TrendingDown : Minus;
   return (
     <span className="flex items-center gap-1 text-xs font-black uppercase" style={{ color }}>
@@ -305,7 +309,7 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
 
 function MetricBox({ label, value, tone = "plain" }) {
   const toneBg = tone === "buy" ? GREEN_BG : tone === "warn" ? AMBER_BG : tone === "action" ? BLUE_BG : SURFACE;
-  const toneColor = tone === "buy" ? GREEN : tone === "warn" ? "#8A6100" : tone === "action" ? BLUE : INK;
+  const toneColor = tone === "buy" ? GREEN : tone === "warn" ? CHECK_TXT : tone === "action" ? BLUE : INK;
   return (
     <div className="rounded-xl px-3 py-2" style={{ backgroundColor: toneBg, border: `1px solid ${LINE}`, boxShadow: "0 6px 18px rgba(30, 41, 59, 0.08)" }}>
       <div className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>{label}</div>
@@ -318,7 +322,7 @@ function EstimateBadge() {
   return (
     <span
       className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest"
-      style={{ color: "#8A6100", backgroundColor: AMBER_BG, border: `1px solid #B8860B` }}
+      style={{ color: CHECK_TXT, backgroundColor: AMBER_BG, border: `1px solid #B8860B` }}
     >
       <AlertTriangle size={10} /> est
     </span>
@@ -328,7 +332,7 @@ function EstimateBadge() {
 function AdminCheck({ done, label, detail }) {
   return (
     <div className="flex items-start gap-3 px-2 py-2" style={{ backgroundColor: done ? GREEN_BG : AMBER_BG, border: `1px solid ${LINE}` }}>
-      {done ? <CheckSquare size={17} color={GREEN} className="mt-0.5 shrink-0" /> : <Square size={17} color="#8A6100" className="mt-0.5 shrink-0" />}
+      {done ? <CheckSquare size={17} color={GREEN} className="mt-0.5 shrink-0" /> : <Square size={17} color={CHECK_TXT} className="mt-0.5 shrink-0" />}
       <div className="min-w-0">
         <div className="text-xs font-black uppercase tracking-widest">{label}</div>
         <div className="mt-0.5 text-xs font-bold normal-case" style={{ color: MUTED }}>{detail}</div>
@@ -352,7 +356,7 @@ function catalogSourceLabel(entry) {
 function DataSourceBadge({ entry }) {
   const source = entry.catalogSource || entry.source || LOOKUP_STATUS.mode;
   const amazon = source === "amazon-sp-api" || source === "amazon-sp-api-sandbox";
-  const color = amazon ? BLUE : "#8A6100";
+  const color = amazon ? BLUE : CHECK_TXT;
   const bg = amazon ? BLUE_BG : AMBER_BG;
   return (
     <span
@@ -378,7 +382,7 @@ function decisionMeta(entry, threshold) {
   const bestNet = entry.amazonNet ?? -Infinity;
   const meets = bestNet >= threshold;
   const label = entry.restricted ? "check" : meets ? "buy" : "pass";
-  const color = entry.restricted ? "#8A6100" : meets ? GREEN : RED;
+  const color = entry.restricted ? CHECK_TXT : meets ? GREEN : RED;
   const bg = entry.restricted ? AMBER_BG : meets ? GREEN_BG : RED_BG;
   return { bestNet, meets, label, color, bg };
 }
@@ -516,7 +520,7 @@ function FirstSessionPanel({ cost, threshold, onCostChange, onThresholdChange, o
   return (
     <div className="grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
       <div className="p-4" style={{ border: `2px solid ${LINE}`, backgroundColor: AMBER_BG }}>
-        <div className="text-xs font-black uppercase tracking-widest" style={{ color: "#8A6100" }}>start here</div>
+        <div className="text-xs font-black uppercase tracking-widest" style={{ color: CHECK_TXT }}>start here</div>
         <div className="mt-2 text-xl font-black uppercase tracking-widest leading-tight">Set your buying rules</div>
         <p className="mt-2 text-sm font-bold leading-relaxed" style={{ color: MUTED }}>
           Start with your real book cost and the profit you need before a book is worth checking.
@@ -553,7 +557,7 @@ function FirstSessionPanel({ cost, threshold, onCostChange, onThresholdChange, o
         <button
           onClick={onScan}
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest"
-          style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}
+          style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}
         >
           <Scan size={16} />
           open scout
@@ -621,7 +625,7 @@ function SyncStatus({ demoMode, verificationReady, loading }) {
 
   const ready = supabaseReady && verificationReady && !loading;
   const bg = ready ? GREEN_BG : supabaseReady ? AMBER_BG : RED_BG;
-  const color = ready ? GREEN : supabaseReady ? "#8A6100" : RED;
+  const color = ready ? GREEN : supabaseReady ? CHECK_TXT : RED;
   const label = ready
     ? "scans saving"
     : supabaseReady
@@ -1379,7 +1383,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     }
   }
 
-  const toastColor = toast?.tone === "buy" ? GREEN : toast?.tone === "pass" ? RED : toast?.tone === "action" ? BLUE : "#B8860B";
+  const toastColor = toast?.tone === "buy" ? GREEN : toast?.tone === "pass" ? RED : toast?.tone === "action" ? BLUE : CHECK_BORDER;
   const toastBg = toast?.tone === "buy" ? GREEN_BG : toast?.tone === "pass" ? RED_BG : toast?.tone === "action" ? BLUE_BG : AMBER_BG;
   const verifiedCount = entries.filter((entry) => verification[verificationKey(entry)]?.real_decision).length;
   const summary = fieldTestSummary(entries, verification);
@@ -1577,7 +1581,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             </div>
 
             <div className="grid sm:grid-cols-2 gap-2">
-              <button onClick={() => navigate("scan")} className="py-3 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}>
+              <button onClick={() => navigate("scan")} className="py-3 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}>
                 start scanning
               </button>
               <button onClick={() => navigate("field")} className="py-3 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: BLUE, color: "#FFF", border: `2px solid ${LINE}` }}>
@@ -1652,7 +1656,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   <div key={row.id} className="px-3 py-2" style={{ border: `2px solid ${LINE}`, backgroundColor: row.valid ? GREEN_BG : AMBER_BG }}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-sm font-black uppercase tracking-widest" style={{ color: row.valid ? GREEN : "#8A6100" }}>
+                        <div className="text-sm font-black uppercase tracking-widest" style={{ color: row.valid ? GREEN : CHECK_TXT }}>
                           {row.valid ? "valid isbn" : "check scanner"}
                         </div>
                         <div className="mt-1 text-xs font-mono break-all" style={{ color: MUTED }}>
@@ -1695,7 +1699,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   subtitle="Scan fast. Decide where the book should go."
                 />
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-widest"
-                  style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: "1px solid #B8860B" }}>
+                  style={{ backgroundColor: AMBER_BG, color: CHECK_TXT, border: "1px solid #B8860B" }}>
                   <span>{LOOKUP_STATUS.mode === "live-catalog" ? "catalog lookup" : "sample catalog"}</span>
                   <span style={{ opacity: 0.5 }}>•</span>
                   <span>estimates until you verify</span>
@@ -1718,7 +1722,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                     type="submit"
                     disabled={scanning || !isbn.trim()}
                     className="shrink-0 rounded-xl px-3 py-3 text-xs font-black uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ backgroundColor: YELLOW, color: INK }}
+                    style={{ backgroundColor: YELLOW, color: GOLD_INK }}
                   >
                     {scanning ? "..." : "look up"}
                   </button>
@@ -1805,7 +1809,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 const open = openId === en.id;
                 const { bestNet, meets, label: statusLabel, color: statusColor, bg: statusBg } = decisionMeta(en, threshold);
                 const score = sourcingScore(bestNet, threshold, en.velocity, en.offers);
-                const scoreColor = score.band === "Strong" ? GREEN : score.band === "Moderate" ? "#B8860B" : RED;
+                const scoreColor = score.band === "Strong" ? GREEN : score.band === "Moderate" ? CHECK_BORDER : RED;
                 const sparkColor = en.velocity.trend === "up" ? GREEN : en.velocity.trend === "down" ? RED : DARK_MUTED;
                 const routeLabel = en.restricted
                   ? "Check Amazon first"
@@ -1841,7 +1845,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                             </span>
                             <span
                               className="flex items-center gap-0.5 text-xs font-bold"
-                              style={{ color: en.offers <= 5 ? GREEN : en.offers <= 15 ? "#B8860B" : RED }}
+                              style={{ color: en.offers <= 5 ? GREEN : en.offers <= 15 ? CHECK_BORDER : RED }}
                             >
                               <Users size={11} /> {en.offers}
                             </span>
@@ -1876,7 +1880,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                           <DataSourceBadge entry={en} />
                           <span
                             className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-widest"
-                            style={{ color: "#8A6100", backgroundColor: AMBER_BG, border: "1px solid #B8860B" }}
+                            style={{ color: CHECK_TXT, backgroundColor: AMBER_BG, border: "1px solid #B8860B" }}
                           >
                             profit estimated
                           </span>
@@ -1901,7 +1905,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         {en.restricted && (
                           <div
                             className="flex items-center gap-2 px-2 py-2 mb-3 text-xs font-bold rounded-lg"
-                            style={{ backgroundColor: AMBER_BG, border: `2px solid #B8860B`, color: "#8A6100" }}
+                            style={{ backgroundColor: AMBER_BG, border: `2px solid #B8860B`, color: CHECK_TXT }}
                           >
                             <Lock size={14} />
                             gated category — Amazon approval required before you can list this title
@@ -1925,7 +1929,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                           </div>
                           <div>
                             <div className="uppercase font-bold tracking-widest mb-1" style={{ color: MUTED }}>other sellers</div>
-                            <div style={{ color: en.offers <= 5 ? GREEN : en.offers <= 15 ? "#B8860B" : RED }}>
+                            <div style={{ color: en.offers <= 5 ? GREEN : en.offers <= 15 ? CHECK_BORDER : RED }}>
                               {en.offers} seller{en.offers === 1 ? "" : "s"} listed
                             </div>
                           </div>
@@ -1967,7 +1971,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             />
 
             <div className="px-3 py-2 text-xs font-black uppercase tracking-widest"
-              style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: `2px solid #B8860B` }}>
+              style={{ backgroundColor: AMBER_BG, color: CHECK_TXT, border: `2px solid #B8860B` }}>
               estimates only - use this page to double-check books
             </div>
             {!verificationReady && (
@@ -2012,7 +2016,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 title="No books to check"
                 body="Scan books first, then come back here to double-check them."
                 action={
-                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}>
+                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}>
                     open scout
                   </button>
                 }
@@ -2026,7 +2030,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   const open = openCheckId === key;
                   const { bestNet, label: statusLabel, color: statusColor, bg: statusBg } = decisionMeta(en, threshold);
                   const finalDecision = actual.real_decision || "";
-                  const finalColor = finalDecision === "buy" ? GREEN : finalDecision === "pass" ? RED : finalDecision === "watch" ? "#8A6100" : MUTED;
+                  const finalColor = finalDecision === "buy" ? GREEN : finalDecision === "pass" ? RED : finalDecision === "watch" ? CHECK_TXT : MUTED;
                   return (
                     <div key={key} className="overflow-hidden rounded-2xl" style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: DARK, color: "#FFFFFF", boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
                       <div className="px-3 py-3">
@@ -2054,7 +2058,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                           {[
                             ["buy", GREEN, "Buy"],
                             ["pass", RED, "Pass"],
-                            ["watch", "#8A6100", "Watch"],
+                            ["watch", CHECK_TXT, "Watch"],
                           ].map(([value, color, label]) => (
                             <button
                               key={value}
@@ -2167,7 +2171,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 title="No saved books yet"
                 body="Scan books first. Anything you scan will show here."
                 action={
-                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}>
+                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}>
                     open scan
                   </button>
                 }
@@ -2239,7 +2243,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             </div>
             <AccountDataCard session={session} onSignOut={onSignOut} demoMode={demoMode} />
             <MfaCard demoMode={demoMode} />
-            <div className="px-3 py-3 text-xs font-bold" style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: `2px solid #B8860B` }}>
+            <div className="px-3 py-3 text-xs font-bold" style={{ backgroundColor: AMBER_BG, color: CHECK_TXT, border: `2px solid #B8860B` }}>
                   Prices are still estimates. Always check Amazon before buying. Saving: {supabaseReady ? "on" : "off"}.
             </div>
           </div>
@@ -2259,7 +2263,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 title="Admin only"
                 body="The first recreated account becomes admin. Sign in with that account to see setup checks."
                 action={
-                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}>
+                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}>
                     back to scan
                   </button>
                 }
@@ -2302,8 +2306,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         className="rounded-xl px-3 py-2 text-xs font-bold"
                         style={{
                           backgroundColor: amazonTest.ok ? GREEN_BG : AMBER_BG,
-                          color: amazonTest.ok ? GREEN : "#8A6100",
-                          border: `1px solid ${amazonTest.ok ? GREEN : "#B8860B"}`,
+                          color: amazonTest.ok ? GREEN : CHECK_TXT,
+                          border: `1px solid ${amazonTest.ok ? GREEN : CHECK_BORDER}`,
                         }}
                       >
                         {amazonTest.message || "Now that Amazon is approved, add the client ID, client secret, and refresh token, then run this test."}
@@ -2335,7 +2339,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                     </div>
                   </div>
                   <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: AMBER_BG }}>
-                    <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: "#8A6100" }}>launch blockers</div>
+                    <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: CHECK_TXT }}>launch blockers</div>
                     <div className="text-sm font-bold leading-relaxed" style={{ color: INK }}>
                       Amazon Professional developer access, live scan proof, support inbox/domain, legal review, and paid-access webhook proof still need final verification.
                     </div>
@@ -2359,7 +2363,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-2">
-                  <button onClick={() => navigate("scan")} className="py-3 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}>
+                  <button onClick={() => navigate("scan")} className="py-3 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}>
                     scan real books
                   </button>
                   <button onClick={() => navigate("settings")} className="py-3 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: BLUE, color: "#FFF", border: `2px solid ${LINE}` }}>
@@ -2384,7 +2388,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 title="No books saved yet"
                 body="When a book looks good, tap the box icon to save it here."
                 action={
-                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK, border: `2px solid ${LINE}` }}>
+                  <button onClick={() => navigate("scan")} className="px-4 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: GOLD_INK, border: `2px solid ${LINE}` }}>
                     scan books
                   </button>
                 }

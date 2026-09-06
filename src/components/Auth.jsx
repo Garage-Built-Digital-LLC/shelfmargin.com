@@ -4,15 +4,18 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath } from "../lib/siteRoutes.js";
 
-const BG = "#FFFBEB";
-const INK = "#1F2937";
-const YELLOW = "#FACC15";
-const GREEN = "#16A34A";
-const BLUE = "#2563EB";
-const RED = "#DC2626";
-const MUTED = "#6B7280";
-const LINE = "#E5E7EB";
-const BLUE_BG = "#EFF6FF";
+/* Forest & Gold brand (locked 2026-09) */
+const BG = "#13201A";
+const INK = "#EAF2EC";
+const YELLOW = "#E8B23A";
+const GREEN = "#17A85C";
+const BLUE = "#E8B23A";
+const RED = "#E8493D";
+const MUTED = "#93A89B";
+const LINE = "#2E4D3D";
+const BLUE_BG = "#26311D";
+const SURFACE = "#1B2C23";
+const GOLD_INK = "#13201A";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function StripeBar() {
@@ -135,7 +138,7 @@ export default function Auth({ initialMode = "signin" }) {
         </section>
 
         <section>
-          <form onSubmit={submit} className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 18px 50px rgba(31, 41, 55, 0.08)" }}>
+          <form onSubmit={submit} className="rounded-lg overflow-hidden" style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE, boxShadow: "0 18px 50px rgba(31, 41, 55, 0.08)" }}>
             <div className="flex" style={{ borderBottom: `2px solid ${INK}` }}>
               {["signin", "signup"].map((m) => (
                 <button

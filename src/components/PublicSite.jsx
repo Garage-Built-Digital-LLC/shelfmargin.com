@@ -18,21 +18,24 @@ import { billingPlanLabel, billingStatusLabel } from "../lib/billing.js";
 import { publicPath, publicRouteMeta } from "../lib/siteRoutes.js";
 import { supabase, supabaseReady } from "../lib/supabase.js";
 
-const BG = "#F7F2E8";
-const INK = "#171717";
-const YELLOW = "#F4D35E";
-const GREEN = "#2E7D50";
-const BLUE = "#1F5A7A";
-const RED = "#C24132";
-const MUTED = "#5E625F";
-const LINE = "#D8CFBC";
-const AMBER_BG = "#F6E9D2";
-const BLUE_BG = "#E4EEF3";
-const GREEN_BG = "#E4EFE7";
-const RED_BG = "#F4E0DB";
-const SURFACE = "#FFFFFF";
-const SOFT = "#EFE7D6";
-const CHARCOAL = "#14110E";
+/* Forest & Gold brand (locked 2026-09) */
+const BG = "#13201A";        // app ground
+const INK = "#EAF2EC";       // cream text
+const YELLOW = "#E8B23A";    // brand gold
+const GREEN = "#17A85C";     // buy
+const BLUE = "#E8B23A";      // remapped primary -> gold
+const RED = "#E8493D";       // pass
+const MUTED = "#93A89B";
+const LINE = "#2E4D3D";
+const AMBER_BG = "#2A2416";
+const BLUE_BG = "#26311D";
+const GREEN_BG = "#16281F";
+const RED_BG = "#2A1A17";
+const SURFACE = "#1B2C23";
+const SOFT = "#17261E";
+const CHARCOAL = "#0F1A15";  // deep forest card / dark section
+const GOLD_INK = "#13201A";  // text on gold
+const CREAM = "#EAF2EC";
 const SUPPORT_EMAIL = "support@shelfmargin.com";
 
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
@@ -65,9 +68,9 @@ function StripeBar() {
 
 function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) {
   const styles = {
-    dark: { backgroundColor: INK, color: "#FFF" },
-    yellow: { backgroundColor: YELLOW, color: INK },
-    blue: { backgroundColor: BLUE, color: "#FFF" },
+    dark: { backgroundColor: YELLOW, color: GOLD_INK },
+    yellow: { backgroundColor: CREAM, color: GOLD_INK },
+    blue: { backgroundColor: YELLOW, color: GOLD_INK },
     ghost: { backgroundColor: "transparent", color: INK },
   };
   return (
@@ -85,9 +88,9 @@ function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) 
 function CheckoutButton({ planId, session, children, tone = "yellow" }) {
   const [state, setState] = useState({ loading: false, error: "" });
   const styles = {
-    dark: { backgroundColor: INK, color: "#FFF" },
-    yellow: { backgroundColor: YELLOW, color: INK },
-    blue: { backgroundColor: BLUE, color: "#FFF" },
+    dark: { backgroundColor: YELLOW, color: GOLD_INK },
+    yellow: { backgroundColor: CREAM, color: GOLD_INK },
+    blue: { backgroundColor: YELLOW, color: GOLD_INK },
     ghost: { backgroundColor: "transparent", color: INK },
   };
 
@@ -254,7 +257,7 @@ function PortalButton({ session }) {
         onClick={openPortal}
         disabled={state.loading}
         className="flex items-center justify-between px-2 py-2 text-left font-black uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-60"
-        style={{ border: `1px solid ${LINE}`, color: BLUE, backgroundColor: "#FFFFFF" }}
+        style={{ border: `1px solid ${LINE}`, color: BLUE, backgroundColor: SURFACE }}
       >
         {state.loading ? "Opening billing..." : "Manage billing"} <ExternalLink size={13} />
       </button>
@@ -299,7 +302,7 @@ function PublicNav({ route, session, onSignOut }) {
   const isAdmin = profileRole === "admin";
 
   return (
-    <header className="sticky top-0 z-20 backdrop-blur" style={{ backgroundColor: "rgba(255,255,255,0.92)", borderBottom: `1px solid ${LINE}` }}>
+    <header className="sticky top-0 z-20 backdrop-blur" style={{ backgroundColor: "rgba(19,32,26,0.9)", borderBottom: `1px solid ${LINE}` }}>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
         <a href={publicPath("home")} className="flex min-w-0 items-center gap-2">
           <span
@@ -329,7 +332,7 @@ function PublicNav({ route, session, onSignOut }) {
             </summary>
             <div
               className="absolute right-0 mt-2 w-72 rounded-lg p-3 text-xs font-bold normal-case shadow-xl"
-              style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}`, color: INK }}
+              style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}`, color: INK }}
             >
               <div className="truncate font-mono" style={{ color: MUTED }}>{session.user?.email}</div>
               <div className="mt-3 grid gap-2">
@@ -396,7 +399,7 @@ function ChevronDownIcon() {
 
 function FramedImage({ src, alt, aspect = "aspect-[4/3]", className = "", imgClassName = "object-cover" }) {
   return (
-    <div className={`overflow-hidden rounded-lg ${aspect} ${className}`} style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+    <div className={`overflow-hidden rounded-lg ${aspect} ${className}`} style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE }}>
       <img src={src} alt={alt} className={`h-full w-full ${imgClassName}`} loading="lazy" />
     </div>
   );
@@ -581,7 +584,7 @@ function FieldScannerVisual() {
   return (
     <div
       className="relative overflow-hidden rounded-lg"
-      style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF", boxShadow: "0 18px 50px rgba(31, 41, 55, 0.08)" }}
+      style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE, boxShadow: "0 18px 50px rgba(31, 41, 55, 0.08)" }}
       aria-label="Scanner console workflow preview"
     >
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
@@ -705,7 +708,7 @@ function ProductWorkflowVisual() {
   return (
     <div className="overflow-hidden rounded-xl bg-white" style={{ border: `1px solid ${LINE}`, boxShadow: "0 22px 60px rgba(31, 41, 55, 0.10)" }}>
       <div className="grid gap-0 lg:grid-cols-[0.88fr_1.12fr]">
-        <div className="p-4 sm:p-5" style={{ backgroundColor: INK, color: "#FFFFFF" }}>
+        <div className="p-4 sm:p-5" style={{ backgroundColor: SURFACE, color: CREAM }}>
           <div className="flex items-center justify-between gap-3">
             <div className="text-xs font-black uppercase tracking-widest">field mode</div>
             <StatusPill>Amazon pending</StatusPill>
@@ -911,7 +914,7 @@ function NotebookPhone() {
   return (
     <div className="relative mx-auto" style={{ maxWidth: 320 }}>
       <div style={{ backgroundColor: "#12100C", borderRadius: 42, padding: 12, boxShadow: "0 26px 60px rgba(23,23,23,0.28)" }}>
-        <div style={{ backgroundColor: "#FFFFFF", borderRadius: 32, padding: "18px 18px 20px" }}>
+        <div style={{ backgroundColor: SURFACE, borderRadius: 32, padding: "18px 18px 20px" }}>
           {/* screen header */}
           <div className="flex items-center justify-between">
             <div style={{ display: "grid", gap: 3 }} aria-hidden>
