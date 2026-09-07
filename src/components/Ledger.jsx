@@ -188,20 +188,22 @@ function ShellButton({ active, icon: Icon, label, detail, href, onClick }) {
   );
 }
 
-function BottomNav({ view, queuedCount, totalUnits, onNavigate }) {
+function BottomNav({ view, queuedCount, savedCount, onNavigate }) {
   const items = [
     { id: "scan", label: "Scan", detail: "barcode", icon: Scan },
     { id: "queue", label: "Buy List", detail: `${queuedCount}`, icon: PackagePlus },
     { id: "field", label: "Check", detail: "prices", icon: ClipboardList },
+    { id: "inventory", label: "Saved", detail: `${savedCount}`, icon: Boxes },
+    { id: "settings", label: "Settings", detail: "setup", icon: Settings },
   ];
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 border-t px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 sm:hidden"
-      style={{ backgroundColor: "rgba(248, 250, 252, 0.96)", borderColor: LINE, backdropFilter: "blur(14px)" }}
-      aria-label="Field workflow navigation"
+      className="fixed inset-x-0 bottom-0 z-30 border-t px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2"
+      style={{ backgroundColor: "rgba(13, 21, 18, 0.94)", borderColor: LINE, backdropFilter: "blur(14px)" }}
+      aria-label="Workflow navigation"
     >
-      <div className="mx-auto grid max-w-md grid-cols-3 gap-2">
+      <div className="mx-auto grid max-w-2xl grid-cols-5 gap-1.5">
         {items.map(({ id, label, detail, icon: Icon }) => {
           const active = view === id;
           return (
@@ -209,17 +211,17 @@ function BottomNav({ view, queuedCount, totalUnits, onNavigate }) {
               key={id}
               type="button"
               onClick={() => onNavigate(id)}
-              className="min-h-14 rounded-2xl px-2 py-2 text-center"
+              className="min-h-14 rounded-2xl px-1 py-2 text-center transition"
               style={{
                 backgroundColor: active ? YELLOW : SURFACE,
-                color: INK,
+                color: active ? GOLD_INK : INK,
                 border: `1px solid ${active ? YELLOW : LINE}`,
-                boxShadow: active ? "0 10px 24px rgba(255, 184, 107, 0.22)" : "none",
+                boxShadow: active ? "0 8px 22px rgba(232, 178, 58, 0.28)" : "none",
               }}
             >
               <Icon size={18} className="mx-auto" />
               <span className="mt-1 block text-[11px] font-black leading-none">{label}</span>
-              <span className="mt-0.5 block text-[9px] font-mono font-bold" style={{ color: MUTED }}>
+              <span className="mt-0.5 block text-[9px] font-mono font-bold" style={{ color: active ? GOLD_INK : MUTED, opacity: active ? 0.7 : 1 }}>
                 {detail}
               </span>
             </button>
@@ -243,17 +245,17 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
     <details className="relative shrink-0">
       <summary
         className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-1 text-xs font-black uppercase tracking-widest"
-        style={{ color: INK, border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}
+        style={{ color: INK, border: `1px solid ${LINE}`, backgroundColor: SURFACE }}
       >
         Account <ChevronDown size={13} />
       </summary>
       <div
         className="absolute right-0 z-30 mt-2 w-72 rounded-lg p-3 text-xs shadow-xl"
-        style={{ backgroundColor: "#FFFFFF", border: `1px solid ${LINE}`, color: INK }}
+        style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}`, color: INK }}
       >
         <div className="truncate font-mono font-bold normal-case" style={{ color: MUTED }}>{session?.user?.email}</div>
         {profileRole === "admin" && (
-          <div className="mt-2 inline-flex px-2 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: "#FFF", backgroundColor: BLUE }}>
+          <div className="mt-2 inline-flex px-2 py-1 text-[10px] font-black uppercase tracking-widest" style={{ color: GOLD_INK, backgroundColor: YELLOW }}>
             admin
           </div>
         )}
@@ -273,6 +275,14 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
             style={{ border: `1px solid ${LINE}` }}
           >
             Settings <Settings size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate("scannerTest")}
+            className="flex items-center justify-between px-2 py-2 text-left font-black uppercase tracking-widest"
+            style={{ border: `1px solid ${LINE}` }}
+          >
+            Scanner test <Scan size={13} />
           </button>
           {profileRole === "admin" && (
             <button
@@ -385,6 +395,79 @@ function decisionMeta(entry, threshold) {
   const color = entry.restricted ? CHECK_TXT : meets ? GREEN : RED;
   const bg = entry.restricted ? AMBER_BG : meets ? GREEN_BG : RED_BG;
   return { bestNet, meets, label, color, bg };
+}
+
+function VerdictHero({ entry, threshold, onSave, onDetails }) {
+  if (!entry) return null;
+  const { bestNet, meets, label } = decisionMeta(entry, threshold);
+  const saved = entry.queued;
+  // Full-color verdict flood — the whole card takes the decision color.
+  const flood = entry.restricted
+    ? { bg: "#DA8E15", deep: "#B4740F", ink: "#1A1305", word: "CHECK" }
+    : meets
+      ? { bg: "#17A85C", deep: "#0C824A", ink: "#04160D", word: "BUY" }
+      : { bg: "#E8493D", deep: "#BE342B", ink: "#1D0705", word: "PASS" };
+  const netTotal = bestNet * entry.count;
+  return (
+    <div
+      className="relative mb-4 overflow-hidden rounded-3xl px-5 pb-5 pt-4"
+      style={{
+        background: `linear-gradient(160deg, ${flood.bg} 0%, ${flood.deep} 100%)`,
+        color: flood.ink,
+        boxShadow: `0 22px 50px -12px ${flood.deep}80`,
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-black uppercase tracking-[0.22em]" style={{ opacity: 0.7 }}>
+          latest scan
+        </span>
+        {entry.restricted && (
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest"
+            style={{ backgroundColor: "rgba(0,0,0,0.16)" }}>
+            <Lock size={11} /> gated
+          </span>
+        )}
+      </div>
+
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <div className="text-6xl font-black leading-none tracking-tight sm:text-7xl">{flood.word}</div>
+        <div className="text-right">
+          <div className="text-[10px] font-black uppercase tracking-widest" style={{ opacity: 0.7 }}>net profit</div>
+          <div className="font-mono text-3xl font-black leading-none sm:text-4xl">
+            {netTotal >= 0 ? "+" : "−"}${Math.abs(netTotal).toFixed(2)}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 truncate text-base font-black" title={entry.title}>
+        {entry.title}
+        {entry.count > 1 && <span className="ml-1 font-mono" style={{ opacity: 0.7 }}>×{entry.count}</span>}
+      </div>
+      <div className="mt-0.5 truncate text-xs font-bold" style={{ opacity: 0.75 }}>
+        {entry.author} · list ${entry.amazonPrice.toFixed(2)} · buy line ${threshold}
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => !saved && onSave(entry.id)}
+          disabled={saved}
+          className="min-h-12 rounded-xl text-sm font-black uppercase tracking-widest"
+          style={{ backgroundColor: flood.ink, color: flood.bg, opacity: saved ? 0.55 : 1 }}
+        >
+          {saved ? "saved to buy list" : "save to buy list"}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDetails(entry.id)}
+          className="min-h-12 rounded-xl text-sm font-black uppercase tracking-widest"
+          style={{ backgroundColor: "rgba(0,0,0,0.18)", color: flood.ink }}
+        >
+          details
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function StickyDecisionBar({ entry, threshold, onSave, onDetails }) {
@@ -1434,7 +1517,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   return (
     <div className="shelf-theme min-h-screen w-full" style={{ backgroundColor: APP_BG, color: INK }}>
       <StripeBar />
-      <div className="mx-auto min-h-screen max-w-3xl px-3 pb-28 pt-4 sm:pb-4" style={{ backgroundColor: APP_PANEL }}>
+      <div className="mx-auto min-h-screen max-w-3xl px-3 pb-28 pt-4" style={{ backgroundColor: APP_PANEL }}>
         <div className="mb-3 rounded-2xl px-3 py-3 shadow-sm" style={{ backgroundColor: SURFACE, color: INK, border: `1px solid ${LINE}` }}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -1452,7 +1535,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             </div>
             {profileRole === "admin" && (
               <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest"
-                style={{ color: "#FFF", backgroundColor: BLUE }}>
+                style={{ color: GOLD_INK, backgroundColor: YELLOW }}>
                 admin
               </span>
             )}
@@ -1465,41 +1548,30 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             />
           </div>
 
-          <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-xl" style={{ border: `1px solid ${LINE}` }}>
-            <div className="px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>scanned</div>
-              <div className="text-2xl font-black font-mono">{totalUnits}</div>
-            </div>
-            <div className="px-3 py-2 border-l" style={{ borderColor: LINE, backgroundColor: GREEN_BG }}>
-              <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: GREEN }}>est. profit</div>
-              <div className="text-2xl font-black font-mono" style={{ color: GREEN }}>${totalProfit.toFixed(2)}</div>
-            </div>
-            <div className="px-3 py-2 border-l text-right" style={{ borderColor: LINE }}>
-              <button onClick={() => { const v = !soundOn; setSoundOn(v); persistProfile({ sound_enabled: v }); }} aria-label="toggle sound">
-                {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} color={MUTED} />}
-              </button>
-              <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>buys</div>
-              <div className="text-2xl font-black font-mono">{buyCount}</div>
-            </div>
+          <div className="mt-3 flex items-center gap-4 rounded-xl px-3 py-2 text-xs font-bold" style={{ border: `1px solid ${LINE}`, backgroundColor: SOFT }}>
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-base font-black font-mono" style={{ color: INK }}>{totalUnits}</span>
+              <span className="uppercase tracking-widest" style={{ color: MUTED }}>scanned</span>
+            </span>
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-base font-black font-mono" style={{ color: GREEN }}>${totalProfit.toFixed(2)}</span>
+              <span className="uppercase tracking-widest" style={{ color: MUTED }}>est. profit</span>
+            </span>
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-base font-black font-mono" style={{ color: INK }}>{buyCount}</span>
+              <span className="uppercase tracking-widest" style={{ color: MUTED }}>buys</span>
+            </span>
+            <button
+              onClick={() => { const v = !soundOn; setSoundOn(v); persistProfile({ sound_enabled: v }); }}
+              aria-label="toggle sound"
+              className="ml-auto shrink-0"
+            >
+              {soundOn ? <Volume2 size={15} color={MUTED} /> : <VolumeX size={15} color={MUTED} />}
+            </button>
           </div>
         </div>
 
         <SyncStatus demoMode={demoMode} verificationReady={verificationReady} loading={loading} />
-
-        <div className="sticky top-0 z-10 -mx-3 mb-3 hidden px-3 pb-3 pt-2 sm:block" style={{ backgroundColor: APP_BG, borderBottom: `1px solid ${LINE}` }}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <ShellButton active={view === "scan"} icon={Scan} label="Scan" detail="barcode" href={hashForSection("scan")} onClick={() => navigate("scan")} />
-            <ShellButton active={view === "queue"} icon={PackagePlus} label="Buy List" detail={`${queued.length} saved`} href={hashForSection("queue")} onClick={() => navigate("queue")} />
-            <ShellButton active={view === "dashboard"} icon={LayoutDashboard} label="Run" detail={`${totalUnits} books`} href={hashForSection("dashboard")} onClick={() => navigate("dashboard")} />
-            <ShellButton active={view === "scannerTest"} icon={Scan} label="Scanner Test" detail={`${scannerTestRows.length} reads`} href={hashForSection("scannerTest")} onClick={() => navigate("scannerTest")} />
-            <ShellButton active={view === "field"} icon={ClipboardList} label="Check Books" detail="real prices" href={hashForSection("field")} onClick={() => navigate("field")} />
-            <ShellButton active={view === "inventory"} icon={Boxes} label="Saved" detail="all books" href={hashForSection("inventory")} onClick={() => navigate("inventory")} />
-            <ShellButton active={view === "settings"} icon={Settings} label="Settings" detail={`$${threshold} min`} href={hashForSection("settings")} onClick={() => navigate("settings")} />
-            {profileRole === "admin" && (
-              <ShellButton active={view === "admin"} icon={ShieldCheck} label="Admin" detail="setup" href={hashForSection("admin")} onClick={() => navigate("admin")} />
-            )}
-          </div>
-        </div>
 
         <div className="h-9 mb-1">
           {toast && (
@@ -1784,8 +1856,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               </div>
             </div>
 
-            {!loading && entries.length > 0 && !demoMode && (
-              <StickyDecisionBar
+            {!loading && entries.length > 0 && (
+              <VerdictHero
                 entry={latestEntry}
                 threshold={threshold}
                 onSave={addToQueue}
@@ -2491,7 +2563,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
           </>
         )}
       </div>
-      <BottomNav view={view} queuedCount={queued.length} totalUnits={totalUnits} onNavigate={navigate} />
+      <BottomNav view={view} queuedCount={queued.length} savedCount={totalUnits} onNavigate={navigate} />
     </div>
   );
 }
