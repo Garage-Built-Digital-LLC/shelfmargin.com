@@ -27,28 +27,28 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { cleanScan, normalizeToIsbn13 } from "../../packages/core/isbn.js";
 
 // Slate Apricot palette: calm field-tool base, warm CTA, sharp verdict colors.
-/* Forest & Gold brand (locked 2026-09) */
-const BG = "#13201A";        // app ground
-const INK = "#EAF2EC";       // cream text
-const YELLOW = "#E8B23A";    // brand gold (primary/active)
-const GREEN = "#17A85C";     // buy
-const GREEN_BG = "#16281F";  // buy tint
-const RED = "#E8493D";       // pass
-const RED_BG = "#2A1A17";    // pass tint
-const AMBER_BG = "#2A2416";  // check tint
-const LINE = "#2E4D3D";
-const MUTED = "#93A89B";
-const BLUE = "#E8B23A";      // remapped: primary action/link -> gold
-const BLUE_BG = "#26311D";   // gold tint (dark green)
-const SURFACE = "#1B2C23";   // card surface
-const SOFT = "#17261E";      // alt panel
-const DARK = "#1B2C23";      // (was near-black bg) -> forest card
-const APP_BG = "#0D1512";    // deepest ground
-const APP_PANEL = "#13201A";
-const DARK_SURFACE = "#17261E";
-const DARK_MUTED = "#93A89B";
-const GOLD_INK = "#13201A";  // text on gold
-const CHECK_TXT = "#F2C87A"; // amber text on dark tint
+/* Carbon & Lime brand (locked 2026-09) */
+const BG = "#181B18";        // app ground
+const INK = "#F0F2EC";       // cream text
+const YELLOW = "#B6E23A";    // brand lime (primary/active)
+const GREEN = "#5F945E";     // buy (muted, sits on carbon)
+const GREEN_BG = "#1A2419";  // buy tint
+const RED = "#AF553C";       // pass (muted terracotta)
+const RED_BG = "#241813";    // pass tint
+const AMBER_BG = "#241F12";  // check tint
+const LINE = "#353B31";
+const MUTED = "#98A093";
+const BLUE = "#B6E23A";      // remapped: primary action/link -> lime
+const BLUE_BG = "#232A12";   // lime tint (dark)
+const SURFACE = "#20241F";   // card surface
+const SOFT = "#1C201B";      // alt panel
+const DARK = "#20241F";      // (was near-black bg) -> carbon card
+const APP_BG = "#111311";    // deepest ground
+const APP_PANEL = "#181B18";
+const DARK_SURFACE = "#1C201B";
+const DARK_MUTED = "#98A093";
+const GOLD_INK = "#111311";  // text on lime
+const CHECK_TXT = "#D6B25A"; // amber text on dark tint
 const CHECK_BORDER = "#8A6A1E";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
@@ -403,10 +403,10 @@ function VerdictHero({ entry, threshold, onSave, onDetails }) {
   const saved = entry.queued;
   // Full-color verdict flood — the whole card takes the decision color.
   const flood = entry.restricted
-    ? { bg: "#DA8E15", deep: "#B4740F", ink: "#1A1305", word: "CHECK" }
+    ? { bg: "#CDA240", deep: "#AE8629", ink: "#231A05", word: "CHECK" }
     : meets
-      ? { bg: "#17A85C", deep: "#0C824A", ink: "#04160D", word: "BUY" }
-      : { bg: "#E8493D", deep: "#BE342B", ink: "#1D0705", word: "PASS" };
+      ? { bg: "#5F945E", deep: "#4E7B4D", ink: "#F3F8F2", word: "BUY" }
+      : { bg: "#AF553C", deep: "#91422E", ink: "#FBF0EC", word: "PASS" };
   const netTotal = bestNet * entry.count;
   return (
     <div

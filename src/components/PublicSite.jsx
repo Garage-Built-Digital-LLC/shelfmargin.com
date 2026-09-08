@@ -18,24 +18,25 @@ import { billingPlanLabel, billingStatusLabel } from "../lib/billing.js";
 import { publicPath, publicRouteMeta } from "../lib/siteRoutes.js";
 import { supabase, supabaseReady } from "../lib/supabase.js";
 
-/* Forest & Gold brand (locked 2026-09) */
-const BG = "#13201A";        // app ground
-const INK = "#EAF2EC";       // cream text
-const YELLOW = "#E8B23A";    // brand gold
-const GREEN = "#17A85C";     // buy
-const BLUE = "#E8B23A";      // remapped primary -> gold
-const RED = "#E8493D";       // pass
-const MUTED = "#93A89B";
-const LINE = "#2E4D3D";
-const AMBER_BG = "#2A2416";
-const BLUE_BG = "#26311D";
-const GREEN_BG = "#16281F";
-const RED_BG = "#2A1A17";
-const SURFACE = "#1B2C23";
-const SOFT = "#17261E";
-const CHARCOAL = "#0F1A15";  // deep forest card / dark section
-const GOLD_INK = "#13201A";  // text on gold
-const CREAM = "#EAF2EC";
+/* Carbon & Lime brand (locked 2026-09) */
+const BG = "#181B18";        // app ground
+const INK = "#F0F2EC";       // cream text
+const YELLOW = "#B6E23A";    // brand lime
+const GREEN = "#5F945E";     // buy (muted)
+const BLUE = "#B6E23A";      // remapped primary -> lime
+const RED = "#AF553C";       // pass (muted terracotta)
+const MUTED = "#98A093";
+const LINE = "#353B31";
+const AMBER_BG = "#241F12";
+const BLUE_BG = "#232A12";
+const GREEN_BG = "#1A2419";
+const RED_BG = "#241813";
+const SURFACE = "#20241F";
+const SOFT = "#1C201B";
+const CHARCOAL = "#111311";  // deepest carbon card / dark section
+const GOLD_INK = "#111311";  // text on lime
+const CREAM = "#F0F2EC";
+const CHECK_TXT = "#D6B25A";  // amber text that reads on the carbon ground
 const SUPPORT_EMAIL = "support@shelfmargin.com";
 
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
@@ -286,7 +287,7 @@ function CheckoutNotice() {
       className="mb-5 rounded-lg px-4 py-3 text-sm font-bold"
       style={{
         backgroundColor: success ? GREEN_BG : AMBER_BG,
-        color: success ? GREEN : "#8A6100",
+        color: success ? GREEN : CHECK_TXT,
         border: `1px solid ${success ? GREEN : "#B8860B"}`,
       }}
     >
@@ -379,7 +380,7 @@ function PublicNav({ route, session, onSignOut }) {
             key={id}
             href={publicPath(id)}
             className="px-1 py-2"
-            style={{ backgroundColor: route === id ? BLUE : "transparent", color: route === id ? "#FFF" : INK }}
+            style={{ backgroundColor: route === id ? BLUE : "transparent", color: route === id ? GOLD_INK : INK }}
           >
             {label}
           </a>
@@ -437,7 +438,7 @@ function Feature({ icon: Icon, title, body, tone = "plain" }) {
 
 function StatusPill({ children, tone = "amber" }) {
   const styles = {
-    amber: { backgroundColor: AMBER_BG, color: "#8A6100", borderColor: "#B8860B" },
+    amber: { backgroundColor: AMBER_BG, color: CHECK_TXT, borderColor: "#B8860B" },
     blue: { backgroundColor: BLUE_BG, color: BLUE, borderColor: BLUE },
     green: { backgroundColor: GREEN_BG, color: GREEN, borderColor: GREEN },
   };
@@ -505,7 +506,7 @@ function StripeSetupPanel() {
       ) : (
         <div className="mt-4 grid gap-2 sm:grid-cols-5">
           {items.map(([label, ready]) => (
-            <div key={label} className="rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: ready ? GREEN_BG : AMBER_BG, color: ready ? GREEN : "#8A6100", border: `1px solid ${ready ? GREEN : "#B8860B"}` }}>
+            <div key={label} className="rounded-lg px-3 py-2 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: ready ? GREEN_BG : AMBER_BG, color: ready ? GREEN : CHECK_TXT, border: `1px solid ${ready ? GREEN : "#B8860B"}` }}>
               {ready ? "Ready" : "Missing"}
               <span className="mt-1 block normal-case tracking-normal" style={{ color: INK }}>{label}</span>
             </div>
@@ -519,7 +520,7 @@ function StripeSetupPanel() {
 function ProductPreview() {
   const rows = [
     ["BUY", "New Plant Parent", "+$6.16", GREEN],
-    ["CHECK", "Greens glorious greens!", "+$2.35", "#9A6A08"],
+    ["CHECK", "Greens glorious greens!", "+$2.35", CHECK_TXT],
     ["PASS", "Old-fashioned cures", "-$1.19", RED],
   ];
   return (
@@ -577,7 +578,7 @@ function ProductPreview() {
 function FieldScannerVisual() {
   const receiptRows = [
     ["Atomic Habits", "$11.35", "BUY", GREEN],
-    ["The 5 AM Club", "$3.80", "CHECK", "#8A6100"],
+    ["The 5 AM Club", "$3.80", "CHECK", CHECK_TXT],
     ["Old travel guide", "-$0.45", "PASS", RED],
   ];
 
@@ -696,12 +697,12 @@ function ProductWorkflowVisual() {
   const flow = [
     ["1", "Scan", "9780143127796", BLUE, BLUE_BG],
     ["2", "Call", "BUY +$11.35 est.", GREEN, GREEN_BG],
-    ["3", "Save", "Buy list", "#8A6100", AMBER_BG],
+    ["3", "Save", "Buy list", CHECK_TXT, AMBER_BG],
     ["4", "Export", "CSV", INK, "#F9FAFB"],
   ];
   const checkRows = [
     ["Atomic Habits", "BUY", "+$11.35", GREEN, GREEN_BG],
-    ["The 5 AM Club", "CHECK", "+$3.80", "#8A6100", AMBER_BG],
+    ["The 5 AM Club", "CHECK", "+$3.80", CHECK_TXT, AMBER_BG],
     ["Old travel guide", "PASS", "-$0.45", RED, RED_BG],
   ];
 
@@ -792,7 +793,7 @@ function ProductWorkflowVisual() {
             </div>
           </div>
 
-          <div className="mt-5 rounded-xl p-4 text-sm font-bold leading-relaxed" style={{ backgroundColor: AMBER_BG, color: "#8A6100", border: `1px solid #B8860B` }}>
+          <div className="mt-5 rounded-xl p-4 text-sm font-bold leading-relaxed" style={{ backgroundColor: AMBER_BG, color: CHECK_TXT, border: `1px solid #B8860B` }}>
             Estimates help sort the pile. Real marketplace price, fees, rank, and restrictions still need to be checked before buying.
           </div>
         </div>
@@ -870,7 +871,7 @@ function FeeReceipt() {
   const rows = [
     ["Amazon price", "$18.40", INK, false],
     ["Referral (15%)", "-$2.76", RED, false],
-    ["Media closing fee", "-$1.80", "#8A6100", true],
+    ["Media closing fee", "-$1.80", CHECK_TXT, true],
     ["FBA fulfillment", "-$4.49", RED, false],
     ["Your cost", "-$1.00", RED, false],
   ];
@@ -882,11 +883,11 @@ function FeeReceipt() {
           key={label}
           className="flex items-center justify-between px-2 py-2 text-sm font-bold"
           style={flag
-            ? { backgroundColor: AMBER_BG, color: "#8A6100", borderRadius: 8, margin: "2px -4px", fontWeight: 800 }
+            ? { backgroundColor: AMBER_BG, color: CHECK_TXT, borderRadius: 8, margin: "2px -4px", fontWeight: 800 }
             : { borderBottom: `1px dashed ${LINE}`, color: MUTED }}
         >
           <span>{label}</span>
-          <span style={{ color: flag ? "#8A6100" : color }}>{val}</span>
+          <span style={{ color: flag ? CHECK_TXT : color }}>{val}</span>
         </div>
       ))}
       <div className="mt-3 flex items-center justify-between px-2 pt-3" style={{ borderTop: `2px solid ${INK}` }}>
@@ -1187,9 +1188,9 @@ function HomePage({ session }) {
 
       {/* ---- CTA ---- */}
       <Band tone="blue">
-        <div className="rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-14" style={{ backgroundColor: BLUE, color: "#FFFFFF" }}>
-          <h2 className="text-2xl font-black leading-tight sm:text-3xl" style={{ color: "#FFFFFF" }}>Stop guessing at the shelf.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "#DDEAF0" }}>
+        <div className="rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-14" style={{ backgroundColor: BLUE, color: GOLD_INK }}>
+          <h2 className="text-2xl font-black leading-tight sm:text-3xl" style={{ color: GOLD_INK }}>Stop guessing at the shelf.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "rgba(17,19,17,0.72)" }}>
             Join the free beta, scan your next haul, and see the real margin before you spend a dime.
           </p>
           <div className="mt-7 flex justify-center">
@@ -1281,9 +1282,9 @@ function ProductPage({ session }) {
       </Band>
 
       <Band tone="blue">
-        <div className="rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-14" style={{ backgroundColor: BLUE, color: "#FFFFFF" }}>
-          <h2 className="text-2xl font-black leading-tight sm:text-3xl" style={{ color: "#FFFFFF" }}>Try it on your next sourcing trip.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "#DDEAF0" }}>
+        <div className="rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-14" style={{ backgroundColor: BLUE, color: GOLD_INK }}>
+          <h2 className="text-2xl font-black leading-tight sm:text-3xl" style={{ color: GOLD_INK }}>Try it on your next sourcing trip.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "rgba(17,19,17,0.72)" }}>
             Free during beta. Scan a book, see the real margin after fees, and decide in a second.
           </p>
           <div className="mt-7 flex justify-center">

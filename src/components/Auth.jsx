@@ -4,18 +4,18 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath } from "../lib/siteRoutes.js";
 
-/* Forest & Gold brand (locked 2026-09) */
-const BG = "#13201A";
-const INK = "#EAF2EC";
-const YELLOW = "#E8B23A";
-const GREEN = "#17A85C";
-const BLUE = "#E8B23A";
-const RED = "#E8493D";
-const MUTED = "#93A89B";
-const LINE = "#2E4D3D";
-const BLUE_BG = "#26311D";
-const SURFACE = "#1B2C23";
-const GOLD_INK = "#13201A";
+/* Carbon & Lime brand (locked 2026-09) */
+const BG = "#181B18";
+const INK = "#F0F2EC";
+const YELLOW = "#B6E23A";
+const GREEN = "#5F945E";
+const BLUE = "#B6E23A";
+const RED = "#AF553C";
+const MUTED = "#98A093";
+const LINE = "#353B31";
+const BLUE_BG = "#232A12";
+const SURFACE = "#20241F";
+const GOLD_INK = "#111311";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function StripeBar() {
@@ -148,7 +148,7 @@ export default function Auth({ initialMode = "signin" }) {
                   className="flex-1 py-2 text-xs font-black uppercase tracking-widest"
                   style={{
                     backgroundColor: mode === m ? YELLOW : "transparent",
-                    color: INK,
+                    color: mode === m ? GOLD_INK : INK,
                     borderRight: m === "signin" ? `2px solid ${INK}` : "none",
                   }}
                 >
@@ -230,7 +230,7 @@ export default function Auth({ initialMode = "signin" }) {
                 type="submit"
                 disabled={busy}
                 className="py-2.5 text-sm font-black uppercase tracking-widest"
-                style={{ backgroundColor: busy ? "#E5E7EB" : YELLOW, color: INK, border: `1px solid ${LINE}` }}
+                style={{ backgroundColor: busy ? "#3A4036" : YELLOW, color: busy ? MUTED : GOLD_INK, border: `1px solid ${LINE}` }}
               >
                 {busy ? "..." : mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : mode === "reset" ? "Send reset link" : "Update password"}
               </button>
