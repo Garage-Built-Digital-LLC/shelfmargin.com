@@ -2,28 +2,27 @@
 @import "tailwindcss";
 
 /* ============================================================
-   ShelfMargin brand tokens — "Carbon & Lime" (locked 2026-09)
-   Carbon-black ground, lime brand accent, cream text.
-   Verdict floods are muted/earthy to sit on the carbon ground.
+   ShelfMargin brand tokens — "Iron & Orange" (locked 2026-09)
+   Neutral black-iron ground, clean orange torch, near-white text. Dark mode.
    ============================================================ */
 :root {
-  --sm-ground:#111311;     /* deepest page ground */
-  --sm-app:#181B18;        /* app surface base */
-  --sm-panel:#20241F;      /* cards / raised panels */
-  --sm-panel-2:#1C201B;    /* alt band */
-  --sm-ink:#F0F2EC;        /* primary cream text */
-  --sm-muted:#98A093;      /* secondary text */
-  --sm-faint:#68705F;      /* tertiary text */
-  --sm-line:#272C25;       /* hairline borders */
-  --sm-line-strong:#353B31;
-  --sm-gold:#B6E23A;       /* brand: logo, active nav, primary action, links (LIME) */
-  --sm-gold-deep:#93B92E;
-  --sm-gold-tint:#232A12;  /* dark chip behind lime text */
-  --sm-gold-ink:#111311;   /* text ON lime */
-  /* verdict — semantic, muted floods tuned for the carbon ground */
-  --sm-buy:#5F945E;   --sm-buy-deep:#4E7B4D;   --sm-buy-tint:#1A2419;
-  --sm-check:#CDA240; --sm-check-deep:#AE8629; --sm-check-tint:#241F12;
-  --sm-pass:#AF553C;  --sm-pass-deep:#91422E;  --sm-pass-tint:#241813;
+  --sm-ground:#0B0B0B;     /* deepest page ground */
+  --sm-app:#151515;        /* app surface base */
+  --sm-panel:#242424;      /* cards / raised panels */
+  --sm-panel-2:#1B1B1B;    /* alt band */
+  --sm-ink:#E8E8E8;        /* primary cool-white text */
+  --sm-muted:#8A8A8A;      /* secondary text */
+  --sm-faint:#5E5E5E;      /* tertiary text */
+  --sm-line:#262626;       /* hairline borders */
+  --sm-line-strong:#323232;
+  --sm-gold:#F55E1F;       /* brand: logo, active nav, primary action, links (RUST) */
+  --sm-gold-deep:#D24E15;
+  --sm-gold-tint:#2A1710;  /* dark chip behind rust text */
+  --sm-gold-ink:#FFFFFF;   /* text ON rust */
+  /* verdict — semantic floods tuned for the charcoal ground */
+  --sm-buy:#4E8A5A;   --sm-buy-deep:#3C6E46;   --sm-buy-tint:#17241C;
+  --sm-check:#D98B2B; --sm-check-deep:#B87A1E; --sm-check-tint:#241C10;
+  --sm-pass:#D8402E;  --sm-pass-deep:#B22F20;  --sm-pass-tint:#241512;
 
   /* legacy aliases so older token-based styles inherit the new brand */
   --sm-paper:var(--sm-app);
@@ -38,14 +37,14 @@
   --font-hand:"Caveat","Bricolage Grotesque",cursive;
 }
 
-/* ---- base typography + carbon-black ground ---- */
+/* ---- base typography + cool-charcoal ground ---- */
 html, body { background: var(--sm-ground); }
 body {
   font-family: var(--font-body);
   color: var(--sm-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  background-image: radial-gradient(1100px 460px at 50% -6%, #1E241A 0%, transparent 62%);
+  background-image: radial-gradient(1100px 460px at 50% -6%, #201C18 0%, transparent 62%);
   background-attachment: fixed;
 }
 ::selection { background: var(--sm-gold); color: var(--sm-gold-ink); }
@@ -61,11 +60,11 @@ body {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
-.sm-mk-buy   { background: rgba(95, 148, 94, 0.30);  color: #A9D3A7; }
-.sm-mk-check { background: rgba(205, 162, 64, 0.30); color: #E4C87E; }
-.sm-mk-pass  { background: rgba(175, 85, 60, 0.30);  color: #E6A794; }
-.sm-mk-blue  { background: rgba(182, 226, 58, 0.20); color: var(--sm-gold); }
-.sm-mk-gold  { background: rgba(182, 226, 58, 0.20); color: var(--sm-gold); }
+.sm-mk-buy   { background: rgba(78, 138, 90, 0.30);  color: #9FD0AC; }
+.sm-mk-check { background: rgba(217, 139, 43, 0.30); color: #E9BC77; }
+.sm-mk-pass  { background: rgba(216, 64, 46, 0.28);  color: #F0A79B; }
+.sm-mk-blue  { background: rgba(245, 94, 31, 0.22);  color: var(--sm-gold); }
+.sm-mk-gold  { background: rgba(245, 94, 31, 0.22);  color: var(--sm-gold); }
 
 /* Underlined lime link, like a note in the margin. */
 .sm-inklink { color: var(--sm-gold); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
@@ -85,8 +84,8 @@ body {
 }
 .pos-grid {
   background-image:
-    linear-gradient(90deg, rgba(182, 226, 58, 0.16) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(240, 242, 236, 0.05) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(245, 94, 31, 0.16) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(231, 234, 237, 0.05) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 .shelf-theme .bg-white { background-color: var(--sm-panel); }

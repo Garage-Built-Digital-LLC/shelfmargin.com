@@ -27,28 +27,28 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { cleanScan, normalizeToIsbn13 } from "../../packages/core/isbn.js";
 
 // Slate Apricot palette: calm field-tool base, warm CTA, sharp verdict colors.
-/* Carbon & Lime brand (locked 2026-09) */
-const BG = "#181B18";        // app ground
-const INK = "#F0F2EC";       // cream text
-const YELLOW = "#B6E23A";    // brand lime (primary/active)
-const GREEN = "#5F945E";     // buy (muted, sits on carbon)
-const GREEN_BG = "#1A2419";  // buy tint
-const RED = "#AF553C";       // pass (muted terracotta)
-const RED_BG = "#241813";    // pass tint
-const AMBER_BG = "#241F12";  // check tint
-const LINE = "#353B31";
-const MUTED = "#98A093";
-const BLUE = "#B6E23A";      // remapped: primary action/link -> lime
-const BLUE_BG = "#232A12";   // lime tint (dark)
-const SURFACE = "#20241F";   // card surface
-const SOFT = "#1C201B";      // alt panel
-const DARK = "#20241F";      // (was near-black bg) -> carbon card
-const APP_BG = "#111311";    // deepest ground
-const APP_PANEL = "#181B18";
-const DARK_SURFACE = "#1C201B";
-const DARK_MUTED = "#98A093";
-const GOLD_INK = "#111311";  // text on lime
-const CHECK_TXT = "#D6B25A"; // amber text on dark tint
+/* Iron & Orange brand (locked 2026-09) — neutral iron + clean orange, dark mode */
+const BG = "#151515";        // app ground
+const INK = "#E8E8E8";       // cream text
+const YELLOW = "#F55E1F";    // brand rust (primary/active)
+const GREEN = "#4E8A5A";     // buy (muted green verdict)
+const GREEN_BG = "#17241C";  // buy tint
+const RED = "#D8402E";       // pass (bright red, distinct from rust)
+const RED_BG = "#241512";    // pass tint
+const AMBER_BG = "#241C10";  // check tint
+const LINE = "#323232";
+const MUTED = "#8A8A8A";
+const BLUE = "#F55E1F";      // remapped: primary action/link -> rust
+const BLUE_BG = "#2A1710";   // rust tint (dark)
+const SURFACE = "#242424";   // card surface
+const SOFT = "#1B1B1B";      // alt panel
+const DARK = "#242424";      // raised card
+const APP_BG = "#0B0B0B";    // deepest ground
+const APP_PANEL = "#151515";
+const DARK_SURFACE = "#1B1B1B";
+const DARK_MUTED = "#8A8A8A";
+const GOLD_INK = "#FFFFFF";  // text on rust
+const CHECK_TXT = "#E0A94E"; // amber text on dark tint
 const CHECK_BORDER = "#8A6A1E";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
@@ -403,10 +403,10 @@ function VerdictHero({ entry, threshold, onSave, onDetails }) {
   const saved = entry.queued;
   // Full-color verdict flood — the whole card takes the decision color.
   const flood = entry.restricted
-    ? { bg: "#CDA240", deep: "#AE8629", ink: "#231A05", word: "CHECK" }
+    ? { bg: "#D98B2B", deep: "#B87A1E", ink: "#231A05", word: "CHECK" }
     : meets
-      ? { bg: "#5F945E", deep: "#4E7B4D", ink: "#F3F8F2", word: "BUY" }
-      : { bg: "#AF553C", deep: "#91422E", ink: "#FBF0EC", word: "PASS" };
+      ? { bg: "#4E8A5A", deep: "#3C6E46", ink: "#F3F8F2", word: "BUY" }
+      : { bg: "#D8402E", deep: "#B22F20", ink: "#FBECEA", word: "PASS" };
   const netTotal = bestNet * entry.count;
   return (
     <div

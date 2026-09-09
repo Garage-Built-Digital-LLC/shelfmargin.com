@@ -18,25 +18,25 @@ import { billingPlanLabel, billingStatusLabel } from "../lib/billing.js";
 import { publicPath, publicRouteMeta } from "../lib/siteRoutes.js";
 import { supabase, supabaseReady } from "../lib/supabase.js";
 
-/* Carbon & Lime brand (locked 2026-09) */
-const BG = "#181B18";        // app ground
-const INK = "#F0F2EC";       // cream text
-const YELLOW = "#B6E23A";    // brand lime
-const GREEN = "#5F945E";     // buy (muted)
-const BLUE = "#B6E23A";      // remapped primary -> lime
-const RED = "#AF553C";       // pass (muted terracotta)
-const MUTED = "#98A093";
-const LINE = "#353B31";
-const AMBER_BG = "#241F12";
-const BLUE_BG = "#232A12";
-const GREEN_BG = "#1A2419";
-const RED_BG = "#241813";
-const SURFACE = "#20241F";
-const SOFT = "#1C201B";
-const CHARCOAL = "#111311";  // deepest carbon card / dark section
-const GOLD_INK = "#111311";  // text on lime
-const CREAM = "#F0F2EC";
-const CHECK_TXT = "#D6B25A";  // amber text that reads on the carbon ground
+/* Iron & Orange brand (locked 2026-09) — neutral iron + clean orange, dark mode */
+const BG = "#151515";        // app ground
+const INK = "#E8E8E8";       // cream text
+const YELLOW = "#F55E1F";    // brand rust
+const GREEN = "#4E8A5A";     // buy (muted green)
+const BLUE = "#F55E1F";      // remapped primary -> rust
+const RED = "#D8402E";       // pass (bright red, distinct from rust)
+const MUTED = "#8A8A8A";
+const LINE = "#323232";
+const AMBER_BG = "#241C10";
+const BLUE_BG = "#2A1710";
+const GREEN_BG = "#17241C";
+const RED_BG = "#241512";
+const SURFACE = "#242424";
+const SOFT = "#1B1B1B";
+const CHARCOAL = "#0B0B0B";  // deepest charcoal card / dark section
+const GOLD_INK = "#FFFFFF";  // text on rust
+const CREAM = "#E8E8E8";
+const CHECK_TXT = "#E0A94E";  // amber text that reads on the charcoal ground
 const SUPPORT_EMAIL = "support@shelfmargin.com";
 
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;

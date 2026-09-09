@@ -4,18 +4,18 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath } from "../lib/siteRoutes.js";
 
-/* Carbon & Lime brand (locked 2026-09) */
-const BG = "#181B18";
-const INK = "#F0F2EC";
-const YELLOW = "#B6E23A";
-const GREEN = "#5F945E";
-const BLUE = "#B6E23A";
-const RED = "#AF553C";
-const MUTED = "#98A093";
-const LINE = "#353B31";
-const BLUE_BG = "#232A12";
-const SURFACE = "#20241F";
-const GOLD_INK = "#111311";
+/* Iron & Orange brand (locked 2026-09) — neutral iron + clean orange, dark mode */
+const BG = "#151515";
+const INK = "#E8E8E8";
+const YELLOW = "#F55E1F";
+const GREEN = "#4E8A5A";
+const BLUE = "#F55E1F";
+const RED = "#D8402E";
+const MUTED = "#8A8A8A";
+const LINE = "#323232";
+const BLUE_BG = "#2A1710";
+const SURFACE = "#242424";
+const GOLD_INK = "#FFFFFF";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function StripeBar() {
