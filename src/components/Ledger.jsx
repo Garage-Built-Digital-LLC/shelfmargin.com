@@ -563,6 +563,68 @@ function EmptyState({ icon: Icon, imageSrc, imageAlt = "", title, body, action }
   );
 }
 
+function FirstRunScan({ sampleBooks, scanValue, scanning, onFocusInput }) {
+  const steps = [
+    { n: "1", icon: Scan, t: "Scan the barcode", d: "Point a Bluetooth scanner or your camera at the barcode — or just type the ISBN. The field stays focused so you can rip through a whole shelf." },
+    { n: "2", icon: TrendingUp, t: "Read the verdict", d: "One clear call — BUY, PASS, or CHECK — with your true net profit after every Amazon fee, the $1.80 media fee included." },
+    { n: "3", icon: PackagePlus, t: "Save the winners", d: "Send buys to your list as you go, then export the whole trip to CSV when you check out." },
+  ];
+  return (
+    <div className="rounded-2xl p-5" style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE, boxShadow: "0 10px 28px rgba(0, 0, 0, 0.12)" }}>
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: YELLOW, color: GOLD_INK }}>
+          <Scan size={22} />
+        </span>
+        <div className="min-w-0">
+          <div className="text-sm font-black uppercase tracking-widest">Let’s find your first winner</div>
+          <div className="text-xs font-bold" style={{ color: MUTED }}>Three taps from barcode to buy decision.</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        {steps.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.n} className="flex items-start gap-3 rounded-xl px-3 py-3" style={{ backgroundColor: SOFT, border: `1px solid ${LINE}` }}>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-black" style={{ backgroundColor: BLUE_BG, color: YELLOW }}>{s.n}</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest"><Icon size={13} /> {s.t}</div>
+                <div className="mt-0.5 text-xs font-bold normal-case" style={{ color: MUTED }}>{s.d}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-2 text-[11px] font-black uppercase tracking-widest" style={{ color: MUTED }}>No book handy? Try a sample</div>
+        <div className="flex flex-wrap gap-2">
+          {sampleBooks.map((b) => (
+            <button
+              key={b.isbn}
+              type="button"
+              onClick={() => scanValue(b.isbn)}
+              disabled={scanning}
+              className="rounded-full px-3 py-2 text-xs font-black transition disabled:opacity-40"
+              style={{ backgroundColor: APP_PANEL, border: `1px solid ${LINE}`, color: INK }}
+            >
+              {b.title}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={onFocusInput}
+          className="mt-3 w-full rounded-xl py-3 text-sm font-black uppercase tracking-widest"
+          style={{ backgroundColor: YELLOW, color: GOLD_INK }}
+        >
+          Scan a book
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function OnboardingChecklist({ totalUnits, queuedCount, verifiedCount, onScan, onFieldTest, demoMode }) {
   const steps = [
     { label: "Scan one book", done: totalUnits > 0, action: onScan },
@@ -1883,11 +1945,20 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 loading your scans…
               </div>
             ) : entries.length === 0 ? (
-              <EmptyState
-                icon={Scan}
-                title="No scans yet"
-                body="Scan a book barcode or type an ISBN above. The field stays focused for Bluetooth scanners."
-              />
+              demoMode ? (
+                <EmptyState
+                  icon={Scan}
+                  title="No scans yet"
+                  body="Tap a sample above, or type an ISBN to see a live verdict. Demo scans don’t save."
+                />
+              ) : (
+                <FirstRunScan
+                  sampleBooks={sampleBooks}
+                  scanValue={scanValue}
+                  scanning={scanning}
+                  onFocusInput={() => inputRef.current?.focus()}
+                />
+              )
             ) : (
             <div className="flex flex-col gap-2">
               {entries.map((en) => {
