@@ -3,7 +3,9 @@ import {
   Scan, ChevronDown, ChevronUp, Trash2, Volume2, VolumeX, Repeat, FileDown,
   PackagePlus, Send, CheckSquare, Square, TrendingUp, TrendingDown, Minus, Users, Lock, LogOut,
   LayoutDashboard, ClipboardList, Boxes, Settings, AlertTriangle, Database, CloudOff, ShieldCheck,
+  Sun, Moon,
 } from "lucide-react";
+import { useTheme } from "../lib/useTheme.js";
 import {
   buildEntry, sourcingScore, CONDITIONS, conditionToDb, velocityToDb,
   DEMO_ISBNS, lookupCore,
@@ -27,29 +29,31 @@ import { supabase, supabaseReady } from "../lib/supabase.js";
 import { cleanScan, normalizeToIsbn13 } from "../../packages/core/isbn.js";
 
 // Slate Apricot palette: calm field-tool base, warm CTA, sharp verdict colors.
-/* Iron & Orange brand (locked 2026-09) — neutral iron + clean orange, dark mode */
-const BG = "#151515";        // app ground
-const INK = "#E8E8E8";       // cream text
-const YELLOW = "#F55E1F";    // brand rust (primary/active)
-const GREEN = "#4E8A5A";     // buy (muted green verdict)
-const GREEN_BG = "#17241C";  // buy tint
-const RED = "#D8402E";       // pass (bright red, distinct from rust)
-const RED_BG = "#241512";    // pass tint
-const AMBER_BG = "#241C10";  // check tint
-const LINE = "#323232";
-const MUTED = "#8A8A8A";
-const BLUE = "#F55E1F";      // remapped: primary action/link -> rust
-const BLUE_BG = "#2A1710";   // rust tint (dark)
-const SURFACE = "#242424";   // card surface
-const SOFT = "#1B1B1B";      // alt panel
-const DARK = "#242424";      // raised card
-const APP_BG = "#0B0B0B";    // deepest ground
-const APP_PANEL = "#151515";
-const DARK_SURFACE = "#1B1B1B";
-const DARK_MUTED = "#8A8A8A";
-const GOLD_INK = "#FFFFFF";  // text on rust
-const CHECK_TXT = "#E0A94E"; // amber text on dark tint
-const CHECK_BORDER = "#8A6A1E";
+/* Iron & Orange brand (locked 2026-09) — theme-aware via --sm-* tokens (index.css).
+   Resolve to dark by default; the app root carries data-sm-theme so light mode
+   flips every one of these at runtime. */
+const BG = "var(--sm-app)";          // app ground
+const INK = "var(--sm-ink)";         // primary text
+const YELLOW = "var(--sm-gold)";     // brand orange (primary/active)
+const GREEN = "var(--sm-buy)";       // buy verdict
+const GREEN_BG = "var(--sm-buy-tint)";
+const RED = "var(--sm-pass)";        // pass verdict
+const RED_BG = "var(--sm-pass-tint)";
+const AMBER_BG = "var(--sm-check-tint)";
+const LINE = "var(--sm-line-strong)";
+const MUTED = "var(--sm-muted)";
+const BLUE = "var(--sm-gold)";       // remapped: primary action/link -> orange
+const BLUE_BG = "var(--sm-gold-tint)";
+const SURFACE = "var(--sm-panel)";   // card surface
+const SOFT = "var(--sm-panel-2)";    // alt panel
+const DARK = "var(--sm-panel)";      // raised card
+const APP_BG = "var(--sm-ground)";   // deepest ground
+const APP_PANEL = "var(--sm-app)";
+const DARK_SURFACE = "var(--sm-panel-2)";
+const DARK_MUTED = "var(--sm-muted)";
+const GOLD_INK = "var(--sm-gold-ink)"; // text on orange
+const CHECK_TXT = "var(--sm-check-txt)"; // amber text
+const CHECK_BORDER = "var(--sm-check-border)";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function dbToDisplayCondition(c) {
@@ -200,7 +204,7 @@ function BottomNav({ view, queuedCount, savedCount, onNavigate }) {
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-30 border-t px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2"
-      style={{ backgroundColor: "rgba(13, 21, 18, 0.94)", borderColor: LINE, backdropFilter: "blur(14px)" }}
+      style={{ backgroundColor: "color-mix(in srgb, var(--sm-app) 92%, transparent)", borderColor: LINE, backdropFilter: "blur(14px)" }}
       aria-label="Workflow navigation"
     >
       <div className="mx-auto grid max-w-2xl grid-cols-5 gap-1.5">
@@ -521,7 +525,7 @@ function StickyDecisionBar({ entry, threshold, onSave, onDetails }) {
 
 function OwnerInputItem({ label, detail }) {
   return (
-    <div className="px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+    <div className="px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE }}>
       <div className="text-xs font-black uppercase tracking-widest">{label}</div>
       <div className="mt-0.5 text-xs font-bold normal-case" style={{ color: MUTED }}>{detail}</div>
     </div>
@@ -548,7 +552,7 @@ function EmptyState({ icon: Icon, imageSrc, imageAlt = "", title, body, action }
           src={imageSrc}
           alt={imageAlt}
           className="mx-auto mb-4 aspect-[4/3] w-full max-w-xs rounded-lg object-cover object-bottom"
-          style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}
+          style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE }}
           loading="lazy"
         />
       ) : Icon && <Icon size={28} className="mx-auto mb-3" color={MUTED} />}
@@ -588,7 +592,7 @@ function OnboardingChecklist({ totalUnits, queuedCount, verifiedCount, onScan, o
             key={step.label}
             onClick={step.action}
             className="flex items-center gap-2 px-2 py-2 text-left text-xs font-bold"
-            style={{ border: `1px solid ${LINE}`, backgroundColor: step.done ? GREEN_BG : "#FFFFFF" }}
+            style={{ border: `1px solid ${LINE}`, backgroundColor: step.done ? GREEN_BG : SURFACE }}
           >
             {step.done ? <CheckSquare size={16} color={GREEN} /> : <Square size={16} color={MUTED} />}
             <span>{step.label}</span>
@@ -611,7 +615,7 @@ function FirstSessionPanel({ cost, threshold, onCostChange, onThresholdChange, o
         <div className="mt-4 grid grid-cols-2 gap-2">
           <label className="text-xs font-black uppercase tracking-widest">
             cost per book
-            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE }}>
               <span>$</span>
               <input
                 type="number"
@@ -624,7 +628,7 @@ function FirstSessionPanel({ cost, threshold, onCostChange, onThresholdChange, o
           </label>
           <label className="text-xs font-black uppercase tracking-widest">
             min profit
-            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: "#FFFFFF" }}>
+            <span className="mt-1 flex items-center gap-2 px-2 py-2" style={{ border: `1px solid ${LINE}`, backgroundColor: SURFACE }}>
               <span>$</span>
               <input
                 type="number"
@@ -1061,6 +1065,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const [cost, setCost] = useState(1.0);
   const [threshold, setThreshold] = useState(3.0);
   const [soundOn, setSoundOn] = useState(true);
+  const { theme, toggle: toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -1515,7 +1520,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   ];
 
   return (
-    <div className="shelf-theme min-h-screen w-full" style={{ backgroundColor: APP_BG, color: INK }}>
+    <div className="shelf-theme min-h-screen w-full" data-sm-theme={theme} style={{ backgroundColor: APP_BG, color: INK }}>
       <StripeBar />
       <div className="mx-auto min-h-screen max-w-3xl px-3 pb-28 pt-4" style={{ backgroundColor: APP_PANEL }}>
         <div className="mb-3 rounded-2xl px-3 py-3 shadow-sm" style={{ backgroundColor: SURFACE, color: INK, border: `1px solid ${LINE}` }}>
@@ -1562,9 +1567,17 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               <span className="uppercase tracking-widest" style={{ color: MUTED }}>buys</span>
             </span>
             <button
+              onClick={toggleTheme}
+              aria-label={theme === "light" ? "switch to dark mode" : "switch to light mode"}
+              title={theme === "light" ? "Switch to dark" : "Switch to light"}
+              className="ml-auto shrink-0"
+            >
+              {theme === "light" ? <Moon size={15} color={MUTED} /> : <Sun size={15} color={MUTED} />}
+            </button>
+            <button
               onClick={() => { const v = !soundOn; setSoundOn(v); persistProfile({ sound_enabled: v }); }}
               aria-label="toggle sound"
-              className="ml-auto shrink-0"
+              className="shrink-0"
             >
               {soundOn ? <Volume2 size={15} color={MUTED} /> : <VolumeX size={15} color={MUTED} />}
             </button>
@@ -1780,16 +1793,16 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             )}
 
             <form onSubmit={addEntry} className="mb-3">
-              <div className="scanner-pulse relative overflow-hidden rounded-2xl p-3" style={{ border: `2px solid ${DARK}`, backgroundColor: DARK, boxShadow: "0 18px 44px rgba(17, 24, 39, 0.26)" }}>
-                <div className="flex items-center gap-3 rounded-xl px-3 py-5" style={{ border: `1px dashed rgba(255,255,255,0.35)`, backgroundColor: DARK_SURFACE }}>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: DARK, color: "#FFF" }}>
+              <div className="scanner-pulse relative overflow-hidden rounded-2xl p-3" style={{ border: `2px solid ${LINE}`, backgroundColor: DARK, boxShadow: "0 18px 44px rgba(0, 0, 0, 0.26)" }}>
+                <div className="flex items-center gap-3 rounded-xl px-3 py-5" style={{ border: `1px dashed ${LINE}`, backgroundColor: DARK_SURFACE }}>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: YELLOW, color: GOLD_INK }}>
                     <Scan size={23} />
                   </div>
                   <input ref={inputRef} autoFocus value={isbn} onChange={(e) => setIsbn(e.target.value)}
                     disabled={scanning}
                     placeholder={scanning ? "Looking up book..." : "Scan or type ISBN"}
                     className="flex-1 bg-transparent outline-none text-xl font-mono font-black tracking-wide"
-                    style={{ color: "#FFFFFF" }} />
+                    style={{ color: INK }} />
                   <button
                     type="submit"
                     disabled={scanning || !isbn.trim()}
@@ -2057,7 +2070,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               <MetricBox label="Possible Buys" value={buyCount} tone="buy" />
               <MetricBox label="Checks" value={checkCount} tone="warn" />
             </div>
-            <div className="rounded-2xl px-3 py-3" style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: summary.verifiedRows ? GREEN_BG : DARK, color: summary.verifiedRows ? INK : "#FFFFFF" }}>
+            <div className="rounded-2xl px-3 py-3" style={{ border: `1px solid ${LINE}`, backgroundColor: summary.verifiedRows ? GREEN_BG : DARK, color: INK }}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-xs font-black uppercase tracking-widest">check summary</div>
@@ -2104,7 +2117,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   const finalDecision = actual.real_decision || "";
                   const finalColor = finalDecision === "buy" ? GREEN : finalDecision === "pass" ? RED : finalDecision === "watch" ? CHECK_TXT : MUTED;
                   return (
-                    <div key={key} className="overflow-hidden rounded-2xl" style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: DARK, color: "#FFFFFF", boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
+                    <div key={key} className="overflow-hidden rounded-2xl" style={{ border: `1px solid rgba(255,255,255,0.12)`, backgroundColor: DARK, color: INK, boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
                       <div className="px-3 py-3">
                         <div className="mb-3 flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -2157,7 +2170,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                               type="button"
                               onClick={() => setOpenCheckId(open ? null : key)}
                               className="flex items-center gap-1 px-3 py-1.5 text-xs font-black uppercase tracking-widest"
-                              style={{ color: "#FFFFFF", border: `1px solid rgba(255,255,255,0.16)`, backgroundColor: DARK_SURFACE }}
+                              style={{ color: INK, border: `1px solid rgba(255,255,255,0.16)`, backgroundColor: DARK_SURFACE }}
                             >
                               details {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                             </button>
@@ -2467,7 +2480,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               />
             ) : (
               <>
-                <div className="mb-3 overflow-hidden rounded-2xl" style={{ backgroundColor: DARK, color: "#FFFFFF", border: `1px solid rgba(255,255,255,0.12)`, boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
+                <div className="mb-3 overflow-hidden rounded-2xl" style={{ backgroundColor: DARK, color: INK, border: `1px solid rgba(255,255,255,0.12)`, boxShadow: "0 16px 34px rgba(17, 24, 39, 0.20)" }}>
                   <div className="grid grid-cols-3 text-center">
                     <div className="px-3 py-3">
                       <div className="text-[10px] font-black uppercase tracking-widest" style={{ color: DARK_MUTED }}>saved</div>
@@ -2487,7 +2500,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   </div>
                 </div>
 
-                <div className="mb-2 flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: DARK_SURFACE, color: "#FFFFFF", border: `1px solid rgba(255,255,255,0.12)` }}>
+                <div className="mb-2 flex items-center justify-between rounded-xl px-3 py-2" style={{ backgroundColor: DARK_SURFACE, color: INK, border: `1px solid rgba(255,255,255,0.12)` }}>
                   <button onClick={selectAll} className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
                     {allSelected ? <CheckSquare size={16} /> : <Square size={16} />} select all
                   </button>
@@ -2498,7 +2511,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                     const { bestNet, color } = decisionMeta(en, threshold);
                     const isSelected = Boolean(selected[en.id]);
                     return (
-                    <div key={en.id} className="rounded-2xl px-3 py-3" style={{ backgroundColor: isSelected ? DARK : DARK_SURFACE, color: "#FFFFFF", border: `1px solid ${isSelected ? YELLOW : "rgba(255,255,255,0.12)"}`, boxShadow: isSelected ? "0 14px 30px rgba(255, 184, 107, 0.16)" : "0 10px 22px rgba(17, 24, 39, 0.16)" }}>
+                    <div key={en.id} className="rounded-2xl px-3 py-3" style={{ backgroundColor: isSelected ? DARK : DARK_SURFACE, color: INK, border: `1px solid ${isSelected ? YELLOW : "rgba(255,255,255,0.12)"}`, boxShadow: isSelected ? "0 14px 30px rgba(255, 184, 107, 0.16)" : "0 10px 22px rgba(17, 24, 39, 0.16)" }}>
                       <div className="grid grid-cols-[28px_1fr_auto] items-center gap-3">
                         <button onClick={() => toggleSelect(en.id)} className="shrink-0" style={{ color: isSelected ? YELLOW : DARK_MUTED }}>
                           {isSelected ? <CheckSquare size={18} /> : <Square size={18} />}

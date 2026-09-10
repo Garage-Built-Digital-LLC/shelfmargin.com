@@ -3,19 +3,20 @@ import { ArrowLeft, FileSpreadsheet, Scan, ShieldCheck } from "lucide-react";
 import { supabase, supabaseReady } from "../lib/supabase.js";
 import { hashForSection } from "../lib/appRoutes.js";
 import { publicPath } from "../lib/siteRoutes.js";
+import { useTheme } from "../lib/useTheme.js";
 
-/* Iron & Orange brand (locked 2026-09) — neutral iron + clean orange, dark mode */
-const BG = "#151515";
-const INK = "#E8E8E8";
-const YELLOW = "#F55E1F";
-const GREEN = "#4E8A5A";
-const BLUE = "#F55E1F";
-const RED = "#D8402E";
-const MUTED = "#8A8A8A";
-const LINE = "#323232";
-const BLUE_BG = "#2A1710";
-const SURFACE = "#242424";
-const GOLD_INK = "#FFFFFF";
+/* Iron & Orange brand (locked 2026-09) — theme-aware via --sm-* tokens (index.css) */
+const BG = "var(--sm-app)";
+const INK = "var(--sm-ink)";
+const YELLOW = "var(--sm-gold)";
+const GREEN = "var(--sm-buy)";
+const BLUE = "var(--sm-gold)";
+const RED = "var(--sm-pass)";
+const MUTED = "var(--sm-muted)";
+const LINE = "var(--sm-line-strong)";
+const BLUE_BG = "var(--sm-gold-tint)";
+const SURFACE = "var(--sm-panel)";
+const GOLD_INK = "var(--sm-gold-ink)";
 const DEMO_SCAN_PATH = `${publicPath("demo")}${hashForSection("scan")}`;
 
 function StripeBar() {
@@ -48,6 +49,7 @@ export default function Auth({ initialMode = "signin" }) {
   const [pwConfirm, setPwConfirm] = useState("");
   const [msg, setMsg] = useState(null); // { tone: 'err'|'ok', text }
   const [busy, setBusy] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     setMode(initialMode);
@@ -102,7 +104,7 @@ export default function Auth({ initialMode = "signin" }) {
   }
 
   return (
-    <div className="min-h-screen w-full" style={{ backgroundColor: BG, color: INK }}>
+    <div className="min-h-screen w-full" data-sm-theme={theme} style={{ backgroundColor: BG, color: INK }}>
       <StripeBar />
       <div className="mx-auto grid min-h-[calc(100vh-4px)] max-w-6xl gap-8 px-4 py-10 lg:grid-cols-[1fr_420px] lg:items-center">
         <section>

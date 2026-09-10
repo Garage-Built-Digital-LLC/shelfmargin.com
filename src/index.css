@@ -23,6 +23,7 @@
   --sm-buy:#4E8A5A;   --sm-buy-deep:#3C6E46;   --sm-buy-tint:#17241C;
   --sm-check:#D98B2B; --sm-check-deep:#B87A1E; --sm-check-tint:#241C10;
   --sm-pass:#D8402E;  --sm-pass-deep:#B22F20;  --sm-pass-tint:#241512;
+  --sm-check-txt:#E0A94E; --sm-check-border:#8A6A1E;
 
   /* legacy aliases so older token-based styles inherit the new brand */
   --sm-paper:var(--sm-app);
@@ -35,6 +36,34 @@
   --font-body:"Hanken Grotesk",system-ui,-apple-system,sans-serif;
   --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
   --font-hand:"Caveat","Bricolage Grotesque",cursive;
+}
+
+/* ============================================================
+   Light mode — scoped to the app shell via [data-sm-theme="light"]
+   (the logged-in app + auth). The marketing site carries no such
+   attribute, so it keeps the base dark tokens above. Dark is
+   unchanged; light is purely additive.
+   ============================================================ */
+[data-sm-theme="dark"] { color-scheme: dark; }
+[data-sm-theme="light"] {
+  color-scheme: light;
+  --sm-ground:#ECECEC;
+  --sm-app:#F3F3F3;
+  --sm-panel:#FFFFFF;
+  --sm-panel-2:#F1F1F1;
+  --sm-ink:#161616;
+  --sm-muted:#6E6E6E;
+  --sm-faint:#9A9A9A;
+  --sm-line:#E6E6E6;
+  --sm-line-strong:#D6D6D6;
+  --sm-gold:#F55E1F;
+  --sm-gold-deep:#D24E15;
+  --sm-gold-tint:#FCE7DC;
+  --sm-gold-ink:#FFFFFF;
+  --sm-buy:#46875A;   --sm-buy-deep:#356043;   --sm-buy-tint:#E7F1EA;
+  --sm-check:#C7871A; --sm-check-deep:#A66E12; --sm-check-tint:#F7EED8;
+  --sm-pass:#D8402E;  --sm-pass-deep:#B22F20;  --sm-pass-tint:#FBE7E3;
+  --sm-check-txt:#A5741A; --sm-check-border:#C89A3A;
 }
 
 /* ---- base typography + cool-charcoal ground ---- */
