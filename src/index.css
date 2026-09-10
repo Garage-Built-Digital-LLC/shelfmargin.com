@@ -73,9 +73,32 @@ body {
   color: var(--sm-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  background-image: radial-gradient(1100px 460px at 50% -6%, #201C18 0%, transparent 62%);
+  /* layered depth: a warm torch glow up top, a soft cool bloom to the
+     right where the hero device sits, and a gentle floor vignette so the
+     page reads as lit rather than a flat slab of near-black. */
+  background-image:
+    radial-gradient(900px 520px at 78% 8%, rgba(245,94,31,0.10) 0%, transparent 60%),
+    radial-gradient(1200px 560px at 50% -8%, #241a12 0%, transparent 60%),
+    radial-gradient(1000px 700px at 50% 118%, rgba(0,0,0,0.55) 0%, transparent 55%);
   background-attachment: fixed;
 }
+[data-sm-theme="light"] body,
+body:has([data-sm-theme="light"]) {
+  background-image: none;
+}
+
+/* Soft radial torch glow, used behind the marketing hero device. */
+.sm-hero-glow { position: relative; }
+.sm-hero-glow::before {
+  content: "";
+  position: absolute;
+  inset: -12% -6% -20% 20%;
+  background: radial-gradient(60% 60% at 62% 42%, rgba(245,94,31,0.16) 0%, transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 0;
+}
+.sm-hero-glow > * { position: relative; z-index: 1; }
 ::selection { background: var(--sm-gold); color: var(--sm-gold-ink); }
 
 /* Handwritten accent — taglines / margin marks only. */

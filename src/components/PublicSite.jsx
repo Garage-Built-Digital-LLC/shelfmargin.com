@@ -23,6 +23,7 @@ const BG = "#151515";        // app ground
 const INK = "#E8E8E8";       // cream text
 const YELLOW = "#F55E1F";    // brand rust
 const GREEN = "#4E8A5A";     // buy (muted green)
+const GREEN_POP = "#43C07B"; // brighter emerald for hero "win" numbers on dark
 const BLUE = "#F55E1F";      // remapped primary -> rust
 const RED = "#D8402E";       // pass (bright red, distinct from rust)
 const MUTED = "#8A8A8A";
@@ -61,8 +62,8 @@ const faqItems = [
 function StripeBar() {
   return (
     <div
-      className="h-1 w-full"
-      style={{ background: `linear-gradient(90deg, ${GREEN}, ${BLUE}, ${YELLOW})` }}
+      className="h-0.5 w-full"
+      style={{ background: YELLOW, opacity: 0.9 }}
     />
   );
 }
@@ -70,7 +71,7 @@ function StripeBar() {
 function ButtonLink({ href, children, tone = "dark", icon: Icon = ArrowRight }) {
   const styles = {
     dark: { backgroundColor: YELLOW, color: GOLD_INK },
-    yellow: { backgroundColor: CREAM, color: GOLD_INK },
+    yellow: { backgroundColor: CREAM, color: "#141414" },
     blue: { backgroundColor: YELLOW, color: GOLD_INK },
     ghost: { backgroundColor: "transparent", color: INK },
   };
@@ -90,7 +91,7 @@ function CheckoutButton({ planId, session, children, tone = "yellow" }) {
   const [state, setState] = useState({ loading: false, error: "" });
   const styles = {
     dark: { backgroundColor: YELLOW, color: GOLD_INK },
-    yellow: { backgroundColor: CREAM, color: GOLD_INK },
+    yellow: { backgroundColor: CREAM, color: "#141414" },
     blue: { backgroundColor: YELLOW, color: GOLD_INK },
     ghost: { backgroundColor: "transparent", color: INK },
   };
@@ -974,8 +975,8 @@ function HeroScanner() {
   const bars = [3,2,4,2,5,3,2,4,3,5,2,3,4,2,3,5,3,2,4,3,2,5,3,2,4];
   return (
     <div className="mx-auto" style={{ maxWidth: 336 }}>
-      <div style={{ backgroundColor: "#0e0c09", borderRadius: 42, padding: 12, boxShadow: "0 26px 60px rgba(23,23,23,0.28)" }}>
-        <div style={{ backgroundColor: SURFACE, borderRadius: 32, padding: "20px 18px 22px" }}>
+      <div style={{ backgroundColor: "#0A0A0A", borderRadius: 42, padding: 12, border: "1px solid rgba(245,94,31,0.28)", boxShadow: "0 40px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 0 60px rgba(245,94,31,0.10)" }}>
+        <div style={{ backgroundColor: SURFACE, borderRadius: 32, padding: "20px 18px 22px", border: `1px solid ${LINE}` }}>
           {/* header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -988,7 +989,7 @@ function HeroScanner() {
               <span className="text-lg font-black">Scan</span>
             </div>
             <div className="text-right font-mono text-[10px] leading-tight" style={{ color: MUTED }}>
-              session · <b style={{ color: GREEN }}>4 buys</b><br />18 scanned
+              session · <b style={{ color: GREEN_POP }}>4 buys</b><br />18 scanned
             </div>
           </div>
 
@@ -1007,10 +1008,10 @@ function HeroScanner() {
           {/* verdict */}
           <div className="mt-2">
             <div className="flex items-center gap-2">
-              <span className="rounded-lg px-2 py-1 text-[11px] font-black uppercase tracking-widest text-white" style={{ backgroundColor: GREEN }}>Buy</span>
+              <span className="rounded-lg px-2 py-1 text-[11px] font-black uppercase tracking-widest text-white" style={{ backgroundColor: GREEN_POP, color: "#08130C" }}>Buy</span>
               <span className="ml-auto font-mono text-[11px]" style={{ color: MUTED }}>velocity · fast</span>
             </div>
-            <div className="mt-2 font-mono font-black leading-none" style={{ fontSize: 40, color: GREEN }}>+$11.42</div>
+            <div className="mt-2 font-mono font-black leading-none" style={{ fontSize: 40, color: GREEN_POP, textShadow: "0 0 26px rgba(67,192,123,0.30)" }}>+$11.42</div>
             <div className="mt-2 text-sm font-bold leading-snug" style={{ color: MUTED }}>Clears your $5 buy line on Amazon with room to spare.</div>
             <div className="mt-3 text-base font-black leading-tight">Structure &amp; Interpretation of Computer Programs</div>
             <div className="text-xs font-bold" style={{ color: MUTED }}>Abelson &amp; Sussman</div>
@@ -1021,7 +1022,7 @@ function HeroScanner() {
                 <div key={l} className="flex items-center justify-between py-0.5"><span>{l}</span><span>{v}</span></div>
               ))}
               <div className="mt-1 flex items-center justify-between pt-1 font-black" style={{ borderTop: `1px solid ${LINE}`, color: INK }}>
-                <span>Net</span><span style={{ color: GREEN }}>+$11.42</span>
+                <span>Net</span><span style={{ color: GREEN_POP }}>+$11.42</span>
               </div>
             </div>
           </div>
@@ -1055,14 +1056,23 @@ function HomePage({ session }) {
     <>
       {/* ---- HERO ---- */}
       <section>
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div className="sm-hero-glow mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black uppercase tracking-widest" style={{ backgroundColor: SURFACE, color: MUTED, border: `1px solid ${LINE}` }}>
               For used-book resellers · <span style={{ color: GREEN }}>Free during beta</span>
             </div>
             <h1 className="mt-5 max-w-2xl text-4xl font-black leading-[0.98] sm:text-6xl">
               Know the{" "}
-              <span style={{ backgroundImage: `linear-gradient(transparent 62%, ${YELLOW} 62%)` }}>margin</span>{" "}
+              <span
+                style={{
+                  color: YELLOW,
+                  textShadow: "0 0 34px rgba(245,94,31,0.35)",
+                  borderBottom: `3px solid ${YELLOW}`,
+                  paddingBottom: "0.04em",
+                }}
+              >
+                margin
+              </span>{" "}
               before you buy the book.
             </h1>
             <p className="mt-5 max-w-md text-xl font-bold leading-relaxed" style={{ color: MUTED }}>
@@ -1190,7 +1200,7 @@ function HomePage({ session }) {
       <Band tone="blue">
         <div className="rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-14" style={{ backgroundColor: BLUE, color: GOLD_INK }}>
           <h2 className="text-2xl font-black leading-tight sm:text-3xl" style={{ color: GOLD_INK }}>Stop guessing at the shelf.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "rgba(17,19,17,0.72)" }}>
+          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "rgba(8,8,8,0.86)" }}>
             Join the free beta, scan your next haul, and see the real margin before you spend a dime.
           </p>
           <div className="mt-7 flex justify-center">
@@ -1284,7 +1294,7 @@ function ProductPage({ session }) {
       <Band tone="blue">
         <div className="rounded-2xl px-6 py-10 text-center sm:px-10 sm:py-14" style={{ backgroundColor: BLUE, color: GOLD_INK }}>
           <h2 className="text-2xl font-black leading-tight sm:text-3xl" style={{ color: GOLD_INK }}>Try it on your next sourcing trip.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "rgba(17,19,17,0.72)" }}>
+          <p className="mx-auto mt-3 max-w-xl text-base font-bold" style={{ color: "rgba(8,8,8,0.86)" }}>
             Free during beta. Scan a book, see the real margin after fees, and decide in a second.
           </p>
           <div className="mt-7 flex justify-center">
