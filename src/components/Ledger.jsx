@@ -2048,8 +2048,10 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         </div>
                         <div className="grid gap-3 pt-1 mb-3 sm:grid-cols-[1fr_1fr]">
                           <div>
-                            <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>Amazon estimate</div>
-                            <div>list ${en.amazonPrice.toFixed(2)}</div>
+                            <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>
+                              {["amazon-sp-api", "amazon-sp-api-sandbox"].includes(en.priceSource) ? "Amazon (live)" : "Amazon estimate"}
+                            </div>
+                            <div>{en.itemCondition ? `${en.itemCondition.toLowerCase()} ` : ""}list ${en.amazonPrice.toFixed(2)}</div>
                             <div>profit ${en.amazonNet.toFixed(2)}</div>
                           </div>
                           <div>
@@ -2081,7 +2083,11 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <div className="uppercase font-bold tracking-widest mb-1" style={{ color: MUTED }}>sales rank</div>
-                            <div>#{en.category.rank} in {en.category.name}</div>
+                            {en.amazonBsr != null ? (
+                              <div>#{en.amazonBsr.toLocaleString()} in Books <span style={{ color: GREEN }}>· live</span></div>
+                            ) : (
+                              <div>#{en.category.rank} in {en.category.name}</div>
+                            )}
                           </div>
                           <div>
                             <div className="uppercase font-bold tracking-widest mb-1" style={{ color: MUTED }}>other sellers</div>
@@ -2095,6 +2101,11 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                         {en.priceSource === "estimated" && (
                           <div className="mt-1" style={{ color: MUTED }}>
                             catalog: {catalogSourceLabel(en)} · resale prices estimated
+                          </div>
+                        )}
+                        {["amazon-sp-api", "amazon-sp-api-sandbox"].includes(en.priceSource) && (
+                          <div className="mt-1" style={{ color: GREEN }}>
+                            live Amazon {en.priceSource === "amazon-sp-api-sandbox" ? "sandbox " : ""}price &amp; rank
                           </div>
                         )}
                       </div>

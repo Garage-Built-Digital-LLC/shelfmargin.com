@@ -143,6 +143,16 @@ export function velocityInfo(history) {
   return { avg, trend, tier, current: history[history.length - 1] };
 }
 
+// Velocity tier from a single LIVE Best Sellers Rank (no history yet). Same
+// thresholds as velocityInfo so the label reads consistently. Trend is "flat"
+// because a one-shot rank has no direction — we don't fake a history for it.
+export function velocityFromBsr(bsr) {
+  let tier = "Slow";
+  if (bsr < 50000) tier = "Fast";
+  else if (bsr < 300000) tier = "Moderate";
+  return { avg: bsr, trend: "flat", tier, current: bsr, live: true };
+}
+
 // Amazon net proceeds — matches the fee model in profit.js, including the
 // $1.80 media variable closing fee and the $0.30 minimum referral. Leaving the
 // closing fee out is the classic error that turns a "$2 profit" into a loss.
@@ -159,15 +169,19 @@ export function buildEntry(isbn, core, cost, id, extra = {}) {
   const winner = "amazon";
   const history = rankHistory(isbn);
   const restricted = extra.restricted ?? isRestricted(isbn);
+  const hasLiveBsr = core.amazonBsr != null;
+  const hasLiveOffers = core.offerCount != null;
   return {
     id,
     isbn,
     title: core.title,
     author: core.author,
     amazonPrice: core.amazonPrice,
+    amazonBsr: core.amazonBsr ?? null,
     source: core.source,
     catalogSource: core.catalogSource,
     priceSource: core.priceSource,
+    itemCondition: core.itemCondition,
     asin: core.asin,
     amazonMode: core.amazonMode,
     marketplaceId: core.marketplaceId,
@@ -179,9 +193,11 @@ export function buildEntry(isbn, core, cost, id, extra = {}) {
     condition: extra.condition,
     at: extra.at ?? Date.now(),
     history,
-    velocity: velocityInfo(history),
+    // Prefer a real BSR for the velocity label when SP-API supplied one;
+    // otherwise keep the synthetic-history estimate.
+    velocity: hasLiveBsr ? velocityFromBsr(core.amazonBsr) : velocityInfo(history),
     category: categoryInfo(isbn),
-    offers: offerCount(isbn),
+    offers: hasLiveOffers ? core.offerCount : offerCount(isbn),
     priceHist: priceHistory(isbn, core.amazonPrice),
     offersList: generateOffers(isbn, core.amazonPrice, offerCount(isbn)),
     restricted,

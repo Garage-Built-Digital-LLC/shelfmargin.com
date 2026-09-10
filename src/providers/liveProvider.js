@@ -27,9 +27,11 @@ function estimatedCore(isbn) {
   };
 }
 
+const LIVE_PRICE_SOURCES = new Set(["amazon-sp-api", "amazon-sp-api-sandbox"]);
+
 function mergeWithEstimatedPricing(isbn, metadata, source) {
   const estimate = estimatedCore(isbn);
-  return {
+  const base = {
     ...estimate,
     title: cleanText(metadata.title) || estimate.title,
     author: cleanText(metadata.author) || estimate.author,
@@ -40,6 +42,28 @@ function mergeWithEstimatedPricing(isbn, metadata, source) {
     marketplaceId: metadata.marketplaceId,
     priceSource: "estimated",
   };
+
+  // If the catalog endpoint returned LIVE Amazon pricing, trust it over the
+  // estimate — this is the whole point of wiring SP-API. We keep the estimated
+  // fields as a backstop for anything the live call didn't provide.
+  if (metadata.amazonPrice != null && LIVE_PRICE_SOURCES.has(metadata.priceSource)) {
+    return {
+      ...base,
+      amazonPrice: metadata.amazonPrice,
+      amazonBsr: metadata.amazonBsr ?? base.amazonBsr,
+      offerCount: metadata.offerCount ?? undefined,
+      itemCondition: metadata.itemCondition,
+      priceSource: metadata.priceSource,
+    };
+  }
+
+  // No live price, but we may still have a real catalog BSR — use it so
+  // velocity is accurate even while price stays an estimate.
+  if (metadata.amazonBsr != null) {
+    return { ...base, amazonBsr: metadata.amazonBsr };
+  }
+
+  return base;
 }
 
 async function fetchJson(fetchImpl, url, timeoutMs) {
@@ -97,6 +121,12 @@ export function parseCatalogEndpoint(json) {
     asin: json.asin,
     amazonMode: json.amazonMode,
     marketplaceId: json.marketplaceId,
+    // live economics (present only when SP-API pricing succeeded server-side)
+    amazonPrice: json.amazonPrice ?? null,
+    amazonBsr: json.amazonBsr ?? null,
+    offerCount: json.offerCount ?? null,
+    itemCondition: json.itemCondition,
+    priceSource: json.priceSource,
   };
 }
 

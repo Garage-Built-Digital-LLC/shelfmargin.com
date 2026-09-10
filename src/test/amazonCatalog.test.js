@@ -29,11 +29,30 @@ describe("amazon catalog lookup", () => {
       asin: "B001234567",
       title: "Clean Code",
       author: "Robert C. Martin",
+      catalogBsr: null,
       source: "amazon-sp-api-sandbox",
       catalogSource: "amazon-sp-api-sandbox",
       amazonMode: "sandbox",
       marketplaceId: "ATVPDKIKX0DER",
     });
+  });
+
+  it("parses the overall Books BSR from salesRanks", () => {
+    const result = parseAmazonCatalogSearch({
+      items: [{
+        asin: "B001234567",
+        summaries: [{ itemName: "Clean Code" }],
+        attributes: { author: [{ value: "Robert C. Martin" }] },
+        salesRanks: [{
+          marketplaceId: "ATVPDKIKX0DER",
+          displayGroupRanks: [{ title: "Books", rank: 12873 }],
+          classificationRanks: [{ title: "Software Design", rank: 42 }],
+        }],
+      }],
+    }, { mode: "production", marketplaceId: "ATVPDKIKX0DER" });
+
+    expect(result.catalogBsr).toBe(12873);
+    expect(result.source).toBe("amazon-sp-api");
   });
 
   it("exchanges a refresh token and searches Amazon catalog by ISBN", async () => {

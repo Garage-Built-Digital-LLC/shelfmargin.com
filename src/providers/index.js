@@ -12,7 +12,7 @@ export const LOOKUP_STATUS = USE_LIVE
   ? {
       mode: "live-catalog",
       label: "Live catalog lookup",
-      detail: "Titles/authors come from public book APIs. Prices and ranks are still estimates.",
+      detail: "Titles/authors from public book APIs. Amazon price & rank are live when your SP-API account is connected; otherwise shown as estimates (each scan is labeled).",
     }
   : {
       mode: "sample",
