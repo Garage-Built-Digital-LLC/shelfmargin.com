@@ -171,17 +171,21 @@ export async function lookupAmazonPricingByAsin(asin, {
   fetchImpl = fetch,
   timeoutMs = 3500,
   conditions = USED_CONDITION_ORDER,
+  accessToken: sharedToken = null,
 } = {}) {
   if (!asin) return null;
   if (!publicAmazonStatus().configured) return null;
 
   const timedFetch = (url, options) => fetchWithTimeout(fetchImpl, url, options, timeoutMs);
 
-  let accessToken;
-  try {
-    ({ accessToken } = await requestAmazonAccessToken({ fetchImpl: timedFetch }));
-  } catch {
-    return null;
+  // Reuse a caller-provided token (one exchange per scan) when available.
+  let accessToken = sharedToken;
+  if (!accessToken) {
+    try {
+      ({ accessToken } = await requestAmazonAccessToken({ fetchImpl: timedFetch }));
+    } catch {
+      return null;
+    }
   }
 
   const config = amazonRuntimeConfig();

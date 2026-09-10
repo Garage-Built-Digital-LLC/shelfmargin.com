@@ -54,6 +54,8 @@ function mergeWithEstimatedPricing(isbn, metadata, source) {
       offerCount: metadata.offerCount ?? undefined,
       itemCondition: metadata.itemCondition,
       priceSource: metadata.priceSource,
+      amazonFees: metadata.amazonFees ?? null,
+      feeSource: metadata.feeSource ?? null,
     };
   }
 
@@ -127,6 +129,8 @@ export function parseCatalogEndpoint(json) {
     offerCount: json.offerCount ?? null,
     itemCondition: json.itemCondition,
     priceSource: json.priceSource,
+    amazonFees: json.amazonFees ?? null,
+    feeSource: json.feeSource ?? null,
   };
 }
 

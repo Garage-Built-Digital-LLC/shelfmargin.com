@@ -3,9 +3,10 @@ import {
   parseOpenLibraryBooks,
   parseOpenLibrarySearch,
 } from "../providers/liveProvider.js";
-import { publicAmazonStatus } from "./amazonConfig.js";
+import { publicAmazonStatus, requestAmazonAccessToken } from "./amazonConfig.js";
 import { lookupAmazonCatalogByIsbn } from "./amazonCatalog.js";
 import { lookupAmazonPricingByAsin } from "./amazonPricing.js";
+import { lookupAmazonFeesEstimate } from "./amazonFees.js";
 
 async function fetchJson(url, timeoutMs) {
   const controller = new AbortController();
@@ -32,9 +33,18 @@ async function fetchJson(url, timeoutMs) {
  */
 async function withLivePricing(amazonHit, { timeoutMs = 3500 } = {}) {
   if (!amazonHit?.asin) return amazonHit;
+
+  // One LWA token for both pricing and fees this scan (avoids 2-3 exchanges).
+  let accessToken = null;
+  try {
+    ({ accessToken } = await requestAmazonAccessToken());
+  } catch {
+    accessToken = null; // libs will each try their own; still best-effort
+  }
+
   let pricing = null;
   try {
-    pricing = await lookupAmazonPricingByAsin(amazonHit.asin, { timeoutMs });
+    pricing = await lookupAmazonPricingByAsin(amazonHit.asin, { timeoutMs, accessToken });
   } catch {
     pricing = null;
   }
@@ -45,13 +55,30 @@ async function withLivePricing(amazonHit, { timeoutMs = 3500 } = {}) {
       ? { ...amazonHit, amazonBsr: amazonHit.catalogBsr }
       : amazonHit;
   }
+
+  // Real per-ASIN fees at the live price (best-effort; falls back to the flat
+  // fee model in bookdata/profit when absent).
+  let fees = null;
+  try {
+    fees = await lookupAmazonFeesEstimate(amazonHit.asin, pricing.amazonPrice, { timeoutMs, accessToken });
+  } catch {
+    fees = null;
+  }
+
   return {
     ...amazonHit,
     amazonPrice: pricing.amazonPrice,
-    amazonBsr: pricing.amazonBsr ?? amazonHit.catalogBsr ?? null,
+    // Prefer the Catalog Items "Books" rank (canonical overall BSR our velocity
+    // thresholds assume). Product Pricing often omits SalesRankings, and when
+    // present it can be a category-specific rank — so catalog wins, pricing is
+    // the fallback.
+    amazonBsr: amazonHit.catalogBsr ?? pricing.amazonBsr ?? null,
     offerCount: pricing.offerCount ?? null,
     itemCondition: pricing.itemCondition,
     priceSource: pricing.priceSource, // "amazon-sp-api" | "amazon-sp-api-sandbox"
+    amazonFees: fees ? fees.totalFees : null,
+    feeBreakdown: fees || null,
+    feeSource: fees ? fees.feeSource : null,
   };
 }
 

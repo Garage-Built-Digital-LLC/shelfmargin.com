@@ -162,10 +162,21 @@ export function calcNet(price, cost) {
   return Math.round((price - referral - 1.8 - 4.49 - cost) * 100) / 100;
 }
 
+// Net when Amazon's REAL total fees are known (Product Fees API): net is simply
+// price minus the actual fee total minus your cost. Used in preference to the
+// flat calcNet estimate whenever a live fee total is present.
+export function calcNetFromFees(price, totalFees, cost) {
+  if (price == null || totalFees == null) return null;
+  return Math.round((price - totalFees - cost) * 100) / 100;
+}
+
 // Build a full UI entry from an ISBN + CORE data (from the provider or a DB row).
 // `extra` carries persisted state: count, queued, condition, listPrice, restricted, dbId.
 export function buildEntry(isbn, core, cost, id, extra = {}) {
-  const amazonNet = calcNet(core.amazonPrice, cost);
+  // Real fees (Product Fees API) win over the flat estimate when present.
+  const amazonNet = core.amazonFees != null
+    ? calcNetFromFees(core.amazonPrice, core.amazonFees, cost)
+    : calcNet(core.amazonPrice, cost);
   const winner = "amazon";
   const history = rankHistory(isbn);
   const restricted = extra.restricted ?? isRestricted(isbn);
@@ -178,6 +189,8 @@ export function buildEntry(isbn, core, cost, id, extra = {}) {
     author: core.author,
     amazonPrice: core.amazonPrice,
     amazonBsr: core.amazonBsr ?? null,
+    amazonFees: core.amazonFees ?? null,
+    feeSource: core.feeSource ?? null,
     source: core.source,
     catalogSource: core.catalogSource,
     priceSource: core.priceSource,

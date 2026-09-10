@@ -2053,6 +2053,9 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                             </div>
                             <div>{en.itemCondition ? `${en.itemCondition.toLowerCase()} ` : ""}list ${en.amazonPrice.toFixed(2)}</div>
                             <div>profit ${en.amazonNet.toFixed(2)}</div>
+                            {en.amazonFees != null && (
+                              <div style={{ color: MUTED }}>fees ${en.amazonFees.toFixed(2)} · live</div>
+                            )}
                           </div>
                           <div>
                             <div className="uppercase font-bold tracking-widest mb-1 flex items-center gap-2" style={{ color: MUTED }}>Data confidence</div>
