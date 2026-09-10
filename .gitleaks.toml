@@ -1,0 +1,15 @@
+# Gitleaks configuration for shelfmargin.com
+# Extends the default ruleset, with an allowlist for known non-secret placeholders.
+title = "ShelfMargin gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local-dev fallback placeholders that are not real credentials."
+# The Stripe clients fall back to the literal string "sk_test_placeholder" when
+# STRIPE_SECRET_KEY is unset in local dev. It matches the sk_test_ shape but is
+# not a real key, so exclude it everywhere (including git history).
+regexes = [
+  '''sk_test_placeholder''',
+]
