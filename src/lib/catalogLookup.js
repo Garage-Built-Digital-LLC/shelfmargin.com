@@ -31,7 +31,7 @@ async function fetchJson(url, timeoutMs) {
  * succeeds we attach amazonPrice/amazonBsr/offerCount and set priceSource to
  * the live source so the UI can badge the verdict as live rather than estimate.
  */
-async function withLivePricing(amazonHit, { timeoutMs = 3500 } = {}) {
+async function withLivePricing(amazonHit, { timeoutMs = 3500, fulfillment = "fba" } = {}) {
   if (!amazonHit?.asin) return amazonHit;
 
   // One LWA token for both pricing and fees this scan (avoids 2-3 exchanges).
@@ -57,10 +57,13 @@ async function withLivePricing(amazonHit, { timeoutMs = 3500 } = {}) {
   }
 
   // Real per-ASIN fees at the live price (best-effort; falls back to the flat
-  // fee model in bookdata/profit when absent).
+  // fee model in bookdata/profit when absent). FBM (merchant-fulfilled) means
+  // no FBA fulfillment fee — pass isAmazonFulfilled accordingly so the Fees API
+  // returns the right total for how this seller actually ships.
+  const isAmazonFulfilled = fulfillment !== "fbm";
   let fees = null;
   try {
-    fees = await lookupAmazonFeesEstimate(amazonHit.asin, pricing.amazonPrice, { timeoutMs, accessToken });
+    fees = await lookupAmazonFeesEstimate(amazonHit.asin, pricing.amazonPrice, { timeoutMs, accessToken, isAmazonFulfilled });
   } catch {
     fees = null;
   }
@@ -76,20 +79,21 @@ async function withLivePricing(amazonHit, { timeoutMs = 3500 } = {}) {
     offerCount: pricing.offerCount ?? null,
     itemCondition: pricing.itemCondition,
     priceSource: pricing.priceSource, // "amazon-sp-api" | "amazon-sp-api-sandbox"
+    fulfillment,
     amazonFees: fees ? fees.totalFees : null,
     feeBreakdown: fees || null,
     feeSource: fees ? fees.feeSource : null,
   };
 }
 
-export async function lookupCatalog(isbn, { timeoutMs = 6500, amazonFallbackTimeoutMs = 2500, pricingTimeoutMs = 3500 } = {}) {
+export async function lookupCatalog(isbn, { timeoutMs = 6500, amazonFallbackTimeoutMs = 2500, pricingTimeoutMs = 3500, fulfillment = "fba" } = {}) {
   if (publicAmazonStatus().configured) {
     try {
       const amazonHit = await lookupAmazonCatalogByIsbn(isbn, {
         timeoutMs: Math.min(timeoutMs, amazonFallbackTimeoutMs),
       });
       if (amazonHit?.title) {
-        return await withLivePricing(amazonHit, { timeoutMs: pricingTimeoutMs });
+        return await withLivePricing(amazonHit, { timeoutMs: pricingTimeoutMs, fulfillment });
       }
     } catch {
       // Fall back to public catalog metadata. Scan results must stay usable even

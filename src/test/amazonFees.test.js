@@ -90,4 +90,12 @@ describe("lookupAmazonFeesEstimate", () => {
     const fetchImpl = vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) }));
     expect(await lookupAmazonFeesEstimate("B1", 12, { fetchImpl, accessToken: "t" })).toBeNull();
   });
+
+  it("sends IsAmazonFulfilled=false for FBM (merchant-fulfilled)", async () => {
+    configureSandbox();
+    const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => FEES_OK }));
+    await lookupAmazonFeesEstimate("B00V5DG6IQ", 12.5, { fetchImpl, accessToken: "t", isAmazonFulfilled: false });
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body.FeesEstimateRequest.IsAmazonFulfilled).toBe(false);
+  });
 });

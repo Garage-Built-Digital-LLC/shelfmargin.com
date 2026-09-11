@@ -156,10 +156,13 @@ export function velocityFromBsr(bsr) {
 // Amazon net proceeds — matches the fee model in profit.js, including the
 // $1.80 media variable closing fee and the $0.30 minimum referral. Leaving the
 // closing fee out is the classic error that turns a "$2 profit" into a loss.
-export function calcNet(price, cost) {
+export function calcNet(price, cost, fulfillment = "fba") {
   if (price == null) return null;
   const referral = Math.max(price * 0.15, 0.3);
-  return Math.round((price - referral - 1.8 - 4.49 - cost) * 100) / 100;
+  // FBM (merchant-fulfilled) has no FBA fulfillment fee. The estimate still
+  // counts the 15% referral + $1.80 media closing fee.
+  const fba = fulfillment === "fbm" ? 0 : 4.49;
+  return Math.round((price - referral - 1.8 - fba - cost) * 100) / 100;
 }
 
 // Net when Amazon's REAL total fees are known (Product Fees API): net is simply
@@ -173,10 +176,11 @@ export function calcNetFromFees(price, totalFees, cost) {
 // Build a full UI entry from an ISBN + CORE data (from the provider or a DB row).
 // `extra` carries persisted state: count, queued, condition, listPrice, restricted, dbId.
 export function buildEntry(isbn, core, cost, id, extra = {}) {
+  const fulfillment = core.fulfillment ?? extra.fulfillment ?? "fba";
   // Real fees (Product Fees API) win over the flat estimate when present.
   const amazonNet = core.amazonFees != null
     ? calcNetFromFees(core.amazonPrice, core.amazonFees, cost)
-    : calcNet(core.amazonPrice, cost);
+    : calcNet(core.amazonPrice, cost, fulfillment);
   const winner = "amazon";
   const history = rankHistory(isbn);
   const restricted = extra.restricted ?? isRestricted(isbn);
@@ -191,6 +195,7 @@ export function buildEntry(isbn, core, cost, id, extra = {}) {
     amazonBsr: core.amazonBsr ?? null,
     amazonFees: core.amazonFees ?? null,
     feeSource: core.feeSource ?? null,
+    fulfillment,
     source: core.source,
     catalogSource: core.catalogSource,
     priceSource: core.priceSource,

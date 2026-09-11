@@ -1127,6 +1127,14 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const [cost, setCost] = useState(1.0);
   const [threshold, setThreshold] = useState(3.0);
   const [soundOn, setSoundOn] = useState(true);
+  const [fulfillment, setFulfillmentState] = useState(() => {
+    try { return localStorage.getItem("sm-fulfillment") === "fbm" ? "fbm" : "fba"; } catch { return "fba"; }
+  });
+  function changeFulfillment(next) {
+    const v = next === "fbm" ? "fbm" : "fba";
+    setFulfillmentState(v);
+    try { localStorage.setItem("sm-fulfillment", v); } catch { /* ignore */ }
+  }
   const { theme, toggle: toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1334,7 +1342,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     setScanning(true);
     setIsbn("");
     try {
-      const core = await lookupBook(normalizedIsbn);
+      const core = await lookupBook(normalizedIsbn, { fulfillment });
       if (!core) {
         playPass();
         showToast("not found — check the ISBN", "pass");
@@ -1929,6 +1937,30 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   onChange={(e) => { const v = parseFloat(e.target.value) || 0; setThreshold(v); persistProfile({ buy_threshold: v }); }}
                   className="w-16 bg-transparent border-b outline-none font-mono normal-case" style={{ borderColor: GREEN, color: GREEN }} />
               </div>
+              <div className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 sm:col-span-2" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
+                <span style={{ color: MUTED }}>fulfillment</span>
+                <div className="flex overflow-hidden rounded-lg" style={{ border: `1px solid ${LINE}` }}>
+                  {[["fba", "FBA"], ["fbm", "FBM"]].map(([val, lbl]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => changeFulfillment(val)}
+                      className="px-3 py-1 font-black uppercase tracking-widest"
+                      style={{
+                        backgroundColor: fulfillment === val ? YELLOW : "transparent",
+                        color: fulfillment === val ? GOLD_INK : INK,
+                      }}
+                    >
+                      {lbl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mb-4 -mt-2 text-xs font-bold normal-case" style={{ color: MUTED }}>
+              {fulfillment === "fbm"
+                ? "FBM: you ship it yourself — no FBA fee counted (your shipping cost isn't included)."
+                : "FBA: Amazon ships — the FBA fulfillment fee is counted in profit."}
             </div>
 
             {!loading && entries.length > 0 && (

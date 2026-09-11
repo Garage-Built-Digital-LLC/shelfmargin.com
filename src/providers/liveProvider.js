@@ -29,7 +29,7 @@ function estimatedCore(isbn) {
 
 const LIVE_PRICE_SOURCES = new Set(["amazon-sp-api", "amazon-sp-api-sandbox"]);
 
-function mergeWithEstimatedPricing(isbn, metadata, source) {
+function mergeWithEstimatedPricing(isbn, metadata, source, fulfillment = "fba") {
   const estimate = estimatedCore(isbn);
   const base = {
     ...estimate,
@@ -41,6 +41,7 @@ function mergeWithEstimatedPricing(isbn, metadata, source) {
     amazonMode: metadata.amazonMode,
     marketplaceId: metadata.marketplaceId,
     priceSource: "estimated",
+    fulfillment: metadata.fulfillment || fulfillment,
   };
 
   // If the catalog endpoint returned LIVE Amazon pricing, trust it over the
@@ -131,11 +132,12 @@ export function parseCatalogEndpoint(json) {
     priceSource: json.priceSource,
     amazonFees: json.amazonFees ?? null,
     feeSource: json.feeSource ?? null,
+    fulfillment: json.fulfillment,
   };
 }
 
-async function lookupCatalogEndpoint(isbn, fetchImpl, endpoint, timeoutMs) {
-  const params = new URLSearchParams({ isbn });
+async function lookupCatalogEndpoint(isbn, fetchImpl, endpoint, timeoutMs, fulfillment = "fba") {
+  const params = new URLSearchParams({ isbn, fulfillment });
   const json = await fetchJson(fetchImpl, `${endpoint}?${params}`, timeoutMs);
   return parseCatalogEndpoint(json);
 }
@@ -171,12 +173,13 @@ async function lookupGoogleBooks(isbn, fetchImpl, timeoutMs) {
 export function createLiveProvider({ endpoint = LOCAL_CATALOG_URL, fetchImpl = fetch, timeoutMs = 6500 } = {}) {
   return {
     name: "live-catalog",
-    async lookup(rawIsbn) {
+    async lookup(rawIsbn, opts = {}) {
       const isbn = normalizeToIsbn13(rawIsbn);
       if (!isbn) return null;
+      const fulfillment = opts.fulfillment === "fbm" ? "fbm" : "fba";
 
       const lookups = [
-        [null, (nextIsbn, nextFetch) => lookupCatalogEndpoint(nextIsbn, nextFetch, endpoint, timeoutMs)],
+        [null, (nextIsbn, nextFetch) => lookupCatalogEndpoint(nextIsbn, nextFetch, endpoint, timeoutMs, fulfillment)],
         ["openlibrary", lookupOpenLibraryBooks],
         ["openlibrary-search", lookupOpenLibrarySearch],
         ["google-books", lookupGoogleBooks],
@@ -185,14 +188,14 @@ export function createLiveProvider({ endpoint = LOCAL_CATALOG_URL, fetchImpl = f
       for (const [source, lookup] of lookups) {
         try {
           const metadata = await lookup(isbn, fetchImpl, timeoutMs);
-          if (metadata?.title) return mergeWithEstimatedPricing(isbn, metadata, source || metadata.source || "live-catalog");
+          if (metadata?.title) return mergeWithEstimatedPricing(isbn, metadata, source || metadata.source || "live-catalog", fulfillment);
         } catch (err) {
           // Try the next catalog source. The UI still gets an estimated fallback
           // rather than failing the scan in a store with spotty signal.
         }
       }
 
-      return estimatedCore(isbn);
+      return { ...estimatedCore(isbn), fulfillment };
     },
   };
 }

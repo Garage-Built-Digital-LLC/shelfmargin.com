@@ -21,15 +21,18 @@ export const LOOKUP_STATUS = USE_LIVE
     };
 
 // Returns CORE book data: { isbn, title, author, amazonPrice, amazonBsr, gated } or null.
-export async function lookupBook(rawIsbn) {
+// opts.fulfillment ("fba" | "fbm") tells the live lookup how to estimate fees.
+export async function lookupBook(rawIsbn, opts = {}) {
   const isbn = normalizeToIsbn13(rawIsbn);
   if (!isbn) return null; // invalid / non-book barcode
 
+  const fulfillment = opts.fulfillment === "fbm" ? "fbm" : "fba";
+
   if (USE_LIVE) {
-    return liveProvider.lookup(isbn);
+    return liveProvider.lookup(isbn, { fulfillment });
   }
 
   // Mock: small latency so loading states get exercised.
   await new Promise((r) => setTimeout(r, 120));
-  return { isbn, ...lookupCore(isbn), source: "sample", priceSource: "estimated" };
+  return { isbn, ...lookupCore(isbn), source: "sample", priceSource: "estimated", fulfillment };
 }

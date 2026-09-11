@@ -6,7 +6,8 @@ export default async function handler(req, res) {
   try {
     const isbn = normalizeToIsbn13(req.query?.isbn);
     if (!isbn) return sendJson(res, 400, { error: "valid ISBN required" });
-    const hit = await lookupCatalog(isbn, { timeoutMs: 6500, amazonFallbackTimeoutMs: 2500 });
+    const fulfillment = String(req.query?.fulfillment || "").toLowerCase() === "fbm" ? "fbm" : "fba";
+    const hit = await lookupCatalog(isbn, { timeoutMs: 6500, amazonFallbackTimeoutMs: 2500, fulfillment });
     if (!hit) return sendJson(res, 404, { error: "catalog match not found" });
     sendJson(res, 200, { isbn, ...hit });
   } catch (err) { handleError(res, err); }
