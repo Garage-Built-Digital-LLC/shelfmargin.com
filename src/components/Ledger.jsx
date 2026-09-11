@@ -1158,6 +1158,10 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const inputRef = useRef(null);
   const scannerTestRef = useRef(null);
   const toastTimer = useRef(null);
+  // Per-session lookup cache: isbn+fulfillment -> core. Re-scanning the same
+  // book (or the same trip revisited) reuses the result instead of spending
+  // another set of throttled SP-API calls.
+  const lookupCacheRef = useRef(new Map());
   const userId = session?.user?.id;
   const exportHistoryKey = `shelfmargin:field-exports:${demoMode ? "demo" : userId || "anonymous"}`;
   const { playBuy, playPass, playDuplicate, playAction } = useTones(soundOn);
@@ -1342,7 +1346,16 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     setScanning(true);
     setIsbn("");
     try {
-      const core = await lookupBook(normalizedIsbn, { fulfillment });
+      const cacheKey = `${normalizedIsbn}:${fulfillment}`;
+      let core = lookupCacheRef.current.get(cacheKey);
+      if (!core) {
+        core = await lookupBook(normalizedIsbn, { fulfillment });
+        if (core) {
+          // Bound the cache so a very long session can't grow it without limit.
+          if (lookupCacheRef.current.size > 500) lookupCacheRef.current.clear();
+          lookupCacheRef.current.set(cacheKey, core);
+        }
+      }
       if (!core) {
         playPass();
         showToast("not found — check the ISBN", "pass");

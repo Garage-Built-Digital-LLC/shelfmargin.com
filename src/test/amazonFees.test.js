@@ -91,6 +91,19 @@ describe("lookupAmazonFeesEstimate", () => {
     expect(await lookupAmazonFeesEstimate("B1", 12, { fetchImpl, accessToken: "t" })).toBeNull();
   });
 
+  it("retries once on 429 then parses the estimate", async () => {
+    configureSandbox();
+    let call = 0;
+    const fetchImpl = vi.fn(async () => {
+      call += 1;
+      if (call === 1) return { ok: false, status: 429, json: async () => ({}) };
+      return { ok: true, json: async () => FEES_OK };
+    });
+    const result = await lookupAmazonFeesEstimate("B1", 12, { fetchImpl, accessToken: "t", sleepFn: async () => {} });
+    expect(result).toMatchObject({ totalFees: 5.06 });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it("sends IsAmazonFulfilled=false for FBM (merchant-fulfilled)", async () => {
     configureSandbox();
     const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => FEES_OK }));

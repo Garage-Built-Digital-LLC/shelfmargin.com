@@ -128,6 +128,21 @@ describe("lookupAmazonPricingByAsin", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(3);
   });
 
+  it("retries once on 429 then succeeds (throttle recovery)", async () => {
+    configureSandbox();
+    let call = 0;
+    const fetchImpl = vi.fn(async () => {
+      call += 1;
+      if (call === 1) return { ok: false, status: 429, json: async () => ({}) };
+      return { ok: true, json: async () => USED_OFFERS };
+    });
+    const result = await lookupAmazonPricingByAsin("B001234567", {
+      fetchImpl, accessToken: "t", conditions: ["Used"], sleepFn: async () => {},
+    });
+    expect(result).toMatchObject({ amazonPrice: 9.75 });
+    expect(fetchImpl).toHaveBeenCalledTimes(2); // 429 then 200
+  });
+
   it("returns null (no throw) when the pricing endpoint errors", async () => {
     configureSandbox();
     const fetchImpl = vi.fn(async (url) => {

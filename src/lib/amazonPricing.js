@@ -20,7 +20,7 @@
 //     exported and unit-tested against documented SP-API response shapes, since
 //     we cannot hit the live endpoint from CI.
 
-import { amazonRuntimeConfig, publicAmazonStatus, requestAmazonAccessToken } from "./amazonConfig.js";
+import { amazonRuntimeConfig, publicAmazonStatus, requestAmazonAccessToken, retryAfterMs, sleep } from "./amazonConfig.js";
 
 /** Conditions we try, in order, when the caller asks for used-book economics. */
 const USED_CONDITION_ORDER = ["Used", "New"];
@@ -141,19 +141,22 @@ export function parsePricingOffers(json, { condition = "Used", mode = "sandbox",
   };
 }
 
-async function requestOffersForCondition({ asin, condition, accessToken, config, timedFetch }) {
+async function requestOffersForCondition({ asin, condition, accessToken, config, timedFetch, sleepFn = sleep, retryDelayMs = 600 }) {
   const params = new URLSearchParams({
     MarketplaceId: config.marketplaceId,
     ItemCondition: condition,
   });
   const url = `${config.endpoint}/products/pricing/v0/items/${encodeURIComponent(asin)}/offers?${params}`;
-  const response = await timedFetch(url, {
-    headers: {
-      accept: "application/json",
-      "x-amz-access-token": accessToken,
-    },
-  });
-  if (!response.ok) return null; // 404/429/5xx → let the caller fall back to estimate
+  const headers = { accept: "application/json", "x-amz-access-token": accessToken };
+
+  let response = await timedFetch(url, { headers });
+  // Pricing is throttled (~0.5 req/s). One short backoff retry on 429/503 turns
+  // a transient throttle into a live result instead of a silent estimate.
+  if ((response.status === 429 || response.status === 503)) {
+    await sleepFn(retryAfterMs(response, retryDelayMs));
+    response = await timedFetch(url, { headers });
+  }
+  if (!response.ok) return null; // 404/other → let the caller fall back to estimate
   const json = await response.json().catch(() => null);
   if (!json) return null;
   return parsePricingOffers(json, { condition, mode: config.mode, marketplaceId: config.marketplaceId });
@@ -172,6 +175,8 @@ export async function lookupAmazonPricingByAsin(asin, {
   timeoutMs = 3500,
   conditions = USED_CONDITION_ORDER,
   accessToken: sharedToken = null,
+  sleepFn = sleep,
+  retryDelayMs = 600,
 } = {}) {
   if (!asin) return null;
   if (!publicAmazonStatus().configured) return null;
@@ -194,7 +199,7 @@ export async function lookupAmazonPricingByAsin(asin, {
   // when no used offer exists (a brand-new title, say). One extra call at most.
   for (const condition of conditions) {
     try {
-      const hit = await requestOffersForCondition({ asin, condition, accessToken, config, timedFetch });
+      const hit = await requestOffersForCondition({ asin, condition, accessToken, config, timedFetch, sleepFn, retryDelayMs });
       if (hit?.amazonPrice != null) return hit;
     } catch {
       // try next condition, then give up to the estimate

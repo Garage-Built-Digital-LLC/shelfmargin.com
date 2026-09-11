@@ -12,7 +12,7 @@
 // Fulfillment assumption: IsAmazonFulfilled defaults to true (FBA), matching
 // the existing fee model. A future FBM path can pass isAmazonFulfilled:false.
 
-import { amazonRuntimeConfig, publicAmazonStatus, requestAmazonAccessToken } from "./amazonConfig.js";
+import { amazonRuntimeConfig, publicAmazonStatus, requestAmazonAccessToken, retryAfterMs, sleep } from "./amazonConfig.js";
 
 function num(value) {
   const n = Number(value);
@@ -82,6 +82,8 @@ export async function lookupAmazonFeesEstimate(asin, price, {
   timeoutMs = 3500,
   isAmazonFulfilled = true,
   accessToken: sharedToken = null,
+  sleepFn = sleep,
+  retryDelayMs = 600,
 } = {}) {
   if (!asin || price == null) return null;
   if (!publicAmazonStatus().configured) return null;
@@ -109,16 +111,24 @@ export async function lookupAmazonFeesEstimate(asin, price, {
     },
   };
 
+  const url = `${config.endpoint}/products/fees/v0/items/${encodeURIComponent(asin)}/feesEstimate`;
+  const reqInit = {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      "x-amz-access-token": accessToken,
+    },
+    body: JSON.stringify(bodyObj),
+  };
+
   try {
-    const response = await timedFetch(`${config.endpoint}/products/fees/v0/items/${encodeURIComponent(asin)}/feesEstimate`, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        "x-amz-access-token": accessToken,
-      },
-      body: JSON.stringify(bodyObj),
-    });
+    let response = await timedFetch(url, reqInit);
+    // Fees is throttled (~1 req/s). One short backoff retry on 429/503.
+    if (response.status === 429 || response.status === 503) {
+      await sleepFn(retryAfterMs(response, retryDelayMs));
+      response = await timedFetch(url, reqInit);
+    }
     if (!response.ok) return null;
     const json = await response.json().catch(() => null);
     if (!json) return null;

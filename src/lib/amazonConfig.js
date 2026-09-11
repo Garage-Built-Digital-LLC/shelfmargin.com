@@ -6,6 +6,27 @@ function trim(value) {
   return String(value || "").trim();
 }
 
+/** Await ms milliseconds. Injectable in tests to avoid real waiting. */
+export function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Delay to wait before retrying a throttled (429/503) SP-API call. Honors the
+ * Retry-After header (seconds) when present, capped so a scan never hangs;
+ * otherwise uses the caller's fallback.
+ */
+export function retryAfterMs(response, fallbackMs = 600) {
+  try {
+    const raw = response?.headers?.get?.("retry-after");
+    const secs = Number(raw);
+    if (Number.isFinite(secs) && secs > 0) return Math.min(secs * 1000, 2000);
+  } catch {
+    /* no headers — use fallback */
+  }
+  return fallbackMs;
+}
+
 function amazonEnv() {
   const mode = trim(process.env.AMAZON_SP_API_MODE || "sandbox").toLowerCase() === "production"
     ? "production"
