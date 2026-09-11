@@ -1449,6 +1449,11 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const allSelected = queued.length > 0 && queued.every((en) => selected[en.id]);
   const totalUnits = entries.reduce((s, en) => s + en.count, 0);
   const averageProfit = buyCount > 0 ? totalProfit / buyCount : 0;
+  // Data-confidence roll-up: how many distinct scans this session ran on live
+  // Amazon economics vs. estimates. Drives the confidence chip in the strip.
+  const liveScanCount = entries.filter((en) => en.priceSource === "amazon-sp-api" || en.priceSource === "amazon-sp-api-sandbox").length;
+  const allLive = entries.length > 0 && liveScanCount === entries.length;
+  const noneLive = liveScanCount === 0;
   const scanSessions = scanSessionSummary(entries);
 
   function selectAll() {
@@ -1649,11 +1654,28 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               <span className="text-base font-black font-mono" style={{ color: INK }}>{buyCount}</span>
               <span className="uppercase tracking-widest" style={{ color: MUTED }}>buys</span>
             </span>
+            {entries.length > 0 && (
+              <span
+                className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest"
+                title={allLive
+                  ? "Every scan this session used live Amazon price & fees."
+                  : noneLive
+                    ? "No live Amazon data yet this session — verdicts are estimates."
+                    : `${liveScanCount} of ${entries.length} scans used live Amazon data; the rest are estimates.`}
+                style={{
+                  color: allLive ? GREEN : noneLive ? MUTED : CHECK_BORDER,
+                  border: `1px solid ${allLive ? GREEN : noneLive ? LINE : CHECK_BORDER}`,
+                  backgroundColor: SOFT,
+                }}
+              >
+                {allLive ? "all live" : noneLive ? "estimates" : `${liveScanCount}/${entries.length} live`}
+              </span>
+            )}
             <button
               onClick={toggleTheme}
               aria-label={theme === "light" ? "switch to dark mode" : "switch to light mode"}
               title={theme === "light" ? "Switch to dark" : "Switch to light"}
-              className="ml-auto shrink-0"
+              className={`${entries.length > 0 ? "" : "ml-auto "}shrink-0`}
             >
               {theme === "light" ? <Moon size={15} color={MUTED} /> : <Sun size={15} color={MUTED} />}
             </button>
