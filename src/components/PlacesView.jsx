@@ -26,7 +26,24 @@ const SOFT = "var(--sm-panel-2)";
 const YELLOW = "var(--sm-gold)";
 const GREEN = "var(--sm-buy)";
 const RED = "var(--sm-pass)";
+const CHECK = "var(--sm-check-txt)";
 const GOLD_INK = "var(--sm-gold-ink)";
+
+const REVISIT_DAYS = 21; // nudge to revisit a productive spot after ~3 weeks
+
+// Whole days since a timestamp (ms). null when never visited.
+function daysSince(ms) {
+  if (!ms) return null;
+  return Math.floor((Date.now() - ms) / 86400000);
+}
+function agoLabel(days) {
+  if (days == null) return "no visits yet";
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.round(days / 30);
+  return months <= 1 ? "~1mo ago" : `~${months}mo ago`;
+}
 
 const KIND_LABEL = {
   thrift: "Thrift", "library-sale": "Library sale", "garage-sale": "Garage sale",
@@ -181,6 +198,8 @@ function PlaceCard({ group, threshold, expanded, onToggle, onUpdatePlace, onArch
   const isUnsorted = group.placeId === null;
   const [editing, setEditing] = useState(false);
   const canEdit = !isUnsorted && group.place && onUpdatePlace;
+  const days = daysSince(t.lastAt);
+  const revisit = !isUnsorted && t.visits > 0 && t.estProfit > 0 && days != null && days >= REVISIT_DAYS;
 
   return (
     <div className="rounded-2xl" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
@@ -188,9 +207,16 @@ function PlaceCard({ group, threshold, expanded, onToggle, onUpdatePlace, onArch
         <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <MapPin size={18} color={isUnsorted ? MUTED : YELLOW} className="shrink-0" />
           <div className="min-w-0 flex-1">
-            <div className="truncate text-base font-black" style={{ color: INK }}>{group.name}</div>
+            <div className="flex items-center gap-2">
+              <span className="truncate text-base font-black" style={{ color: INK }}>{group.name}</span>
+              {revisit && (
+                <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest" style={{ color: CHECK, border: `1px solid ${CHECK}` }}>
+                  revisit
+                </span>
+              )}
+            </div>
             <div className="text-xs font-bold" style={{ color: MUTED }}>
-              {isUnsorted ? "no place set" : (KIND_LABEL[group.place?.kind] || "Place")} · {t.visits} visit{t.visits === 1 ? "" : "s"} · {t.units} scanned · {t.buyList} buys
+              {isUnsorted ? "no place set" : (KIND_LABEL[group.place?.kind] || "Place")} · {t.visits} visit{t.visits === 1 ? "" : "s"} · {t.units} scanned · {t.buyList} buys{!isUnsorted && t.visits > 0 ? ` · last ${agoLabel(days)}` : ""}
             </div>
           </div>
         </button>
@@ -254,6 +280,7 @@ function VisitBlock({ visit, threshold }) {
 export default function PlacesView({ entries, places, threshold = 3, onBack, onNavigateScan, onUpdatePlace, onArchivePlace }) {
   const summary = useMemo(() => placeVisitSummary(entries || [], places || []), [entries, places]);
   const [expandedId, setExpandedId] = useState(null);
+  const [sortBy, setSortBy] = useState("recent"); // "recent" | "earning"
   const hasAnyCoords = (places || []).some((p) => p.lat != null && p.lng != null);
   const keyFor = (g) => (g.placeId === null ? "__unsorted__" : g.placeId);
 
@@ -272,11 +299,12 @@ export default function PlacesView({ entries, places, threshold = 3, onBack, onN
     const unsorted = byId.get("__unsorted__");
     if (unsorted) rows.push(unsorted);
     return rows.sort((a, b) => {
-      if (a.placeId === null) return 1;
+      if (a.placeId === null) return 1; // Unsorted always last
       if (b.placeId === null) return -1;
+      if (sortBy === "earning") return (b.totals.estProfit || 0) - (a.totals.estProfit || 0);
       return (b.totals.lastAt || 0) - (a.totals.lastAt || 0);
     });
-  }, [summary, places]);
+  }, [summary, places, sortBy]);
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pb-28 pt-4">
@@ -285,6 +313,21 @@ export default function PlacesView({ entries, places, threshold = 3, onBack, onN
           <ArrowLeft size={14} /> Scan
         </button>
         <h1 className="ml-1 text-lg font-black" style={{ color: INK }}>Places &amp; Trips</h1>
+        {groups.some((g) => g.placeId !== null) && (
+          <div className="ml-auto flex overflow-hidden rounded-lg" style={{ border: `1px solid ${LINE}` }}>
+            {[["recent", "Recent"], ["earning", "Top earning"]].map(([val, lbl]) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setSortBy(val)}
+                className="px-2.5 py-1 text-[11px] font-black uppercase tracking-widest"
+                style={{ backgroundColor: sortBy === val ? YELLOW : "transparent", color: sortBy === val ? GOLD_INK : MUTED }}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {places && places.length > 0 && hasAnyCoords && (
