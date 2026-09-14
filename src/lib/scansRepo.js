@@ -68,6 +68,69 @@ export async function insertScan(row) {
   return data;
 }
 
+// ---- places (sourcing locations) -----------------------------------------
+// RLS scopes every read/write to the signed-in user; inserts must carry user_id.
+const PLACE_KINDS = new Set([
+  "thrift", "library-sale", "garage-sale", "estate-sale", "bookstore", "store", "other",
+]);
+
+export function normalizePlacePatch(patch) {
+  const next = {};
+  if (!patch || typeof patch !== "object") return next;
+  if (typeof patch.name === "string" && patch.name.trim()) next.name = patch.name.trim().slice(0, 120);
+  if (PLACE_KINDS.has(patch.kind)) next.kind = patch.kind;
+  if ("lat" in patch) next.lat = patch.lat == null || patch.lat === "" ? null : Number(patch.lat);
+  if ("lng" in patch) next.lng = patch.lng == null || patch.lng === "" ? null : Number(patch.lng);
+  if ("address" in patch) next.address = patch.address == null ? null : String(patch.address).slice(0, 300);
+  if (typeof patch.notes === "string") next.notes = patch.notes.slice(0, 1000);
+  if (typeof patch.archived === "boolean") next.archived = patch.archived;
+  // Drop non-finite coordinates rather than persisting NaN.
+  if (next.lat != null && !Number.isFinite(next.lat)) delete next.lat;
+  if (next.lng != null && !Number.isFinite(next.lng)) delete next.lng;
+  return next;
+}
+
+export async function listPlaces() {
+  const { data, error } = await supabase
+    .from("places")
+    .select("*")
+    .eq("archived", false)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createPlace(patch) {
+  const userId = await currentUserId();
+  if (!userId) return null;
+  const body = normalizePlacePatch(patch);
+  if (!body.name) throw new Error("A place needs a name.");
+  const { data, error } = await supabase
+    .from("places")
+    .insert({ ...body, user_id: userId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePlace(id, patch) {
+  const body = normalizePlacePatch(patch);
+  if (!Object.keys(body).length) return null;
+  const { data, error } = await supabase
+    .from("places")
+    .update({ ...body, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function archivePlace(id) {
+  return updatePlace(id, { archived: true });
+}
+
 const scanConditions = new Set(["new", "used-good", "used-acceptable"]);
 const lifecycleStatuses = new Set(["scouted", "purchased", "listed", "sold", "shipped"]);
 

@@ -3,7 +3,7 @@ import {
   Scan, ChevronDown, ChevronUp, Trash2, Volume2, VolumeX, Repeat, FileDown,
   PackagePlus, Send, CheckSquare, Square, TrendingUp, TrendingDown, Minus, Users, Lock, LogOut,
   LayoutDashboard, ClipboardList, Boxes, Settings, AlertTriangle, Database, CloudOff, ShieldCheck,
-  Sun, Moon,
+  Sun, Moon, MapPin,
 } from "lucide-react";
 import { useTheme } from "../lib/useTheme.js";
 import {
@@ -14,6 +14,7 @@ import { LOOKUP_STATUS, lookupBook } from "../providers/index.js";
 import {
   fetchScans, insertScan, updateScan, deleteAllScans, getProfile, updateProfile,
   fetchScanVerifications, upsertScanVerification,
+  listPlaces, createPlace,
 } from "../lib/scansRepo.js";
 import { fieldTestCsv } from "../lib/fieldTestExport.js";
 import {
@@ -76,14 +77,16 @@ function rowToEntry(row) {
     at: row.created_at,
   });
   if (queued) entry.listPrice = entry.amazonPrice;
+  entry.locationId = row.location_id ?? null; // carry place tag for trip grouping
   return entry;
 }
 
-function entryToRow(entry, userId, cost, threshold) {
+function entryToRow(entry, userId, cost, threshold, locationId = null) {
   const bestNet = entry.amazonNet ?? -Infinity;
   const status = entry.restricted ? "check" : bestNet >= threshold ? "buy" : "pass";
   return {
     user_id: userId,
+    location_id: locationId ?? null,
     isbn: entry.isbn,
     title: entry.title,
     author: entry.author,
@@ -1135,6 +1138,57 @@ function Ledger({ session, onSignOut, demoMode = false }) {
     setFulfillmentState(v);
     try { localStorage.setItem("sm-fulfillment", v); } catch { /* ignore */ }
   }
+  const [places, setPlaces] = useState([]);
+  const [activePlaceId, setActivePlaceIdState] = useState(() => {
+    try { return localStorage.getItem("sm-place") || null; } catch { return null; }
+  });
+  function setActivePlaceId(id) {
+    setActivePlaceIdState(id || null);
+    try {
+      if (id) localStorage.setItem("sm-place", id);
+      else localStorage.removeItem("sm-place");
+    } catch { /* ignore */ }
+  }
+  const activePlace = places.find((p) => p.id === activePlaceId) || null;
+  const [showNewPlace, setShowNewPlace] = useState(false);
+  const [newPlaceName, setNewPlaceName] = useState("");
+  const [newPlaceKind, setNewPlaceKind] = useState("thrift");
+  const [newPlaceCoords, setNewPlaceCoords] = useState(null); // {lat,lng} | null
+  const [placeBusy, setPlaceBusy] = useState(false);
+
+  function captureLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      showToast("location not available", "pass");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setNewPlaceCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); showToast("pin captured", "buy"); },
+      () => showToast("location permission denied", "pass"),
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  }
+
+  async function handleCreatePlace() {
+    const name = newPlaceName.trim();
+    if (!name) return;
+    setPlaceBusy(true);
+    try {
+      const place = await createPlace({ name, kind: newPlaceKind, lat: newPlaceCoords?.lat, lng: newPlaceCoords?.lng });
+      if (place) {
+        setPlaces((prev) => [place, ...prev]);
+        setActivePlaceId(place.id);
+        setShowNewPlace(false);
+        setNewPlaceName("");
+        setNewPlaceKind("thrift");
+        setNewPlaceCoords(null);
+        showToast(`sourcing at ${place.name}`, "buy");
+      }
+    } catch {
+      showToast("couldn't save place", "pass");
+    } finally {
+      setPlaceBusy(false);
+    }
+  }
   const { theme, toggle: toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1206,6 +1260,16 @@ function Ledger({ session, onSignOut, demoMode = false }) {
         }
         const rows = await fetchScans();
         if (alive) setEntries(rows.map(rowToEntry));
+        try {
+          const placeRows = await listPlaces();
+          if (alive) {
+            setPlaces(placeRows);
+            // Drop a stale active place (e.g. deleted on another device) so we
+            // never tag a scan with a location_id that no longer exists. Clears
+            // localStorage too via setActivePlaceId.
+            if (activePlaceId && !placeRows.some((p) => p.id === activePlaceId)) setActivePlaceId(null);
+          }
+        } catch { /* places optional — never block the scan list */ }
         try {
           const verificationRows = await fetchScanVerifications();
           if (alive) {
@@ -1377,6 +1441,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
         return;
       }
       const temp = buildEntry(core.isbn, core, cost, demoMode ? `demo-${core.isbn}` : `tmp-${core.isbn}`);
+      temp.locationId = activePlaceId; // tag the in-memory entry for trip grouping
       const bestNet = temp.amazonNet;
       const meets = bestNet >= threshold;
       setEntries((prev) => [temp, ...prev]);
@@ -1385,7 +1450,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
       else { playPass(); showToast(`pass — ${temp.title}`, "pass"); }
       if (demoMode) return;
       try {
-        const row = await insertScan(entryToRow(temp, userId, cost, threshold));
+        const row = await insertScan(entryToRow(temp, userId, cost, threshold, activePlaceId));
         setEntries((prev) => prev.map((en) => (en.id === temp.id ? { ...en, id: row.id } : en)));
       } catch (err) {
         setEntries((prev) => prev.filter((en) => en.id !== temp.id));
@@ -1997,6 +2062,55 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 ? "FBM: you ship it yourself — no FBA fee counted (your shipping cost isn't included)."
                 : "FBA: Amazon ships — the FBA fulfillment fee is counted in profit."}
             </div>
+
+            {!demoMode && (
+              <div className="mb-4 rounded-xl px-3 py-2" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                  <MapPin size={14} color={activePlace ? YELLOW : MUTED} />
+                  <span style={{ color: MUTED }}>sourcing at</span>
+                  <select
+                    value={activePlaceId || ""}
+                    onChange={(e) => setActivePlaceId(e.target.value || null)}
+                    className="flex-1 bg-transparent outline-none font-bold normal-case"
+                    style={{ color: INK }}
+                  >
+                    <option value="">Unsorted (no place)</option>
+                    {places.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                  <button type="button" onClick={() => setShowNewPlace((s) => !s)} className="shrink-0 font-black uppercase tracking-widest" style={{ color: BLUE }}>
+                    {showNewPlace ? "cancel" : "+ new"}
+                  </button>
+                </div>
+                {showNewPlace && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      value={newPlaceName}
+                      onChange={(e) => setNewPlaceName(e.target.value)}
+                      placeholder="Place name (e.g. Goodwill on 5th)"
+                      className="min-w-[150px] flex-1 border-b bg-transparent px-2 py-1 normal-case outline-none"
+                      style={{ borderColor: LINE, color: INK }}
+                    />
+                    <select value={newPlaceKind} onChange={(e) => setNewPlaceKind(e.target.value)} className="bg-transparent text-xs font-bold outline-none" style={{ color: INK }}>
+                      {[["thrift", "Thrift"], ["library-sale", "Library sale"], ["garage-sale", "Garage sale"], ["estate-sale", "Estate sale"], ["bookstore", "Bookstore"], ["store", "Store"], ["other", "Other"]].map(([v, l]) => (
+                        <option key={v} value={v}>{l}</option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={captureLocation} className="text-xs font-black uppercase tracking-widest" style={{ color: newPlaceCoords ? GREEN : MUTED }}>
+                      {newPlaceCoords ? "📍 pinned" : "📍 use location"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCreatePlace}
+                      disabled={placeBusy || !newPlaceName.trim()}
+                      className="rounded px-3 py-1 text-xs font-black uppercase tracking-widest"
+                      style={{ backgroundColor: YELLOW, color: GOLD_INK, opacity: placeBusy || !newPlaceName.trim() ? 0.5 : 1 }}
+                    >
+                      {placeBusy ? "…" : "save"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {!loading && entries.length > 0 && (
               <VerdictHero
