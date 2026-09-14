@@ -5,6 +5,7 @@ export const APP_SECTIONS = {
   queue: { id: "queue", path: "/queue" },
   field: { id: "field", path: "/check-books" },
   inventory: { id: "inventory", path: "/inventory" },
+  places: { id: "places", path: "/places" },
   settings: { id: "settings", path: "/settings" },
   admin: { id: "admin", path: "/admin" },
 };

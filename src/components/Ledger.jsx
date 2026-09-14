@@ -17,6 +17,7 @@ import {
   listPlaces, createPlace,
 } from "../lib/scansRepo.js";
 import { fieldTestCsv } from "../lib/fieldTestExport.js";
+import PlacesView from "./PlacesView.jsx";
 import {
   createExportHistoryItem,
   fieldTestSummary,
@@ -1751,6 +1752,16 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             >
               {soundOn ? <Volume2 size={15} color={MUTED} /> : <VolumeX size={15} color={MUTED} />}
             </button>
+            {!demoMode && (
+              <button
+                onClick={() => navigate("places")}
+                aria-label="places and trips"
+                title="Places & trips"
+                className="shrink-0"
+              >
+                <MapPin size={15} color={MUTED} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -2563,6 +2574,16 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               </div>
             )}
           </div>
+        )}
+
+        {view === "places" && (
+          <PlacesView
+            entries={entries}
+            places={places}
+            threshold={threshold}
+            onBack={() => navigate("scan")}
+            onNavigateScan={() => navigate("scan")}
+          />
         )}
 
         {view === "settings" && (
