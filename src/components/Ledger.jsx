@@ -14,7 +14,7 @@ import { LOOKUP_STATUS, lookupBook } from "../providers/index.js";
 import {
   fetchScans, insertScan, updateScan, deleteAllScans, getProfile, updateProfile,
   fetchScanVerifications, upsertScanVerification,
-  listPlaces, createPlace,
+  listPlaces, createPlace, updatePlace, archivePlace,
 } from "../lib/scansRepo.js";
 import { fieldTestCsv } from "../lib/fieldTestExport.js";
 import PlacesView from "./PlacesView.jsx";
@@ -1188,6 +1188,31 @@ function Ledger({ session, onSignOut, demoMode = false }) {
       showToast("couldn't save place", "pass");
     } finally {
       setPlaceBusy(false);
+    }
+  }
+
+  async function handleUpdatePlace(id, patch) {
+    try {
+      const updated = await updatePlace(id, patch);
+      if (updated) {
+        setPlaces((prev) => prev.map((p) => (p.id === id ? updated : p)));
+        showToast("place updated", "buy");
+      }
+      return updated;
+    } catch {
+      showToast("couldn't update place", "pass");
+      return null;
+    }
+  }
+
+  async function handleArchivePlace(id) {
+    try {
+      await archivePlace(id);
+      setPlaces((prev) => prev.filter((p) => p.id !== id));
+      if (activePlaceId === id) setActivePlaceId(null);
+      showToast("place archived", "buy");
+    } catch {
+      showToast("couldn't archive place", "pass");
     }
   }
   const { theme, toggle: toggleTheme } = useTheme();
@@ -2583,6 +2608,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
             threshold={threshold}
             onBack={() => navigate("scan")}
             onNavigateScan={() => navigate("scan")}
+            onUpdatePlace={handleUpdatePlace}
+            onArchivePlace={handleArchivePlace}
           />
         )}
 

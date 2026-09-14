@@ -1,8 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { ArrowLeft, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, MapPin, ChevronDown, ChevronUp, Pencil, Archive } from "lucide-react";
 import { placeVisitSummary } from "../../packages/core/sessionSummary.js";
+
+const KIND_OPTIONS = [
+  ["thrift", "Thrift"], ["library-sale", "Library sale"], ["garage-sale", "Garage sale"],
+  ["estate-sale", "Estate sale"], ["bookstore", "Bookstore"], ["store", "Store"], ["other", "Other"],
+];
+
+function captureGeo(onOk, onFail) {
+  if (typeof navigator === "undefined" || !navigator.geolocation) { onFail?.(); return; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => onOk({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    () => onFail?.(),
+    { enableHighAccuracy: false, timeout: 8000 },
+  );
+}
 
 const INK = "var(--sm-ink)";
 const MUTED = "var(--sm-muted)";
@@ -92,32 +106,126 @@ function BookRow({ entry, threshold }) {
   );
 }
 
+// ---- inline edit form for one place --------------------------------------
+function PlaceEditForm({ place, onSave, onArchive, onClose }) {
+  const [name, setName] = useState(place.name || "");
+  const [kind, setKind] = useState(place.kind || "other");
+  const [coords, setCoords] = useState(place.lat != null && place.lng != null ? { lat: place.lat, lng: place.lng } : null);
+  const [busy, setBusy] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+
+  async function save() {
+    if (!name.trim()) return;
+    setBusy(true);
+    const patch = { name: name.trim(), kind };
+    if (coords) { patch.lat = coords.lat; patch.lng = coords.lng; }
+    await onSave(place.id, patch);
+    setBusy(false);
+    onClose();
+  }
+
+  return (
+    <div className="mt-1 rounded-xl px-3 py-3" style={{ backgroundColor: SOFT, border: `1px solid ${LINE}` }}>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Place name"
+        className="w-full border-b bg-transparent px-1 py-1 text-sm font-bold outline-none"
+        style={{ borderColor: LINE, color: INK }}
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <select value={kind} onChange={(e) => setKind(e.target.value)} className="bg-transparent text-xs font-bold outline-none" style={{ color: INK }}>
+          {KIND_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        <button
+          type="button"
+          onClick={() => captureGeo(setCoords, () => {})}
+          className="text-xs font-black uppercase tracking-widest"
+          style={{ color: coords ? GREEN : MUTED }}
+        >
+          {coords ? "📍 pin set" : "📍 update pin"}
+        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button type="button" onClick={onClose} className="text-xs font-black uppercase tracking-widest" style={{ color: MUTED }}>cancel</button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy || !name.trim()}
+            className="rounded px-3 py-1 text-xs font-black uppercase tracking-widest"
+            style={{ backgroundColor: YELLOW, color: GOLD_INK, opacity: busy || !name.trim() ? 0.5 : 1 }}
+          >
+            {busy ? "…" : "save"}
+          </button>
+        </div>
+      </div>
+      <div className="mt-2 flex items-center justify-end">
+        {confirmArchive ? (
+          <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest" style={{ color: RED }}>
+            archive this place?
+            <button type="button" onClick={() => onArchive(place.id)} style={{ color: RED }}>yes</button>
+            <button type="button" onClick={() => setConfirmArchive(false)} style={{ color: MUTED }}>no</button>
+          </span>
+        ) : (
+          <button type="button" onClick={() => setConfirmArchive(true)} className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+            <Archive size={12} /> archive
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- one place, expandable into its visits -------------------------------
-function PlaceCard({ group, threshold, expanded, onToggle }) {
+function PlaceCard({ group, threshold, expanded, onToggle, onUpdatePlace, onArchivePlace }) {
   const t = group.totals;
   const isUnsorted = group.placeId === null;
+  const [editing, setEditing] = useState(false);
+  const canEdit = !isUnsorted && group.place && onUpdatePlace;
+
   return (
     <div className="rounded-2xl" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
-      <button type="button" onClick={onToggle} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-        <MapPin size={18} color={isUnsorted ? MUTED : YELLOW} className="shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-base font-black" style={{ color: INK }}>{group.name}</div>
-          <div className="text-xs font-bold" style={{ color: MUTED }}>
-            {isUnsorted ? "no place set" : (KIND_LABEL[group.place?.kind] || "Place")} · {t.visits} visit{t.visits === 1 ? "" : "s"} · {t.units} scanned · {t.buyList} buys
+      <div className="flex w-full items-center gap-3 px-4 py-3">
+        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+          <MapPin size={18} color={isUnsorted ? MUTED : YELLOW} className="shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-base font-black" style={{ color: INK }}>{group.name}</div>
+            <div className="text-xs font-bold" style={{ color: MUTED }}>
+              {isUnsorted ? "no place set" : (KIND_LABEL[group.place?.kind] || "Place")} · {t.visits} visit{t.visits === 1 ? "" : "s"} · {t.units} scanned · {t.buyList} buys
+            </div>
           </div>
-        </div>
+        </button>
         <div className="shrink-0 text-right">
           <div className="font-mono text-sm font-black" style={{ color: t.estProfit > 0 ? GREEN : MUTED }}>{money(t.estProfit)}</div>
           <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>est. profit</div>
         </div>
-        {expanded ? <ChevronUp size={16} color={MUTED} /> : <ChevronDown size={16} color={MUTED} />}
-      </button>
+        {canEdit && (
+          <button type="button" onClick={() => setEditing((e) => !e)} aria-label="edit place" className="shrink-0">
+            <Pencil size={14} color={editing ? YELLOW : MUTED} />
+          </button>
+        )}
+        <button type="button" onClick={onToggle} aria-label="expand" className="shrink-0">
+          {expanded ? <ChevronUp size={16} color={MUTED} /> : <ChevronDown size={16} color={MUTED} />}
+        </button>
+      </div>
+
+      {editing && canEdit && (
+        <div className="px-4 pb-3">
+          <PlaceEditForm
+            place={group.place}
+            onSave={onUpdatePlace}
+            onArchive={onArchivePlace}
+            onClose={() => setEditing(false)}
+          />
+        </div>
+      )}
 
       {expanded && (
         <div className="px-4 pb-3">
-          {group.visits.map((v) => (
-            <VisitBlock key={v.key} visit={v} threshold={threshold} />
-          ))}
+          {group.visits.length === 0 ? (
+            <div className="py-2 text-xs font-bold" style={{ color: MUTED }}>No scans here yet.</div>
+          ) : (
+            group.visits.map((v) => <VisitBlock key={v.key} visit={v} threshold={threshold} />)
+          )}
         </div>
       )}
     </div>
@@ -143,7 +251,7 @@ function VisitBlock({ visit, threshold }) {
   );
 }
 
-export default function PlacesView({ entries, places, threshold = 3, onBack, onNavigateScan }) {
+export default function PlacesView({ entries, places, threshold = 3, onBack, onNavigateScan, onUpdatePlace, onArchivePlace }) {
   const summary = useMemo(() => placeVisitSummary(entries || [], places || []), [entries, places]);
   const [expandedId, setExpandedId] = useState(null);
   const hasAnyCoords = (places || []).some((p) => p.lat != null && p.lng != null);
@@ -205,6 +313,8 @@ export default function PlacesView({ entries, places, threshold = 3, onBack, onN
               threshold={threshold}
               expanded={expandedId === keyFor(group)}
               onToggle={() => setExpandedId((cur) => (cur === keyFor(group) ? null : keyFor(group)))}
+              onUpdatePlace={onUpdatePlace}
+              onArchivePlace={onArchivePlace}
             />
           ))}
         </div>
