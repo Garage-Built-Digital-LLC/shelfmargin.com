@@ -46,6 +46,23 @@ describe("database hardening migrations", () => {
     expect(sql).toContain("grant execute on function public.record_stripe_event(text, text) to service_role");
   });
 
+  it("enforces the 100-book lifetime scan cap in the database", () => {
+    const sql = migration("supabase/migrations/0011_lifetime_scan_cap.sql");
+
+    expect(sql).toContain("create table if not exists public.lifetime_scan_isbns");
+    expect(sql).toContain("grant select on public.lifetime_scan_isbns to authenticated");
+    expect(sql).not.toMatch(/grant\s+(insert|update|delete|all)\s+on public\.lifetime_scan_isbns to authenticated/i);
+    expect(sql).toContain("create or replace function public.consume_trial_scan(p_isbn text)");
+    expect(sql).toContain("security definer");
+    expect(sql).toContain("set search_path = ''");
+    expect(sql).toContain("revoke execute on function public.consume_trial_scan(text) from anon");
+    expect(sql).toContain("grant execute on function public.consume_trial_scan(text) to authenticated");
+    expect(sql).toContain("cap constant integer := 100");
+    expect(sql).toContain("create trigger scans_enforce_lifetime_cap");
+    expect(sql).toContain("raise exception 'scan_cap_reached'");
+    expect(sql).toContain("subscription_status in ('trialing', 'active')");
+  });
+
   it("keeps self-serve account deletion pinned to the caller and authenticated-only", () => {
     const sql = migration("supabase/migrations/0009_account_lifecycle.sql");
 

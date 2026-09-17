@@ -4,6 +4,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { normalizeToIsbn13 } from "./packages/core/isbn.js";
 import { lookupCatalog } from "./src/lib/catalogLookup.js";
+import { consumeLifetimeScan } from "./src/lib/scanCap.js";
 import Stripe from "stripe";
 import { createCheckoutSession, readJsonBody, STRIPE_API_VERSION } from "./src/lib/stripeCheckout.js";
 import { createPortalSession } from "./src/lib/stripePortal.js";
@@ -170,7 +171,11 @@ export function createShelfMarginServer() {
           sendJson(res, 404, { error: "catalog match not found" });
           return;
         }
-        sendJson(res, 200, { isbn, ...hit });
+        const scanCap = await consumeLifetimeScan({
+          isbn,
+          authHeader: req.headers.authorization,
+        });
+        sendJson(res, 200, { isbn, ...hit, scanCap });
         return;
       }
 
@@ -301,6 +306,10 @@ export function createShelfMarginServer() {
           code: err.code,
           amazonStatus: err.amazonStatus,
           amazonError: err.amazonError,
+          remaining: err.remaining,
+          used: err.used,
+          cap: err.cap,
+          upgradePath: err.upgradePath,
         });
       } else {
         // Unexpected error: report it (structured log + optional forwarder) and

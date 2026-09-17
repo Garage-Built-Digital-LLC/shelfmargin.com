@@ -22,7 +22,7 @@ export const PUBLIC_ROUTE_META = {
   },
   pricing: {
     title: "ShelfMargin Pricing - Used Book Scanner Plans",
-    description: "ShelfMargin is free during beta, with a planned $15/month Starter plan and $29/month Pro plan for used-book resellers after live data is ready.",
+    description: "Each ShelfMargin account gets 100 lifetime scans free, then $15/month Starter or $29/month Pro to keep scanning.",
   },
   faq: {
     title: "ShelfMargin FAQ - Used Book Scanner Questions",

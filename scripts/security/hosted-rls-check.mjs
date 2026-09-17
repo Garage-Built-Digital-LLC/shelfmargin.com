@@ -162,6 +162,9 @@ try {
 
   res = await userA.from("billing_accounts").update({ plan: "pro" }).eq("user_id", accountA.userId).select("user_id");
   record(checks, "User A cannot update billing row from browser", Boolean(res.error), res.error?.message || "unexpected success");
+
+  res = await userA.from("lifetime_scan_isbns").insert({ user_id: accountA.userId, isbn: "9780143127796" }).select("isbn");
+  record(checks, "User A cannot insert lifetime scan ISBNs from the browser", Boolean(res.error), res.error?.message || "unexpected success");
 } finally {
   await cleanup(userA, scanId);
 }

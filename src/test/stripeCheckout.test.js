@@ -108,6 +108,8 @@ describe("Stripe checkout foundation", () => {
         authorization: "Bearer user-token",
       }),
     }));
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(String(fetchImpl.mock.calls[0][0])).not.toContain("billing_accounts");
     expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(expect.objectContaining({
       mode: "subscription",
       client_reference_id: "user_123",

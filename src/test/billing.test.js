@@ -3,14 +3,19 @@ import { describe, expect, it } from "vitest";
 import {
   BILLING_PLANS,
   BILLING_STATUSES,
+  FREE_LIFETIME_SCAN_CAP,
+  SCAN_CAP_CODE,
   STRIPE_PRICE_LOOKUP_KEYS,
   billingPlanFromLookupKey,
   billingPlanLabel,
   billingStatusLabel,
+  canRecordLifetimeScan,
   hasAppAccess,
   hasPaidAccess,
   isKnownBillingPlan,
   isKnownSubscriptionStatus,
+  isScanCapError,
+  scanCapState,
 } from "../lib/billing.js";
 
 describe("billing model", () => {
@@ -28,7 +33,7 @@ describe("billing model", () => {
   });
 
   it("returns plain billing labels for customer-facing account UI", () => {
-    expect(billingPlanLabel(BILLING_PLANS.freeBeta)).toBe("Free beta");
+    expect(billingPlanLabel(BILLING_PLANS.freeBeta)).toBe("Free");
     expect(billingPlanLabel(BILLING_PLANS.starter)).toBe("Starter");
     expect(billingPlanLabel("custom")).toBe("Unknown plan");
     expect(billingStatusLabel(BILLING_STATUSES.active)).toBe("Active");
@@ -47,6 +52,31 @@ describe("billing model", () => {
     expect(hasPaidAccess({ plan: BILLING_PLANS.pro, subscription_status: BILLING_STATUSES.trialing })).toBe(true);
     expect(hasPaidAccess({ plan: BILLING_PLANS.pro, subscription_status: BILLING_STATUSES.pastDue })).toBe(false);
     expect(hasPaidAccess({ plan: BILLING_PLANS.starter, subscription_status: BILLING_STATUSES.canceled })).toBe(false);
+  });
+
+  it("blocks new lifetime scans at 100 books unless the account is paid", () => {
+    const free = { plan: BILLING_PLANS.freeBeta, subscription_status: BILLING_STATUSES.freeBeta };
+    expect(FREE_LIFETIME_SCAN_CAP).toBe(100);
+    expect(canRecordLifetimeScan({ account: free, used: 99 })).toBe(true);
+    expect(canRecordLifetimeScan({ account: free, used: 100 })).toBe(false);
+    expect(canRecordLifetimeScan({ account: free, used: 100, isbnAlreadyCounted: true })).toBe(true);
+    expect(canRecordLifetimeScan({
+      account: { plan: BILLING_PLANS.starter, subscription_status: BILLING_STATUSES.active },
+      used: 250,
+    })).toBe(true);
+    expect(canRecordLifetimeScan({
+      account: { plan: BILLING_PLANS.starter, subscription_status: BILLING_STATUSES.canceled },
+      used: 100,
+    })).toBe(false);
+
+    const blocked = scanCapState({ account: free, used: 100 });
+    expect(blocked).toMatchObject({
+      blocked: true,
+      remaining: 0,
+      cap: 100,
+      code: SCAN_CAP_CODE,
+    });
+    expect(isScanCapError({ code: "P0001", message: "scan_cap_reached" })).toBe(true);
   });
 
   it("keeps billing writes out of the browser-accessible RLS policy", () => {

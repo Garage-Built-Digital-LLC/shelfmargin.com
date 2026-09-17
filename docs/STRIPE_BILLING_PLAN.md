@@ -1,18 +1,21 @@
 # Shelf Margin Stripe Billing Plan
 
-Last checked: August 11, 2026
+Last checked: September 17, 2026
 
 ## Position
 
-Stripe is planned only. Shelf Margin does not currently process payments, create
-Checkout Sessions, handle webhooks, or grant paid access from Stripe state.
+Stripe Checkout, Customer Portal, and webhooks are implemented on the server and
+**fail closed** until keys, both plan price IDs, and the webhook signing secret
+are configured. Paid access is never granted from a browser redirect alone.
 
-The first paid product should stay simple:
+The paid product is:
 
-- Free beta while the scanner workflow is being proven.
+- **100-book lifetime free** per account, then paid required to keep scanning.
 - Starter at `$15/month` for solo book resellers.
-- Pro at `$29/month` after live data and higher-volume workflow value are real.
-- Apple Watch alerts are a future Pro feature after native iOS exists.
+- Pro at `$29/month` after the free cap, for higher-volume scanning.
+- Apple Watch alerts remain a future Pro feature after native iOS exists.
+
+Uncapped free beta is retired.
 
 ## Recommended Stripe Product Model
 
@@ -25,8 +28,10 @@ Create two active recurring prices in Stripe test mode first:
 | Starter | Shelf Margin Starter | `$15/month` | `shelfmargin_starter_monthly` | `starter` |
 | Pro | Shelf Margin Pro | `$29/month` | `shelfmargin_pro_monthly` | `pro` |
 
-Keep Free Beta outside Stripe until billing is ready. A free beta user should
-have app access based on Supabase profile state, not a fake Stripe subscription.
+Keep the 100-book free allowance outside Stripe. A free user has app access from
+Supabase profile / `billing_accounts` state (`plan = free_beta`), not a fake
+Stripe subscription. After 100 distinct lifetime ISBNs, further scans are blocked
+until a verified Starter or Pro subscription is active.
 
 ## Required Provider Inputs
 
@@ -37,7 +42,6 @@ have app access based on Supabase profile state, not a fake Stripe subscription.
 - Stripe webhook signing secret for live mode.
 - Stripe product IDs for Starter and Pro.
 - Stripe price IDs or stable lookup keys for Starter and Pro.
-- Decision on whether to use a trial period when paid plans launch.
 - Production domain before live webhook registration.
 - Tax decision and registrations before enabling Stripe Tax.
 
@@ -81,6 +85,10 @@ Checkout Sessions only when Stripe keys, both plan price IDs, Supabase Auth, and
 the webhook signing secret are configured. Until then it fails closed with a
 server-side configuration error.
 
+Paid access is stored on `billing_accounts` only after a verified webhook (or a
+trusted server-side Stripe lookup). Returning from Checkout with `session_id`
+is not enough.
+
 The checkout endpoint is rate limited server-side. Keep this protection in
 place when moving from local preview to hosted deployment.
 
@@ -122,6 +130,25 @@ Every webhook handler must:
 - Store `stripe_customer_id`, `stripe_subscription_id`, plan, status, and current period dates.
 - Downgrade access when subscription status is canceled, unpaid, incomplete,
   incomplete expired, or otherwise not entitled.
+
+## 100-book lifetime scan cap
+
+Free accounts (`billing_accounts.plan = free_beta`) can record **100 distinct
+lifetime ISBNs**. After that, scans are blocked until Starter or Pro is
+`trialing` or `active`.
+
+Enforcement:
+
+- Authenticated `/api/catalog` lookups call `consume_trial_scan` after a
+  successful catalog hit. Demo (no auth token) is not an account and is not
+  counted.
+- `private.enforce_lifetime_scan_cap` blocks `scans` inserts of a new ISBN once
+  the lifetime set is full, so a client cannot bypass the cap through PostgREST.
+- Distinct ISBNs already counted can still be re-opened (copy count / re-lookup).
+- `profiles.trial_scans_used` is maintained by the RPC/trigger and is not
+  writable from the browser.
+
+The scanner UI shows remaining free scans and a pricing upgrade path at the cap.
 
 ## Suggested Supabase Billing Fields
 
@@ -213,7 +240,7 @@ matches the expected monthly amount (`Starter` $15, `Pro` $29).
 
 ## Do Not Implement Yet
 
-- Do not enable paid gating until webhooks are verified.
+- Do not grant paid access from a Checkout success redirect.
 - Do not add Apple Watch paywall logic until iOS exists.
 - Do not enable Stripe Tax until tax registrations are decided.
 - Do not add secret Stripe keys to Vite or public client code.

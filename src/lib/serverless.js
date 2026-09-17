@@ -45,6 +45,10 @@ export function handleError(res, err) {
       code: err.code,
       amazonStatus: err.amazonStatus,
       amazonError: err.amazonError,
+      remaining: err.remaining,
+      used: err.used,
+      cap: err.cap,
+      upgradePath: err.upgradePath,
     });
   } else {
     sendJson(res, 500, { error: "server error" });

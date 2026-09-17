@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   createLiveProvider,
   parseGoogleBooks,
@@ -93,5 +93,38 @@ describe("live catalog provider", () => {
     expect(hit.source).toBe("estimated");
     expect(hit.priceSource).toBe("estimated");
     expect(hit.title).toBeTruthy();
+  });
+
+  it("does not fall back to other catalog sources when the scan cap is reached", async () => {
+    const fetchImpl = vi.fn(async (url) => {
+      if (String(url).includes("/api/catalog")) {
+        return {
+          ok: false,
+          status: 402,
+          json: async () => ({
+            error: "Free scan limit reached. Subscribe to Starter or Pro to keep scanning.",
+            code: "scan_cap_reached",
+            remaining: 0,
+            used: 100,
+            cap: 100,
+            upgradePath: "/pricing",
+          }),
+        };
+      }
+      throw new Error(`should not fall back: ${url}`);
+    });
+    const provider = createLiveProvider({ fetchImpl });
+
+    await expect(provider.lookup(ISBN, { accessToken: "user-token" })).rejects.toMatchObject({
+      status: 402,
+      code: "scan_cap_reached",
+      upgradePath: "/pricing",
+    });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("/api/catalog"),
+      expect.objectContaining({
+        headers: expect.objectContaining({ authorization: "Bearer user-token" }),
+      }),
+    );
   });
 });

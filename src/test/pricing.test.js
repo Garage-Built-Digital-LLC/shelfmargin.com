@@ -11,8 +11,15 @@ describe("pricing model", () => {
     const starter = pricingPlanById("starter");
 
     expect(starter.priceLabel).toBe("$15/mo");
-    expect(starter.status).toBe(PRICING_STATUS.planned);
     expect(starter.audience).toContain("Solo book resellers");
+  });
+
+  it("caps the free plan at 100 lifetime books", () => {
+    const free = pricingPlanById("free-beta");
+
+    expect(free.name).toBe("Free");
+    expect(free.cadence).toBe("100 books lifetime");
+    expect(free.summary).toContain("100 lifetime scans");
   });
 
   it("keeps pro as the future higher-value reseller plan", () => {
@@ -32,5 +39,10 @@ describe("pricing model", () => {
 
   it("does not include a team plan yet", () => {
     expect(PRICING_PLANS.map((plan) => plan.id)).not.toContain("team");
+  });
+
+  it("keeps Starter at $15/mo and Pro at $29/mo", () => {
+    expect(pricingPlanById("starter").priceLabel).toBe("$15/mo");
+    expect(pricingPlanById("pro").priceLabel).toBe("$29/mo");
   });
 });

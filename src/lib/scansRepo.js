@@ -3,6 +3,7 @@
 // reads — the policies do it. Inserts must carry user_id to pass the check.
 
 import { supabase } from "./supabase.js";
+import { isScanCapError, scanCapClientError } from "./billing.js";
 
 export async function currentUserId() {
   const { data } = await supabase.auth.getUser();
@@ -62,9 +63,21 @@ export async function fetchScans() {
   return data ?? [];
 }
 
+export async function getBillingAccount() {
+  const { data, error } = await supabase
+    .from("billing_accounts")
+    .select("plan, subscription_status, current_period_end, cancel_at_period_end")
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function insertScan(row) {
   const { data, error } = await supabase.from("scans").insert(row).select().single();
-  if (error) throw error;
+  if (error) {
+    if (isScanCapError(error)) throw scanCapClientError();
+    throw error;
+  }
   return data;
 }
 
