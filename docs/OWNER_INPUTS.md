@@ -9,7 +9,7 @@ real books, business decisions, or external service access.
 - Created the first real Shelf Margin account: `dillonw@garagebuiltdigital.com`.
 - Confirmed that account is email-confirmed and has the `admin` role.
 - Chose planned public support email: `support@shelfmargin.com`.
-- Chose initial pricing direction: free beta, $15/month Starter, $29/month Pro after live data is ready, and no team plan yet.
+- Chose initial pricing: 100-book lifetime free per account, then $15/month Starter or $29/month Pro to keep scanning. No team plan yet.
 - Chose Apple Watch alerts as a future paid feature.
 - Confirmed real books are available for field testing.
 
@@ -31,11 +31,11 @@ real books, business decisions, or external service access.
 - Provide any marketplace API credentials only through server-side environment variables.
 - Secure the `shelfmargin.com` domain.
 - Activate the `support@shelfmargin.com` inbox before public launch.
-- Decide when Stripe billing should be connected.
 - Create or confirm Stripe test-mode products and recurring monthly prices for
-  Starter and Pro before billing implementation.
+  Starter (`shelfmargin_starter_monthly`) and Pro (`shelfmargin_pro_monthly`)
+  before turning on live checkout.
 - Provide Stripe webhook signing secret only through server-side environment
-  variables after a backend boundary exists.
+  variables. Checkout and webhooks fail closed until this is set.
 - Decide whether the first iOS app should prioritize phone camera scanning,
   Bluetooth scanner input, or both.
 - Confirm Apple Developer Program enrollment before App Store release work.

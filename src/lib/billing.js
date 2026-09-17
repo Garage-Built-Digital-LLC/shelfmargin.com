@@ -71,16 +71,64 @@ export function hasPaidAccess(account) {
   return [BILLING_STATUSES.trialing, BILLING_STATUSES.active].includes(account.subscription_status);
 }
 
+export const FREE_LIFETIME_SCAN_CAP = 100;
+export const SCAN_CAP_CODE = "scan_cap_reached";
+export const SCAN_CAP_MESSAGE = "Free scan limit reached. Subscribe to Starter or Pro to keep scanning.";
+export const SCAN_CAP_UPGRADE_PATH = "/pricing";
+
+export function normalizeLifetimeScanCount(value) {
+  const used = Number(value);
+  return Number.isFinite(used) && used > 0 ? Math.trunc(used) : 0;
+}
+
+export function scanCapState({ account = null, used = 0, isbnAlreadyCounted = false } = {}) {
+  const counted = normalizeLifetimeScanCount(used);
+  const paid = hasPaidAccess(account);
+  const remaining = paid ? null : Math.max(0, FREE_LIFETIME_SCAN_CAP - counted);
+  const blocked = !paid && !isbnAlreadyCounted && counted >= FREE_LIFETIME_SCAN_CAP;
+  return {
+    paid,
+    cap: FREE_LIFETIME_SCAN_CAP,
+    used: counted,
+    remaining,
+    blocked,
+    code: blocked ? SCAN_CAP_CODE : null,
+  };
+}
+
+export function canRecordLifetimeScan(input = {}) {
+  return !scanCapState(input).blocked;
+}
+
+export function isScanCapError(error) {
+  if (!error) return false;
+  if (error.code === SCAN_CAP_CODE || error.status === 402) return true;
+  const text = `${error.message || ""} ${error.hint || ""} ${error.details || ""}`;
+  return (error.code === "P0001" && /scan_cap_reached/i.test(text))
+    || /scan_cap_reached/i.test(String(error.message || ""));
+}
+
+export function scanCapClientError(details = {}) {
+  const err = new Error(SCAN_CAP_MESSAGE);
+  err.status = 402;
+  err.code = SCAN_CAP_CODE;
+  err.remaining = 0;
+  err.used = Number.isFinite(details.used) ? details.used : FREE_LIFETIME_SCAN_CAP;
+  err.cap = Number.isFinite(details.cap) ? details.cap : FREE_LIFETIME_SCAN_CAP;
+  err.upgradePath = SCAN_CAP_UPGRADE_PATH;
+  return err;
+}
+
 export function billingPlanLabel(plan) {
   if (plan === BILLING_PLANS.starter) return "Starter";
   if (plan === BILLING_PLANS.pro) return "Pro";
-  if (plan === BILLING_PLANS.freeBeta) return "Free beta";
+  if (plan === BILLING_PLANS.freeBeta) return "Free";
   return "Unknown plan";
 }
 
 export function billingStatusLabel(status) {
   const labels = {
-    [BILLING_STATUSES.freeBeta]: "Free beta",
+    [BILLING_STATUSES.freeBeta]: "Free",
     [BILLING_STATUSES.trialing]: "Trialing",
     [BILLING_STATUSES.active]: "Active",
     [BILLING_STATUSES.pastDue]: "Past due",

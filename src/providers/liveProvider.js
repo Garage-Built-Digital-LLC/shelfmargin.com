@@ -7,6 +7,7 @@
 
 import { normalizeToIsbn13 } from "../../packages/core/isbn.js";
 import { lookupCore } from "../lib/bookdata.js";
+import { SCAN_CAP_CODE, SCAN_CAP_MESSAGE } from "../lib/billing.js";
 
 const LOCAL_CATALOG_URL = "/api/catalog";
 const OPEN_LIBRARY_BOOKS_URL = "https://openlibrary.org/api/books";
@@ -42,6 +43,7 @@ function mergeWithEstimatedPricing(isbn, metadata, source, fulfillment = "fba") 
     marketplaceId: metadata.marketplaceId,
     priceSource: "estimated",
     fulfillment: metadata.fulfillment || fulfillment,
+    scanCap: metadata.scanCap || null,
   };
 
   // If the catalog endpoint returned LIVE Amazon pricing, trust it over the
@@ -69,15 +71,26 @@ function mergeWithEstimatedPricing(isbn, metadata, source, fulfillment = "fba") 
   return base;
 }
 
-async function fetchJson(fetchImpl, url, timeoutMs) {
+async function fetchJson(fetchImpl, url, timeoutMs, headers = {}) {
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
   try {
     const res = await fetchImpl(url, {
-      headers: { accept: "application/json" },
+      headers: { accept: "application/json", ...headers },
       signal: controller?.signal,
     });
     if (res.status === 404) return null;
+    if (res.status === 402) {
+      const body = await res.json().catch(() => ({}));
+      const err = new Error(body?.error || SCAN_CAP_MESSAGE);
+      err.status = 402;
+      err.code = body?.code || SCAN_CAP_CODE;
+      err.remaining = body?.remaining;
+      err.used = body?.used;
+      err.cap = body?.cap;
+      err.upgradePath = body?.upgradePath;
+      throw err;
+    }
     if (!res.ok) throw new Error(`lookup failed: ${res.status}`);
     return res.json();
   } finally {
@@ -133,12 +146,15 @@ export function parseCatalogEndpoint(json) {
     amazonFees: json.amazonFees ?? null,
     feeSource: json.feeSource ?? null,
     fulfillment: json.fulfillment,
+    scanCap: json.scanCap || null,
   };
 }
 
-async function lookupCatalogEndpoint(isbn, fetchImpl, endpoint, timeoutMs, fulfillment = "fba") {
+async function lookupCatalogEndpoint(isbn, fetchImpl, endpoint, timeoutMs, fulfillment = "fba", accessToken = "") {
   const params = new URLSearchParams({ isbn, fulfillment });
-  const json = await fetchJson(fetchImpl, `${endpoint}?${params}`, timeoutMs);
+  const headers = {};
+  if (accessToken) headers.authorization = `Bearer ${accessToken}`;
+  const json = await fetchJson(fetchImpl, `${endpoint}?${params}`, timeoutMs, headers);
   return parseCatalogEndpoint(json);
 }
 
@@ -177,9 +193,10 @@ export function createLiveProvider({ endpoint = LOCAL_CATALOG_URL, fetchImpl = f
       const isbn = normalizeToIsbn13(rawIsbn);
       if (!isbn) return null;
       const fulfillment = opts.fulfillment === "fbm" ? "fbm" : "fba";
+      const accessToken = typeof opts.accessToken === "string" ? opts.accessToken : "";
 
       const lookups = [
-        [null, (nextIsbn, nextFetch) => lookupCatalogEndpoint(nextIsbn, nextFetch, endpoint, timeoutMs, fulfillment)],
+        [null, (nextIsbn, nextFetch) => lookupCatalogEndpoint(nextIsbn, nextFetch, endpoint, timeoutMs, fulfillment, accessToken)],
         ["openlibrary", lookupOpenLibraryBooks],
         ["openlibrary-search", lookupOpenLibrarySearch],
         ["google-books", lookupGoogleBooks],
@@ -190,6 +207,7 @@ export function createLiveProvider({ endpoint = LOCAL_CATALOG_URL, fetchImpl = f
           const metadata = await lookup(isbn, fetchImpl, timeoutMs);
           if (metadata?.title) return mergeWithEstimatedPricing(isbn, metadata, source || metadata.source || "live-catalog", fulfillment);
         } catch (err) {
+          if (err?.code === SCAN_CAP_CODE || err?.status === 402) throw err;
           // Try the next catalog source. The UI still gets an estimated fallback
           // rather than failing the scan in a store with spotty signal.
         }

@@ -54,7 +54,7 @@ const faqItems = [
   ["Is the profit number final?", "No. Treat it as a quick estimate. Always check the real Amazon listing data before buying."],
   ["Why export a list?", "So you can check your finds later, compare real Amazon prices, and avoid guessing from memory."],
   ["Do I need an account?", "Use the demo without an account. Create an account when you want to save real scans."],
-  ["What will it cost?", "The beta is free while we test. The first paid plan is planned at $15/month, with a $29/month Pro plan after Amazon data is useful."],
+  ["What will it cost?", "Each account gets 100 lifetime scans free. After that, Starter is $15/month and Pro is $29/month to keep scanning."],
   ["How do I get help?", `The planned support address is ${SUPPORT_EMAIL}. The domain and inbox still need to be secured before public launch.`],
   ["Is this ready for live buying decisions?", "Not yet. The app is built for testing the workflow while Amazon data connections are still being added."],
 ];
@@ -209,7 +209,7 @@ function useProfileRole(session) {
 
 function BillingSummary({ session }) {
   const { loading, account, error } = useBillingAccount(session);
-  const plan = account ? billingPlanLabel(account.plan) : "Free beta";
+  const plan = account ? billingPlanLabel(account.plan) : "Free";
   const status = account ? billingStatusLabel(account.subscription_status) : "Not connected";
   const suffix = account?.cancel_at_period_end ? " - cancels at period end" : "";
 
@@ -1317,19 +1317,19 @@ function PricingPage({ session }) {
       <path d="M3 8.5l3 3 7-7" stroke={GREEN} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-  const freeFeats = ["Scan books & save history", "Build a buy list", "Notes before buying", "One-tap CSV export"];
-  const starterFeats = ["Everything in Free beta", "Account scan history", "Saved buy lists & field-test exports", "Live Amazon checks when connected"];
+  const freeFeats = ["100 lifetime book scans", "Build a buy list", "Notes before buying", "One-tap CSV export"];
+  const starterFeats = ["Unlimited scanning past the free cap", "Account scan history", "Saved buy lists & field-test exports", "Live Amazon checks when connected"];
   const proFeats = ["Everything in Starter", "Advanced live-data checks", "Faster sourcing tools", "Apple Watch alerts (later)"];
 
   function PlanCTA({ planId, tone }) {
-    if (isAdmin) {
-      return (
-        <CheckoutButton planId={planId} session={session} tone={tone}>
-          {session ? `Test ${planId === "starter" ? "Starter" : "Pro"}` : "Sign in"}
-        </CheckoutButton>
-      );
+    if (!session) {
+      return <ButtonLink href={publicPath("login")} tone={tone}>Sign in to subscribe</ButtonLink>;
     }
-    return <ButtonLink href={primaryHref} tone={tone}>Join the waitlist</ButtonLink>;
+    return (
+      <CheckoutButton planId={planId} session={session} tone={tone}>
+        {`Subscribe to ${planId === "starter" ? "Starter" : "Pro"}`}
+      </CheckoutButton>
+    );
   }
 
   return (
@@ -1337,20 +1337,20 @@ function PricingPage({ session }) {
       <Band>
         <div className="mx-auto max-w-2xl text-center">
           <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: BLUE }}>Pricing</div>
-          <h1 className="text-3xl font-black leading-tight sm:text-4xl">Free while we prove it. Fair once it pays for itself.</h1>
+          <h1 className="text-3xl font-black leading-tight sm:text-4xl">100 books free. Then Starter or Pro to keep scanning.</h1>
           <p className="mt-3 text-base font-bold leading-relaxed" style={{ color: MUTED }}>
-            Start free during the beta. Paid plans switch on only after live Amazon data makes the scanner clearly worth it.
+            Every account can scan 100 lifetime books at no charge. After that, subscribe to Starter or Pro. Checkout does not grant access by itself — Stripe must confirm the subscription.
           </p>
         </div>
         <div className="mx-auto mt-6 max-w-2xl"><CheckoutNotice /></div>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-3 lg:items-start">
-          {/* Free beta */}
+          {/* Free — 100 lifetime scans */}
           <div className="rounded-2xl p-6" style={{ backgroundColor: SURFACE, border: `1px solid ${LINE}` }}>
-            <h3 className="text-xl font-black">Free beta</h3>
+            <h3 className="text-xl font-black">Free</h3>
             <div className="mt-2 font-mono text-4xl font-black">$0</div>
-            <div className="font-mono text-xs font-bold" style={{ color: MUTED }}>during beta</div>
-            <div className="mt-3 text-sm font-bold" style={{ color: MUTED, minHeight: "2.6em" }}>Early testers scanning real books with us.</div>
+            <div className="font-mono text-xs font-bold" style={{ color: MUTED }}>100 books lifetime</div>
+            <div className="mt-3 text-sm font-bold" style={{ color: MUTED, minHeight: "2.6em" }}>First 100 distinct book scans per account.</div>
             <ul className="mt-4 grid gap-2 text-sm font-bold">
               {freeFeats.map((f) => (<li key={f} className="flex items-start gap-2"><Ck />{f}</li>))}
             </ul>
@@ -1359,17 +1359,17 @@ function PricingPage({ session }) {
 
           {/* Starter — featured */}
           <div className="relative rounded-2xl p-6" style={{ backgroundColor: SURFACE, border: `2px solid ${BLUE}`, boxShadow: "0 16px 40px rgba(23,23,23,0.10)" }}>
-            <span className="absolute -top-3 left-6 rounded-md px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK }}>Planned</span>
+            <span className="absolute -top-3 left-6 rounded-md px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: YELLOW, color: INK }}>Keep scanning</span>
             <h3 className="text-xl font-black">Starter</h3>
             <div className="mt-2 font-mono text-4xl font-black">$15<span className="text-sm font-bold" style={{ color: MUTED }}> /mo</span></div>
-            <div className="font-mono text-xs font-bold" style={{ color: MUTED }}>after live data is useful</div>
+            <div className="font-mono text-xs font-bold" style={{ color: MUTED }}>after 100 free scans</div>
             <div className="mt-3 text-sm font-bold" style={{ color: MUTED, minHeight: "2.6em" }}>Solo resellers who source regularly.</div>
             <ul className="mt-4 grid gap-2 text-sm font-bold">
               {starterFeats.map((f) => (<li key={f} className="flex items-start gap-2"><Ck />{f}</li>))}
             </ul>
             <div className="mt-6"><PlanCTA planId="starter" tone="blue" /></div>
             <div className="mt-2 text-center font-mono text-[10px] font-black uppercase tracking-widest" style={{ color: MUTED }}>
-              {isAdmin ? "admin test checkout" : "switches on after live data"}
+              {isAdmin ? "admin can test checkout" : "access grants after Stripe confirms"}
             </div>
           </div>
 
@@ -1464,7 +1464,7 @@ function TermsPage() {
     <LegalPage eyebrow="Legal" title="Terms of Use" updated="August 6, 2026">
       <p>This is an early tool for testing used-book sourcing. Estimated pricing, rank, velocity, eligibility, and fee data should be independently checked before any buying decision.</p>
       <p>Users are responsible for their own marketplace compliance, resale eligibility, inventory purchases, tax treatment, and shipping decisions.</p>
-      <p>The beta may change as live data integrations, billing, and account controls are added. Planned pricing is $0 during beta, $15/month for Starter, and $29/month for Pro after the paid product is ready. Customer-facing terms should be checked before any paid public launch.</p>
+      <p>The product may change as live data integrations and billing are added. Each account gets 100 lifetime scans free, then $15/month for Starter or $29/month for Pro to keep scanning. Customer-facing terms should be checked before any paid public launch.</p>
       <p>For support, contact {SUPPORT_EMAIL}. This inbox is planned and should be activated before public launch.</p>
     </LegalPage>
   );

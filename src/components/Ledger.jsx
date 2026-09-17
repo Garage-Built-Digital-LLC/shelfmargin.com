@@ -13,9 +13,11 @@ import {
 import { LOOKUP_STATUS, lookupBook } from "../providers/index.js";
 import {
   fetchScans, insertScan, updateScan, deleteAllScans, getProfile, updateProfile,
+  getBillingAccount,
   fetchScanVerifications, upsertScanVerification,
   listPlaces, createPlace, updatePlace, archivePlace,
 } from "../lib/scansRepo.js";
+import { SCAN_CAP_CODE, isScanCapError, scanCapState } from "../lib/billing.js";
 import { fieldTestCsv } from "../lib/fieldTestExport.js";
 import PlacesView from "./PlacesView.jsx";
 import {
@@ -240,7 +242,7 @@ function BottomNav({ view, queuedCount, savedCount, onNavigate }) {
   );
 }
 
-function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) {
+function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut, scanCap }) {
   if (demoMode) {
     return (
       <a href={publicPath("login")} className="flex items-center gap-1 shrink-0" style={{ color: INK }}>
@@ -302,15 +304,20 @@ function AccountMenu({ session, profileRole, demoMode, onNavigate, onSignOut }) 
               Admin setup <ShieldCheck size={13} />
             </button>
           )}
-          <button
-            type="button"
-            className="px-2 py-2 text-left font-black uppercase tracking-widest"
+          <a
+            href={publicPath("pricing")}
+            className="block px-2 py-2 text-left font-black uppercase tracking-widest"
             style={{ border: `1px solid ${LINE}`, color: MUTED, backgroundColor: BLUE_BG }}
-            title="Stripe billing portal is not connected yet."
           >
-            Subscription status
-            <span className="mt-1 block font-bold normal-case tracking-normal">Free beta - Stripe not connected</span>
-          </button>
+            Subscription
+            <span className="mt-1 block font-bold normal-case tracking-normal">
+              {scanCap?.paid
+                ? "Paid plan active"
+                : scanCap?.blocked
+                  ? "Free limit reached — subscribe to keep scanning"
+                  : `${scanCap?.remaining ?? 100} of ${scanCap?.cap ?? 100} free scans left`}
+            </span>
+          </a>
           <button
             type="button"
             onClick={onSignOut}
@@ -1228,6 +1235,8 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const [verificationReady, setVerificationReady] = useState(true);
   const [exportHistory, setExportHistory] = useState([]);
   const [profileRole, setProfileRole] = useState("");
+  const [billingAccount, setBillingAccount] = useState(null);
+  const [trialScansUsed, setTrialScansUsed] = useState(0);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeStatusError, setStripeStatusError] = useState("");
   const [amazonStatus, setAmazonStatus] = useState(null);
@@ -1245,6 +1254,9 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   const userId = session?.user?.id;
   const exportHistoryKey = `shelfmargin:field-exports:${demoMode ? "demo" : userId || "anonymous"}`;
   const { playBuy, playPass, playDuplicate, playAction } = useTones(soundOn);
+  const scanCap = demoMode
+    ? { paid: false, blocked: false, remaining: null, used: 0, cap: 100 }
+    : scanCapState({ account: billingAccount, used: trialScansUsed });
 
   useEffect(() => {
     const onHashChange = () => setView(sectionFromHash(window.location.hash));
@@ -1280,10 +1292,13 @@ function Ledger({ session, onSignOut, demoMode = false }) {
         const profile = await getProfile().catch(() => null);
         if (alive && profile) {
           setProfileRole(profile.role || "");
+          setTrialScansUsed(Number(profile.trial_scans_used) || 0);
           if (profile.cost_per_book != null) setCost(Number(profile.cost_per_book));
           if (profile.buy_threshold != null) setThreshold(Number(profile.buy_threshold));
           if (profile.sound_enabled != null) setSoundOn(profile.sound_enabled);
         }
+        const billing = await getBillingAccount().catch(() => null);
+        if (alive) setBillingAccount(billing);
         const rows = await fetchScans();
         if (alive) setEntries(rows.map(rowToEntry));
         try {
@@ -1425,11 +1440,20 @@ function Ledger({ session, onSignOut, demoMode = false }) {
   async function scanValue(rawInput) {
     const raw = String(rawInput || "").trim();
     if (!raw || scanning) return;
+    if (!demoMode && loading) return;
     const normalizedIsbn = normalizeToIsbn13(raw);
     if (!normalizedIsbn) {
       playPass();
       setIsbn("");
       showToast("scan a full ISBN barcode", "pass");
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return;
+    }
+    const alreadyCounted = entries.some((en) => en.isbn === normalizedIsbn);
+    if (!demoMode && scanCap.blocked && !alreadyCounted) {
+      playPass();
+      setIsbn("");
+      showToast("free scan limit reached — subscribe to keep scanning", "pass");
       requestAnimationFrame(() => inputRef.current?.focus());
       return;
     }
@@ -1439,12 +1463,18 @@ function Ledger({ session, onSignOut, demoMode = false }) {
       const cacheKey = `${normalizedIsbn}:${fulfillment}`;
       let core = lookupCacheRef.current.get(cacheKey);
       if (!core) {
-        core = await lookupBook(normalizedIsbn, { fulfillment });
+        core = await lookupBook(normalizedIsbn, {
+          fulfillment,
+          accessToken: demoMode ? "" : session?.access_token,
+        });
         if (core) {
           // Bound the cache so a very long session can't grow it without limit.
           if (lookupCacheRef.current.size > 500) lookupCacheRef.current.clear();
           lookupCacheRef.current.set(cacheKey, core);
         }
+      }
+      if (core?.scanCap?.used != null) {
+        setTrialScansUsed(Number(core.scanCap.used) || 0);
       }
       if (!core) {
         playPass();
@@ -1478,10 +1508,26 @@ function Ledger({ session, onSignOut, demoMode = false }) {
       try {
         const row = await insertScan(entryToRow(temp, userId, cost, threshold, activePlaceId));
         setEntries((prev) => prev.map((en) => (en.id === temp.id ? { ...en, id: row.id } : en)));
+        if (!scanCap.paid && !alreadyCounted) {
+          setTrialScansUsed((prev) => Math.max(prev, trialScansUsed + 1));
+        }
       } catch (err) {
         setEntries((prev) => prev.filter((en) => en.id !== temp.id));
-        showToast("couldn't save scan", "pass");
+        if (isScanCapError(err) || err?.code === SCAN_CAP_CODE) {
+          setTrialScansUsed((prev) => Math.max(prev, scanCap.cap || 100));
+          showToast("free scan limit reached — subscribe to keep scanning", "pass");
+        } else {
+          showToast("couldn't save scan", "pass");
+        }
       }
+    } catch (err) {
+      if (isScanCapError(err) || err?.code === SCAN_CAP_CODE) {
+        setTrialScansUsed((prev) => Math.max(prev, Number(err.used) || scanCap.cap || 100));
+        showToast("free scan limit reached — subscribe to keep scanning", "pass");
+        return;
+      }
+      playPass();
+      showToast("couldn't look up that ISBN", "pass");
     } finally {
       setScanning(false);
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -1729,6 +1775,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
               demoMode={demoMode}
               onNavigate={navigate}
               onSignOut={onSignOut}
+              scanCap={scanCap}
             />
           </div>
 
@@ -2005,13 +2052,17 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                     <Scan size={23} />
                   </div>
                   <input ref={inputRef} autoFocus value={isbn} onChange={(e) => setIsbn(e.target.value)}
-                    disabled={scanning}
-                    placeholder={scanning ? "Looking up book..." : "Scan or type ISBN"}
+                    disabled={scanning || loading || (!demoMode && scanCap.blocked)}
+                    placeholder={
+                      !demoMode && scanCap.blocked
+                        ? "Free scan limit reached"
+                        : scanning ? "Looking up book..." : "Scan or type ISBN"
+                    }
                     className="flex-1 bg-transparent outline-none text-xl font-mono font-black tracking-wide"
                     style={{ color: INK }} />
                   <button
                     type="submit"
-                    disabled={scanning || !isbn.trim()}
+                    disabled={scanning || !isbn.trim() || loading || (!demoMode && scanCap.blocked)}
                     className="shrink-0 rounded-xl px-3 py-3 text-xs font-black uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
                     style={{ backgroundColor: YELLOW, color: GOLD_INK }}
                   >
@@ -2020,7 +2071,11 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3 text-xs font-bold">
                   <span style={{ color: DARK_MUTED }}>
-                    {scanning ? "Looking up ISBN. Amazon sandbox may fall back to public catalog." : "Type an ISBN and press Enter, or click Look up."}
+                    {!demoMode && scanCap.blocked
+                      ? "Subscribe to Starter or Pro to keep scanning."
+                      : scanning
+                        ? "Looking up ISBN. Amazon sandbox may fall back to public catalog."
+                        : "Type an ISBN and press Enter, or click Look up."}
                   </span>
                   <span className="font-mono" style={{ color: DARK_MUTED }}>
                     {typedIsbnStatus(isbn)}
@@ -2028,6 +2083,30 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                 </div>
               </div>
             </form>
+
+            {!demoMode && scanCap.blocked && (
+              <div className="mb-4 rounded-2xl px-4 py-4" style={{ backgroundColor: AMBER_BG, border: "1px solid #B8860B" }}>
+                <div className="text-sm font-black uppercase tracking-widest" style={{ color: CHECK_TXT }}>
+                  100-book free limit reached
+                </div>
+                <p className="mt-2 text-sm font-bold" style={{ color: INK }}>
+                  Subscribe to Starter ($15/mo) or Pro ($29/mo) to keep scanning. Paid access is granted after Stripe confirms the subscription.
+                </p>
+                <a
+                  href={publicPath("pricing")}
+                  className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-xs font-black uppercase tracking-widest"
+                  style={{ backgroundColor: YELLOW, color: GOLD_INK }}
+                >
+                  View plans
+                </a>
+              </div>
+            )}
+
+            {!demoMode && !scanCap.paid && !scanCap.blocked && (
+              <div className="mb-3 text-xs font-bold" style={{ color: MUTED }}>
+                {scanCap.remaining} of {scanCap.cap} free lifetime scans remaining.
+              </div>
+            )}
 
             {demoMode && (
               <div className="mb-4">
@@ -2728,7 +2807,7 @@ function Ledger({ session, onSignOut, demoMode = false }) {
                   <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: BLUE_BG }}>
                     <div className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: BLUE }}>revenue path</div>
                     <div className="text-sm font-bold leading-relaxed" style={{ color: INK }}>
-                      Free beta first. Starter at $15/mo after real scans prove the scanner saves time or prevents bad buys.
+                      100 lifetime scans free, then Starter at $15/mo or Pro at $29/mo to keep scanning.
                     </div>
                   </div>
                   <div className="px-3 py-3" style={{ border: `2px solid ${LINE}`, backgroundColor: GREEN_BG }}>

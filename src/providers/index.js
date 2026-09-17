@@ -29,7 +29,7 @@ export async function lookupBook(rawIsbn, opts = {}) {
   const fulfillment = opts.fulfillment === "fbm" ? "fbm" : "fba";
 
   if (USE_LIVE) {
-    return liveProvider.lookup(isbn, { fulfillment });
+    return liveProvider.lookup(isbn, { fulfillment, accessToken: opts.accessToken });
   }
 
   // Mock: small latency so loading states get exercised.
